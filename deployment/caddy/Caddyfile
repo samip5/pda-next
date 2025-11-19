@@ -1,0 +1,9 @@
+http://localhost:8080 {
+
+  handle_path /static/* {
+		root * /home/sky/code/gh/samip5/pda-next/src/static_root
+		file_server
+  }
+
+  reverse_proxy 127.0.0.1:8000
+}
