@@ -24,6 +24,8 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 
 from apps.web.sitemaps import StaticViewSitemap
 
+from debug_toolbar.toolbar import debug_toolbar_urls
+
 sitemaps = {
     "static": StaticViewSitemap(),
 }
@@ -31,17 +33,18 @@ sitemaps = {
 urlpatterns = [
     # redirect Django admin login to main login page, this might need tro be changed for PDNS-Admin
     path("admin/login/", RedirectView.as_view(pattern_name="account_login")),
-    path("admin/", admin.site.urls),
+    path("djadmin/", admin.site.urls),
     path("i18n/", include("django.conf.urls.i18n")),
     path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="django.contrib.sitemaps.views.sitemap"),
     path("accounts/", include("allauth_2fa.urls")),
     path("accounts/", include("allauth.urls")),
     path("users/", include("apps.users.urls")),
+    path("admin/", include("apps.pda-admin.urls")),
     path("", include("apps.web.urls")),
     # API docs
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     # Optional UI - you may wish to remove one of these depending on your preference
     path("api/schema/swagger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + debug_toolbar_urls()

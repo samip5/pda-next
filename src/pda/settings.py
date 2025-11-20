@@ -36,6 +36,8 @@ FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 SITE_ID = 1
 GOOGLE_ANALYTICS_ID = settings.google_analytics_id
 
+DEBUG=True
+
 PROJECT_METADATA = {
     'NAME': gettext_lazy(settings.site_title),
     'URL': settings.site_url,
@@ -110,6 +112,7 @@ THIRD_PARTY_APPS = [
     "rest_framework_api_key",
     "celery_progress",
     "waffle",
+    "debug_toolbar"
 ]
 
 # Put your project-specific apps here
@@ -122,6 +125,7 @@ PROJECT_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
 
 MIDDLEWARE = [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -169,6 +173,10 @@ TEMPLATES = [
             ],
         },
     },
+]
+
+INTERNAL_IPS = [
+    "127.0.0.1",
 ]
 
 # Database

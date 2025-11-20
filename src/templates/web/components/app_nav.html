@@ -35,6 +35,19 @@
           <span class="pg-icon"><i class="fa fa-sign-out"></i></span><span>{% translate "Sign out" %}</span>
         </a>
       </li>
+      <li class="nav-item mt-3">
+        <h6 class="ps-4 ms-2 text-uppercase text-xs text-white font-weight-bolder opacity-8">{% translate "Admin area" %}</h6>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'pda-admin:dashboard' %}" class="nav-link {% if active_tab == 'admin_dash' %}active{% endif %}">
+          <span class="pg-icon"><i class="fa fa-shield"></i></span><span>{% translate "Admin Dashboard" %}</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="/djadmin" class="nav-link {% if active_tab == 'djadmin' %}active{% endif %}">
+          <span class="pg-icon"><i class="fa fa-cog"></i></span><span>{% translate "Django Admin" %}</span>
+        </a>
+      </li>
     </ul>
   </div>
 </aside>
