@@ -120,6 +120,7 @@ PROJECT_APPS = [
     "apps.users.apps.UserConfig",
     "apps.api.apps.APIConfig",
     "apps.web",
+    "apps.pdadns.apps.DNSConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
@@ -282,19 +283,6 @@ AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',
 )
 
-# Third-Party Social Authentication Setup
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        },
-    },
-}
-
 # Email setup
 
 EMAIL_BACKEND = None
@@ -313,66 +301,6 @@ if isinstance(settings.email_backend, str) and len(settings.email_backend.strip(
     EMAIL_TIMEOUT = settings.email_timeout
     EMAIL_USE_SSL = settings.email_use_ssl
     EMAIL_USE_TLS = settings.email_use_tls
-
-    #
-    # Anymail Backend Settings
-    #
-
-    # Amazon SES
-    ANYMAIL_AMAZON_SES_AUTO_CONFIRM_SNS_SUBSCRIPTIONS = settings.anymail_amazon_ses_auto_confirm_sns_subscriptions
-    ANYMAIL_AMAZON_SES_CLIENT_PARAMS = settings.anymail_amazon_ses_client_params
-    ANYMAIL_AMAZON_SES_CONFIGURATION_SET_NAME = settings.anymail_amazon_ses_configuration_set_name
-    ANYMAIL_AMAZON_SES_MESSAGE_TAG_NAME = settings.anymail_amazon_ses_message_tag_name
-    ANYMAIL_AMAZON_SES_SESSION_PARAMS = settings.anymail_amazon_ses_session_params
-
-    # MailerSend
-    ANYMAIL_MAILERSEND_API_TOKEN = settings.anymail_mailersend_api_token
-    ANYMAIL_MAILERSEND_API_URL = settings.anymail_mailersend_api_url
-    ANYMAIL_MAILERSEND_BATCH_SEND_MODE = settings.anymail_mailersend_batch_send_mode
-    ANYMAIL_MAILERSEND_INBOUND_SECRET = settings.anymail_mailersend_inbound_secret
-    ANYMAIL_MAILERSEND_SIGNING_SECRET = settings.anymail_mailersend_signing_secret
-
-    # Mailgun
-    ANYMAIL_MAILGUN_API_KEY = settings.anymail_mailgun_api_key
-    ANYMAIL_MAILGUN_API_URL = settings.anymail_mailgun_api_url
-    ANYMAIL_MAILGUN_SENDER_DOMAIN = settings.anymail_mailgun_sender_domain
-    ANYMAIL_MAILGUN_WEBHOOK_SIGNING_KEY = settings.anymail_mailgun_webhook_signing_key
-
-    # Mailjet
-    ANYMAIL_MAILJET_API_KEY = settings.anymail_mailjet_api_key
-    ANYMAIL_MAILJET_API_URL = settings.anymail_mailjet_api_url
-    ANYMAIL_MAILJET_SECRET_KEY = settings.anymail_mailjet_secret_key
-
-    # Mandrill
-    ANYMAIL_MANDRILL_API_KEY = settings.anymail_mandrill_api_key
-    ANYMAIL_MANDRILL_API_URL = settings.anymail_mandrill_api_url
-    ANYMAIL_MANDRILL_WEBHOOK_KEY = settings.anymail_mandrill_webhook_key
-    ANYMAIL_MANDRILL_WEBHOOK_URL = settings.anymail_mandrill_webhook_url
-
-    # Postal
-    ANYMAIL_POSTAL_API_KEY = settings.anymail_postal_api_key
-    ANYMAIL_POSTAL_API_URL = settings.anymail_postal_api_url
-    ANYMAIL_POSTAL_WEBHOOK_KEY = settings.anymail_postal_webhook_key
-
-    # Postmark
-    ANYMAIL_POSTMARK_API_URL = settings.anymail_postmark_api_url
-    ANYMAIL_POSTMARK_SERVER_TOKEN = settings.anymail_postmark_server_token
-
-    # SendGrid
-    ANYMAIL_SENDGRID_API_KEY = settings.anymail_sendgrid_api_key
-    ANYMAIL_SENDGRID_API_URL = settings.anymail_sendgrid_api_url
-    ANYMAIL_SENDGRID_GENERATE_MESSAGE_ID = settings.anymail_sendgrid_generate_message_id
-    ANYMAIL_SENDGRID_MERGE_FIELD_FORMAT = settings.anymail_sendgrid_merge_field_format
-
-    # Sendinblue
-    ANYMAIL_SENDINBLUE_API_KEY = settings.anymail_sendinblue_api_key
-    ANYMAIL_SENDINBLUE_API_URL = settings.anymail_sendinblue_api_url
-
-    # SparkPost
-    ANYMAIL_SPARKPOST_API_KEY = settings.anymail_sparkpost_api_key
-    ANYMAIL_SPARKPOST_API_URL = settings.anymail_sparkpost_api_url
-    ANYMAIL_SPARKPOST_SUBACCOUNT = settings.anymail_sparkpost_subaccount
-    ANYMAIL_SPARKPOST_TRACK_INITIAL_OPEN_AS_OPENED = settings.anymail_sparkpost_track_initial_open_as_opened
 
 # DRF config
 REST_FRAMEWORK = {
