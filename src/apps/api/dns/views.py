@@ -11,10 +11,10 @@ from .services import PowerDNSService
 
 class RecordViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ViewSet for fetching DNS records.
+    ViewSet for fetching DNS zones and records.
 
-    Provides endpoints to list and retrieve records from the database.
-    Records can be filtered by zone, name, record type, etc.
+    Provides endpoints to list and retrieve zones and records from the database.
+    Records can be filtered by zone.
     """
 
     queryset = Record.objects.all()
@@ -68,17 +68,12 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
         returns them. If the zone doesn't exist in the database, it will
         attempt to fetch from PowerDNS.
         """
-        # If zone doesn't exist in DB, try to fetch from PowerDNS
         service = PowerDNSService()
         powerdns_zones = service.get_zones("localhost")
 
         if not powerdns_zones:
             raise NotFound(f"Zones not found")
 
-
-        # Fetch records from PowerDNS
-        service = PowerDNSService()
-        powerdns_zones = service.get_zones("localhost")
 
         # Convert PowerDNS record format to Record model instances (not saved)
         zone_instances = []
@@ -100,8 +95,42 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = ZoneSerializer(zone_instances, many=True)
         return Response(serializer.data)
 
-
     @action(detail=False, methods=['get'], url_path='zones/(?P<zone_name>[^/]+)')
+    def zone(self, request, zone_name=None):
+        """
+        Get zone.
+
+        This endpoint fetches zone from PowerDNS API on-demand and
+        returns them. If the zone doesn't exist in the database, it will
+        attempt to fetch from PowerDNS.
+        """
+        if not zone_name.endswith('.'):
+            zone_name = f"{zone_name}."
+
+        service = PowerDNSService()
+        powerdns_zone = service.get_zone(zone_name)
+
+        if not powerdns_zone:
+            raise NotFound(f"Zone '{zone_name}' not found")
+
+        # Convert PowerDNS record format to Record model instances (not saved)
+
+        zone = Zone(
+            name=powerdns_zone.get('name', ''),
+            kind=powerdns_zone.get('kind', Zone.ZONE_KIND_NATIVE),
+            nameservers=powerdns_zone.get('nameservers', []),
+            server_id=powerdns_zone.get('server_id', 'localhost'),
+            powerdns_id=powerdns_zone.get('id'),
+            account=powerdns_zone.get('account', ''),
+            dnssec=powerdns_zone.get('dnssec', '')
+        )
+
+
+        serializer = ZoneSerializer(zone, many=False)
+        return Response(serializer.data)
+
+
+    @action(detail=False, methods=['get'], url_path='zones/(?P<zone_name>[^/]+)/records')
     def zone_records(self, request, zone_name=None):
         """
         Get all records for a specific zone by zone name.
