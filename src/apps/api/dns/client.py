@@ -176,6 +176,7 @@ class PowerDNSClient:
         nameservers: List[str],
         kind: str = 'Native',
         server_id: str = 'localhost',
+        account: str = None,
         **kwargs
     ) -> Dict[str, Any]:
         """
@@ -186,6 +187,7 @@ class PowerDNSClient:
             nameservers: List of nameserver hostnames
             kind: Zone kind (Native, Master, Slave)
             server_id: Server ID (default: 'localhost')
+            account: Account name (default: '')
             **kwargs: Additional zone parameters
             
         Returns:
@@ -195,6 +197,7 @@ class PowerDNSClient:
             'name': zone_name,
             'kind': kind,
             'nameservers': nameservers,
+            'account': account,
             **kwargs
         }
         return self._request('POST', f'servers/{server_id}/zones', data=zone_data)

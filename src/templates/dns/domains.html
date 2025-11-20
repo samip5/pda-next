@@ -19,12 +19,17 @@
       <tbody>
         {% for zone in zones %}
         <tr>
-            <td><a class="text-white" href="/dns/domain/{{ zone.domain }}">{{ zone.domain }}</a></td>
-            <td><span class="pg-icon bg-warning p-3 rounded-3"><i class="fa fa-lock"></i></span></td>
-            <td>{{ zone.type }}</td>
-            <td>{{ zone.primary }}</td>
+            <td><a class="text-white" href="/dns/domain/{{ zone.name }}">{{ zone.name }}</a></td>
+            <td>{% if zone.dnssec %}
+                <span class="pg-icon bg-success p-3 rounded-3"><i class="fa fa-lock"></i></span>
+                {% else %}
+                <span class="pg-icon bg-danger p-3 rounded-3"><i class="fa fa-lock"></i></span>
+                {% endif %}
+            </td>
+            <td>{{ zone.kind }}</td>
+            <td></td>
             <td>{{ zone.account }}</td>
-            <td>{{ zone.serial }}</td>
+            <td></td>
             <td></td>
         </tr>
         {% endfor %}

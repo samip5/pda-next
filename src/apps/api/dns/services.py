@@ -91,6 +91,7 @@ class PowerDNSService:
         nameservers: List[str],
         kind: str = 'Native',
         server_id: str = 'localhost',
+        account: str = None,
         **kwargs
     ) -> Optional[Dict[str, Any]]:
         """
@@ -101,13 +102,14 @@ class PowerDNSService:
             nameservers: List of nameserver hostnames
             kind: Zone kind (Native, Master, Slave)
             server_id: Server ID (default: 'localhost')
+            account: Account Name
             **kwargs: Additional zone parameters
             
         Returns:
             Created zone dictionary from PowerDNS API or None on error
         """
         try:
-            return self.client.create_zone(zone_name, nameservers, kind, server_id, **kwargs)
+            return self.client.create_zone(zone_name, nameservers, kind, server_id, account, **kwargs)
         except PowerDNSError as e:
             logger.error(f"Failed to create zone {zone_name} in PowerDNS: {e}")
             return None

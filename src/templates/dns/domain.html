@@ -19,6 +19,21 @@
         </tr>
       </thead>
       <tbody>
+        {% for record in records %}
+        <tr>
+            <td>{{ record.name }}</td>
+            <td>{{ record.record_type }}</td>
+            <td>{{ record.disabled }}</td>
+            <td>{{ record.ttl }}</td>
+            <td>{{ record.content }}</td>
+            <td></td>
+            <td>
+                <span class="pg-icon bg-danger p-3 rounded-3 text-white"><i class="fa fa-trash-o"></i></span>
+                <span class="pg-icon bg-warning p-3 rounded-3 text-white"><i class="fa fa-pencil-square"></i></span>
+            </td>
+        </tr>
+        {% endfor %}
+
         {% for rrset in rrsets %}
         <tr>
             <td>{{ rrset.name }}</td>
