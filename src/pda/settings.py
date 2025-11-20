@@ -122,6 +122,7 @@ PROJECT_APPS = [
     "apps.web",
     "apps.dns",
     "apps.pdaAdmin"
+    "apps.pdadns.apps.DNSConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
