@@ -45,6 +45,7 @@ urlpatterns = [
     path("", include("apps.web.urls")),
     # API endpoints
     path("api/v1/dns/", include("apps.api.dns.urls")),
+    path("api/v1/accounts/", include("apps.api.accounts.urls")),
     # API docs
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     # Optional UI - you may wish to remove one of these depending on your preference

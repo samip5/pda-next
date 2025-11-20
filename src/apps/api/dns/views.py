@@ -63,16 +63,16 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
 
         return queryset.order_by('zone__name', 'name', 'record_type')
 
-    @action(detail=False, methods=['get'], url_path='zones')
+    @action(detail=False, methods=['get', 'post'], url_path='zones')
     def zones(self, request):
-        """
-        Get all Zones.
-
-        This endpoint fetches zones from PowerDNS API on-demand and
-        returns them. If the zone doesn't exist in the database, it will
-        attempt to fetch from PowerDNS.
-        """
         if request.method == 'GET':
+            """
+            Get all Zones.
+
+            This endpoint fetches zones from PowerDNS API on-demand and
+            returns them. If the zone doesn't exist in the database, it will
+            attempt to fetch from PowerDNS.
+            """
             service = PowerDNSService()
             powerdns_zones = service.get_zones("localhost")
 
@@ -98,7 +98,12 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
 
             serializer = ZoneSerializer(zone_instances, many=True)
             return Response(serializer.data)
+
         elif request.method == 'POST':
+            """
+            Create a New zone.
+
+            """
             zone_name = request.data.get('name', '')
             zone_type = request.data.get('type', '')
             zone_account = request.data.get('account', '')

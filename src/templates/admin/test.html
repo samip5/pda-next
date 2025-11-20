@@ -2,9 +2,17 @@
 {% load static %}
 {% load i18n %}
 {% block app %}
-<section class="app-card">
-  <h1 class="pg-title">Yes</h1>
-  <p class="pg-subtitle">{% translate 'this is a page yes' %}</p>
+<section class="">
+    <h1 class="pg-title mb-5">Dashboard</h1>
+    <div class="pg-columns">
+        <div class="pg-column card bg-gray-800 m-2 p-2">
+            <h2 class="pg-title">Activity</h2>
+        </div>
+        <div class="pg-column-one-third card bg-gray-800 m-2 p-2">
+            <h2 class="pg-title">Statistics</h2>
+
+        </div>
+    </div>
 </section>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.min.js" integrity="sha512-n/G+dROKbKL3GVngGWmWfwK0yPctjZQM752diVYnXZtD/48agpUKLIn0xDQL9ydZ91x6BiOmTIFwWjjFi2kEFg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 {% endblock %}
