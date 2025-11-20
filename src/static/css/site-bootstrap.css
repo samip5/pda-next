@@ -110,7 +110,7 @@ h6, .h6, h5, .h5, h4, .h4, h3, .pg-title, .h3, h2, .h2, h1, .h1 {
   margin-bottom: 0.5rem;
   font-weight: 400;
   line-height: 1.2;
-  color: #344767;
+  color: #ffffff;
 }
 
 h1, .h1 {
@@ -2347,7 +2347,7 @@ progress {
   font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.5rem;
-  color: #495057;
+  color: #dddddd;
   background-color: transparent;
   background-clip: padding-box;
   border: 1px solid #d2d6da;
@@ -2367,7 +2367,7 @@ progress {
   cursor: pointer;
 }
 .form-control:focus, .pg-control:focus {
-  color: #495057;
+  color: #fff;
   background-color: transparent;
   border-color: transparent;
   outline: 0;
@@ -2388,7 +2388,7 @@ progress {
   padding: 0.5rem 0;
   margin: -0.5rem 0;
   margin-inline-end: 0;
-  color: #495057;
+  color: #dddddd;
   background-color: transparent;
   pointer-events: none;
   border-color: inherit;
@@ -2490,7 +2490,7 @@ textarea.form-control-lg {
   font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.5rem;
-  color: #495057;
+  color: #dddddd;
   background-color: transparent;
   background-image: url("data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3e%3cpath fill=%27none%27 stroke=%27%23343a40%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%272%27 d=%27M2 5l6 6 6-6%27/%3e%3c/svg%3e");
   background-repeat: no-repeat;
@@ -18676,7 +18676,7 @@ body.dark-version {
   background-color: transparent;
   background-image: none;
   border: 1px solid #344767;
-  color: #344767;
+  color: #ffffff;
 }
 .fixed-plugin.show .card, .fixed-plugin.show .pg-card {
   right: 0;
@@ -18727,7 +18727,7 @@ body.dark-version {
   border-right: 1px solid #d2d6da;
 }
 .input-group.input-group-dynamic .form-control, .input-group.input-group-dynamic .pg-control, .input-group.input-group-dynamic .form-control:focus, .input-group.input-group-static .form-control, .pg-input-group .form-control, .input-group.input-group-static .pg-control, .pg-input-group .pg-control, .input-group.input-group-static .form-control:focus {
-  background-image: linear-gradient(0deg, #e91e63 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #d2d2d2 1px, hsla(0deg, 0%, 82%, 0) 0);
+  background-image: linear-gradient(0deg, #29a1f4 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #d2d2d2 1px, hsla(0deg, 0%, 82%, 0) 0);
   border-radius: 0 !important;
 }
 .input-group.input-group-dynamic .form-control:focus, .input-group.input-group-dynamic .pg-control:focus, .input-group.input-group-static .form-control:focus, .pg-input-group .form-control:focus, .input-group.input-group-static .pg-control:focus, .pg-input-group .pg-control:focus {
@@ -18735,7 +18735,7 @@ body.dark-version {
 }
 .input-group.input-group-dynamic .form-control[disabled], .input-group.input-group-dynamic [disabled].pg-control, .input-group.input-group-static .form-control[disabled], .pg-input-group .form-control[disabled], .input-group.input-group-static [disabled].pg-control, .pg-input-group [disabled].pg-control {
   cursor: not-allowed;
-  background-image: linear-gradient(0deg, #e91e63 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #f0f2f5 1px, hsla(0deg, 0%, 82%, 0) 0) !important;
+  background-image: linear-gradient(0deg, #29a1f4 2px, rgba(156, 39, 176, 0) 0), linear-gradient(0deg, #f0f2f5 1px, hsla(0deg, 0%, 82%, 0) 0) !important;
 }
 .input-group.input-group-dynamic .input-group-text, .input-group.input-group-static .input-group-text, .pg-input-group .input-group-text {
   border-right: 0;
@@ -18747,7 +18747,7 @@ body.dark-version {
   top: -0.7rem;
 }
 .input-group.input-group-dynamic.is-focused label, .input-group.input-group-static.is-focused label, .is-focused.pg-input-group label {
-  color: #e91e63;
+  color: #29a1f4;
 }
 .input-group.input-group-dynamic.is-focused.is-valid label, .input-group.input-group-static.is-focused.is-valid label, .is-focused.is-valid.pg-input-group label {
   color: #4CAF50;
@@ -19078,7 +19078,7 @@ label,
 }
 
 .footer .nav-link {
-  color: #344767;
+  color: #ccc;
   font-weight: 400;
   font-size: 0.875rem;
   padding-top: 0;
@@ -21952,6 +21952,7 @@ p {
   padding: 2em;
   width: 100%;
   border-radius: 0.3em;
+  background-color: #343a40 !important;
 }
 .app-card:not(.notification) {
   background-color: white;
