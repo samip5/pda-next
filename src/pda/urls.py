@@ -41,7 +41,7 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
     path("users/", include("apps.users.urls")),
     path("admin/", include("apps.pdaAdmin.urls")),
-    path("dns/", include("apps.dns.urls")),
+    path("dns/", include("apps.pdadns.urls")),
     path("", include("apps.web.urls")),
     # API endpoints
     path("api/pdadns/", include("apps.pdadns.urls")),

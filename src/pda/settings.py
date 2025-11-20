@@ -120,8 +120,6 @@ PROJECT_APPS = [
     "apps.users.apps.UserConfig",
     "apps.api.apps.APIConfig",
     "apps.web",
-    "apps.dns",
-    "apps.pdaAdmin"
     "apps.pdadns.apps.DNSConfig",
 ]
 
