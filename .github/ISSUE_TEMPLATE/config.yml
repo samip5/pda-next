@@ -1,6 +1,6 @@
 ---
 # Reference: https://help.github.com/en/github/building-a-strong-community/configuring-issue-templates-for-your-repository#configuring-the-template-chooser
-blank_issues_enabled: false
+blank_issues_enabled: true
 contact_links:
   - name: 📖 Contribution Guide
     url: https://github.com/PowerDNS-Admin/pda-next/blob/main/docs/wiki/contributing/README.md
@@ -8,6 +8,3 @@ contact_links:
   - name: ❓ Discussion
     url: https://github.com/PowerDNS-Admin/pda-next/discussions
     about: "If you're just looking for help, try starting a discussion instead"
-  - name: 💬 Discord Server
-    url: https://discord.powerdnsadmin.org
-    about: "Join our Discord server to discuss the project with other users and developers"
