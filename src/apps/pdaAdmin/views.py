@@ -20,7 +20,19 @@ def settings(request):
         request,
         "admin/settings.html",
         {
-            "active_tab": "admin_settings",
+            "active_tab": "pda_settings",
             "page_title": _("Settings"),
+            "settings": {}
+        },
+    )
+@login_required
+def accounts(request):
+    return render(
+        request,
+        "admin/accounts.html",
+        {
+            "active_tab": "pda_accounts",
+            "page_title": _("Accounts"),
+            "accounts": {}
         },
     )
