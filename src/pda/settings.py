@@ -120,7 +120,7 @@ PROJECT_APPS = [
     "apps.users.apps.UserConfig",
     "apps.api.apps.APIConfig",
     "apps.web",
-    "apps.pdadns.apps.DNSConfig",
+    "apps.api.dns.apps.DNSConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS

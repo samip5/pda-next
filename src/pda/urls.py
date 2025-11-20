@@ -44,7 +44,7 @@ urlpatterns = [
     path("dns/", include("apps.pdadns.urls")),
     path("", include("apps.web.urls")),
     # API endpoints
-    path("api/pdadns/", include("apps.pdadns.urls")),
+    path("api/v1/dns/", include("apps.api.dns.urls")),
     # API docs
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     # Optional UI - you may wish to remove one of these depending on your preference

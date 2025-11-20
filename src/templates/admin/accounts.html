@@ -4,6 +4,30 @@
 {% block app %}
 <section class="app-card">
     <h1 class="pg-title">Accounts</h1>
-
+    <table class="table text-white text-center">
+      <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Contact</th>
+            <th>Mail</th>
+            <th>Member</th>
+            <th>Zone(s)</th>
+            <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for zone in zones %}
+        <tr>
+            <td>{{ account.name }}<</td>
+            <td>{{ account.description }}</td>
+            <td>{{ account.contact }}</td>
+            <td>{{ account.mail }}</td>
+            <td>{{ account.member }}</td>
+            <td>{{ account.zones }}<</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 </section>
 {% endblock %}

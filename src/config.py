@@ -102,8 +102,8 @@ class AppSettings(BaseSettings):
     use_tz: bool = True
     venv_enabled: bool = False
     venv_path: str | None = 'venv'
-    powerdns_api_url: str = 'http://localhost:8081/api/v1'
-    powerdns_api_key: str = ''
+    powerdns_api_url: str = 'http://172.8.0.20:8081/api/v1'
+    powerdns_api_key: str = 'secret'
     powerdns_api_timeout: int = 30
 
     """ The following settings are automatically loaded at application startup. """
