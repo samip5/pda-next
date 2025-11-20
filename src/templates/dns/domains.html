@@ -19,7 +19,7 @@
       <tbody>
         {% for zone in zones %}
         <tr>
-            <td><a class="text-white" href="/domain/{{ zone.domain }}">{{ zone.domain }}</a></td>
+            <td><a class="text-white" href="/dns/domain/{{ zone.domain }}">{{ zone.domain }}</a></td>
             <td><span class="pg-icon bg-warning p-3 rounded-3"><i class="fa fa-lock"></i></span></td>
             <td>{{ zone.type }}</td>
             <td>{{ zone.primary }}</td>

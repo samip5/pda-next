@@ -1,0 +1,39 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% block app %}
+<section class="app-card">
+  <a class="bg-info px-2 py-2 my-2 rounded-3 text-white" href="/dns/"><span class="pg-icon"><i class="fa fa-arrow-left"></i></span> Back </a>
+  <h1 class="pg-title">Records for {{ id }}</h1>
+  <span class="pg-icon bg-info p-3 rounded-3 text-white"><i class="fa fa-plus"></i></span>
+
+  <table class="table text-white">
+      <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>TTL</th>
+            <th>Data</th>
+            <th>Comments</th>
+            <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rrset in rrsets %}
+        <tr>
+            <td>{{ rrset.name }}</td>
+            <td>{{ rrset.type }}</td>
+            <td>{{ rrset.status }}</td>
+            <td>{{ rrset.ttl }}</td>
+            <td>{{ rrset.data }}</td>
+            <td></td>
+            <td>
+                <span class="pg-icon bg-danger p-3 rounded-3 text-white"><i class="fa fa-trash-o"></i></span>
+            </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+  </table>
+</section>
+{% endblock %}
