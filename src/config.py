@@ -1,5 +1,6 @@
 import os
 import yaml
+import logging
 from pathlib import Path
 from pydantic import BaseSettings
 
@@ -11,6 +12,20 @@ SRC_PATH: Path = ROOT_PATH / 'src'
 
 TEMPLATE_PATH: Path = SRC_PATH / 'templates'
 """ The template path of the application which is typically the templates directory within the SRC_PATH. """
+
+logger = logging.getLogger("pda.config")
+# Configure basic logging for config module (before Django's logging is initialized)
+# Django will reconfigure this later when it initializes (disable_existing_loggers=False)
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        '[%(asctime)s] %(levelname)s "%(name)s" %(message)s',
+        datefmt='%d/%b/%Y %H:%M:%S'
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
 
 
 class AppSettings(BaseSettings):
@@ -102,7 +117,7 @@ class AppSettings(BaseSettings):
     use_tz: bool = True
     venv_enabled: bool = False
     venv_path: str | None = 'venv'
-    powerdns_api_url: str = 'http://localhost:8081/api/v1'
+    powerdns_api_url: str = ''
     powerdns_api_key: str = ''
     powerdns_api_timeout: int = 30
 
@@ -124,36 +139,27 @@ def load_settings(env_file_path: str = '/etc/pda/.env', env_file_encoding: str =
         '_env_file_encoding': env_file_encoding,
     }
 
-    os.putenv('PDA_ENV_FILE', env_file_path)
-    os.putenv('PDA_ENV_FILE_ENCODING', env_file_encoding)
+#    os.putenv('PDA_ENV_FILE', env_file_path)
+#    os.putenv('PDA_ENV_FILE_ENCODING', env_file_encoding)
 
-    if secrets_path is not None:
-        valid: bool = True
+    logger.debug(f"Loading config using env file {env_file_path}")
 
-        if not os.path.exists(secrets_path):
-            valid = False
-            print(f'The given path for the "--secrets-dir" option does not exist: {secrets_path}')
-        elif not os.path.isdir(secrets_path):
-            valid = False
-            print(f'The given path for the "--secrets-dir" option is not a directory: {secrets_path}')
-
-        if valid:
-            params['_secrets_dir'] = secrets_path
-            os.putenv('PDA_ENV_SECRETS_DIR', secrets_path)
 
     # Load base app configuration settings from the given environment file and the local environment
     app_settings = AppSettings(**params)
 
+    logger.debug(app_settings)
+
     # Load additional configuration from the given YAML configuration file (if any)
-    if app_settings.config_path is not None:
-        if not app_settings.config_path.startswith('/'):
-            app_settings.config_path = os.path.join(app_settings.root_path, app_settings.config_path)
-        app_settings = load_config(app_settings)
+#    if app_settings.config_path is not None:
+#        if not app_settings.config_path.startswith('/'):
+#            app_settings.config_path = os.path.join(app_settings.root_path, app_settings.config_path)
+#        app_settings = load_config(app_settings)
 
     # Prepend the root path to the database path if it is not an absolute path
-    if isinstance(app_settings.db_path, str) and len(
-            app_settings.db_path.strip()) and not app_settings.db_path.startswith('/'):
-        app_settings.db_path = str(os.path.join(app_settings.root_path, app_settings.db_path))
+#    if isinstance(app_settings.db_path, str) and len(
+#            app_settings.db_path.strip()) and not app_settings.db_path.startswith('/'):
+#        app_settings.db_path = str(os.path.join(app_settings.root_path, app_settings.db_path))
 
     return app_settings
 

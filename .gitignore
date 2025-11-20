@@ -9,6 +9,7 @@
 .env.local
 .env.production
 .idea
+db.sqlite3
 conf/config.yml
 docs/_build
 venv

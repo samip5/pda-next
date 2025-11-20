@@ -49,8 +49,23 @@ INTERNAL_IPS = [
 ]
 
 # Add more verbose logging in development
-LOGGING['loggers']['django']['level'] = 'DEBUG'
+#LOGGING['loggers']['django']['level'] = 'DEBUG'
 LOGGING['loggers']['pda']['level'] = 'DEBUG'
+
+# Add a console handler without debug filter for config logger
+# (needed because config.py is imported before Django's DEBUG is set)
+LOGGING['handlers']['console_config'] = {
+    'class': 'logging.StreamHandler',
+    'formatter': 'verbose',
+    'level': 'DEBUG',
+}
+
+# Explicitly configure pda.config logger for development
+LOGGING['loggers']['pdadns'] = {
+    'handlers': ['console_config'],
+    'level': 'DEBUG',
+    'propagate': False,
+}
 
 # Disable email verification in development for easier testing
 ACCOUNT_EMAIL_VERIFICATION = 'none'
@@ -60,10 +75,10 @@ if settings.secret_key == 'INSECURE-CHANGE-ME-6up8zksTD6mi4N3z3zFk':
     SECRET_KEY = 'dev-secret-key-change-in-production-12345'
 
 # Print SQL queries in development (useful for debugging)
-if DEBUG:
-    LOGGING['loggers']['django.db.backends'] = {
-        'handlers': ['console'],
-        'level': 'DEBUG',
-        'propagate': False,
-    }
+#if DEBUG:
+#    LOGGING['loggers']['django.db.backends'] = {
+#        'handlers': ['console'],
+#        'level': 'DEBUG',
+#        'propagate': False,
+#    }
 
