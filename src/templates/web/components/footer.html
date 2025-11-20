@@ -1,10 +1,6 @@
 {% load i18n %}
 <footer>
   <div class="container text-center py-5">
-    <p>{{project_meta.NAME}} &mdash; {% translate "Copyright" %} <span id="copyright-year">2022</span></p>
-    {% include "web/components/language_select.html" %}
+    <p class="text-white">{{project_meta.NAME}} &mdash; {% translate "Copyright" %} <span id="copyright-year">2025</span></p>
   </div>
 </footer>
-<script>
-    document.getElementById('copyright-year').innerText = (new Date()).getFullYear();
-</script>

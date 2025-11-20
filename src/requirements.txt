@@ -24,7 +24,7 @@ certifi==2022.12.7
     # via
     #   requests
     #   sentry-sdk
-cffi==1.15.1
+cffi==2.0.0
     # via cryptography
 charset-normalizer==3.0.1
     # via requests
@@ -89,7 +89,7 @@ oauthlib==3.2.2
     # via requests-oauthlib
 prompt-toolkit==3.0.38
     # via click-repl
-psycopg2-binary==2.9.5
+psycopg2-binary==2.9.11
     # via -r requirements.in
 pycparser==2.21
     # via cffi
@@ -105,7 +105,7 @@ pytz==2022.7.1
     # via
     #   celery
     #   djangorestframework
-pyyaml==6.0
+pyyaml==6.0.3
     # via drf-spectacular
 qrcode==7.4.2
     # via django-allauth-2fa
