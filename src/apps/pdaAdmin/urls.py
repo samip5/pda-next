@@ -2,8 +2,8 @@ from django.urls import path
 
 from . import views
 
-app_name = "pda-admin"
+app_name = "pdaAdmin"
 urlpatterns = [
-    path("", views.profile, name="dashboard"),
+    path("", views.dashboard, name="dashboard"),
     path("settings/", views.settings, name="settings")
 ]

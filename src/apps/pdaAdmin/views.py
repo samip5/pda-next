@@ -1,12 +1,10 @@
-from allauth.socialaccount.models import SocialAccount
-from allauth_2fa.utils import user_has_valid_totp_device
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
 
 
 @login_required
-def profile(request):
+def dashboard(request):
     return render(
         request,
         "admin/test.html",

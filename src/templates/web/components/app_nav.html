@@ -9,9 +9,25 @@
   <hr class="horizontal light mt-0 mb-2">
   <div class="collapse navbar-collapse  w-auto  max-height-vh-100" id="sidenav-collapse-main">
     <ul class="navbar-nav">
+      <li class="nav-item mt-3">
+        <h6 class="ps-4 ms-2 text-uppercase text-xs text-white font-weight-bolder opacity-8">{% translate "Domain Management" %}</h6>
+      </li>
       <li class="nav-item">
-        <a href="{% url 'web:home' %}" class="nav-link {% if active_tab == 'dashboard' %}active{% endif %}">
-          <span class="pg-icon"><i class="fa fa-home"></i></span><span>{% translate "Dashboard" %}</span>
+        <a href="{% url 'dns:domains' %}" class="nav-link {% if active_tab == 'domains' %}active{% endif %}">
+          <span class="pg-icon"><i class="fa fa-globe"></i></span><span>{% translate "Domains" %}</span>
+        </a>
+      </li>
+      <li class="nav-item mt-3">
+        <h6 class="ps-4 ms-2 text-uppercase text-xs text-white font-weight-bolder opacity-8">{% translate "Admin area" %}</h6>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'pdaAdmin:dashboard' %}" class="nav-link {% if active_tab == 'admin_dash' %}active{% endif %}">
+          <span class="pg-icon"><i class="fa fa-shield"></i></span><span>{% translate "Admin Dashboard" %}</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="/djadmin" class="nav-link {% if active_tab == 'djadmin' %}active{% endif %}">
+          <span class="pg-icon"><i class="fa fa-cog"></i></span><span>{% translate "Django Admin" %}</span>
         </a>
       </li>
       <li class="nav-item mt-3">
@@ -33,19 +49,6 @@
         <a href="{% url 'account_logout' %}"
            class="nav-link {% if 'accounts/logout' in request.path %}active{% endif %}">
           <span class="pg-icon"><i class="fa fa-sign-out"></i></span><span>{% translate "Sign out" %}</span>
-        </a>
-      </li>
-      <li class="nav-item mt-3">
-        <h6 class="ps-4 ms-2 text-uppercase text-xs text-white font-weight-bolder opacity-8">{% translate "Admin area" %}</h6>
-      </li>
-      <li class="nav-item">
-        <a href="{% url 'pda-admin:dashboard' %}" class="nav-link {% if active_tab == 'admin_dash' %}active{% endif %}">
-          <span class="pg-icon"><i class="fa fa-shield"></i></span><span>{% translate "Admin Dashboard" %}</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="/djadmin" class="nav-link {% if active_tab == 'djadmin' %}active{% endif %}">
-          <span class="pg-icon"><i class="fa fa-cog"></i></span><span>{% translate "Django Admin" %}</span>
         </a>
       </li>
     </ul>

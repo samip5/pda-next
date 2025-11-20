@@ -40,7 +40,8 @@ urlpatterns = [
     path("accounts/", include("allauth_2fa.urls")),
     path("accounts/", include("allauth.urls")),
     path("users/", include("apps.users.urls")),
-    path("admin/", include("apps.pda-admin.urls")),
+    path("admin/", include("apps.pdaAdmin.urls")),
+    path("dns/", include("apps.dns.urls")),
     path("", include("apps.web.urls")),
     # API docs
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
