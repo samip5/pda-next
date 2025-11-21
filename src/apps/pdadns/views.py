@@ -2,10 +2,13 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
+from rest_framework.exceptions import ValidationError
 
+from apps.api.dns.client import PowerDNSError
 from apps.api.dns.models import Zone, Record
 from apps.api.dns.serializers import ZoneSerializer, RecordSerializer
 from apps.api.dns.services import PowerDNSService
+from django.contrib import messages
 
 """
 Frontend Views
@@ -45,9 +48,87 @@ def domains(request):
 @login_required
 def domain(request, id):
     zone_name = id
+    if not zone_name.endswith('.'):
+        zone_name = f"{zone_name}."
 
     service = PowerDNSService()
     powerdns_zone = service.get_zone(zone_name)
+
+    # Try to get zone from database
+    zone = Zone.objects.filter(name=zone_name).first()
+
+    # If zone doesn't exist in DB, try to fetch from PowerDNS
+    if not zone:
+        powerdns_zone = service.get_zone(zone_name)
+
+        if not powerdns_zone:
+            messages.add_message(request, messages.ERROR, f"Internal Error")
+            raise Exception("Internal Error")
+        # Create zone in database for reference
+        zone = Zone.objects.create(
+            name=zone_name,
+            kind=powerdns_zone.get('kind', Zone.ZONE_KIND_NATIVE),
+            nameservers=powerdns_zone.get('nameservers', []),
+            server_id=powerdns_zone.get('server_id', 'localhost'),
+            account=powerdns_zone.get('account', ''),
+            dnssec=powerdns_zone.get('dnssec', ''),
+            powerdns_id=powerdns_zone.get('id')
+        )
+
+    if request.method == "POST":
+        if request.POST.get('formName') == "createForm":
+            recordCreate = Record(
+                zone=zone,
+                name=request.POST.get('name'),
+                record_type=request.POST.get('record_type'),
+                content=request.POST.get('content'),
+                ttl=request.POST.get('ttl', '3600'),
+                disabled=False,
+            )
+            try:
+                recordCreate.full_clean()
+            except ValidationError as e:
+                messages.add_message(request, messages.WARNING, f"{e}")
+
+            try:
+                service.create_record(zone.name, recordCreate.name, recordCreate.record_type, recordCreate.content, recordCreate.ttl)
+            except Exception as e:
+                messages.add_message(request, messages.WARNING, f"{e}")
+        elif request.POST.get('formName') == "editForm":
+            recordEdit = Record(
+                zone=zone,
+                name=request.POST.get('name'),
+                record_type=request.POST.get('record_type'),
+                content=request.POST.get('content'),
+                ttl=request.POST.get('ttl', '3600'),
+                disabled=False,
+            )
+            oldRecord = Record(
+                zone=zone,
+                name=request.POST.get('old_name'),
+                record_type=request.POST.get('old_record_type'),
+                content=request.POST.get('old_content'),
+                ttl=request.POST.get('old_ttl', '3600'),
+                disabled=False,
+            )
+            try:
+                recordEdit.full_clean()
+            except ValidationError as e:
+                messages.add_message(request, messages.WARNING, f"{e}")
+            if oldRecord.name == recordEdit.name and oldRecord.record_type == recordEdit.record_type:
+                try:
+                    service.update_record(zone.name, recordEdit.name, recordEdit.record_type, request.POST.get('old_content'), recordEdit.content)
+                    messages.add_message(request, messages.SUCCESS, f"Record {recordEdit.name} {recordEdit.record_type} updated")
+                except PowerDNSError as e:
+                    messages.add_message(request, messages.WARNING, f"{e}")
+            elif oldRecord.name != recordEdit.name or oldRecord.record_type != recordEdit.record_type:
+                try:
+                    service.delete_record(zone.name, oldRecord.name, oldRecord.record_type, oldRecord.content)
+                    service.create_record(zone.name, recordEdit.name, recordEdit.record_type, recordEdit.content, recordEdit.ttl)
+                    messages.add_message(request, messages.SUCCESS, f"Record {recordEdit.name} {recordEdit.record_type} updated")
+                except PowerDNSError as e:
+                    messages.add_message(request, messages.WARNING, f"{e}")
+
 
     powerdns_records = service.get_records(zone_name)
 
