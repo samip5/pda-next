@@ -3,7 +3,7 @@ import logging
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 
 from .models.record import Record
 from .models.zone import Zone
@@ -151,77 +151,115 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
             resp = service.delete_zone(zone_name=zone_name)
             return Response(resp)
 
-    @action(detail=False, methods=['get'], url_path='zones/(?P<zone_name>[^/]+)/records')
+    @action(detail=False, methods=['get', 'post'], url_path='zones/(?P<zone_name>[^/]+)/records')
     def zone_records(self, request, zone_name=None):
-        """
-        Get all records for a specific zone by zone name.
+        if request.method == 'GET':
+            """
+            Get all records for a specific zone by zone name.
 
-        This endpoint fetches records from PowerDNS API on-demand and
-        returns them. If the zone doesn't exist in the database, it will
-        attempt to fetch from PowerDNS.
-        """
-        # Ensure zone name has trailing dot
-        if not zone_name.endswith('.'):
-            zone_name = f"{zone_name}."
+            This endpoint fetches records from PowerDNS API on-demand and
+            returns them. If the zone doesn't exist in the database, it will
+            attempt to fetch from PowerDNS.
+            """
+            # Ensure zone name has trailing dot
+            if not zone_name.endswith('.'):
+                zone_name = f"{zone_name}."
 
-        # Try to get zone from database
-        zone = Zone.objects.filter(name=zone_name).first()
+            # Try to get zone from database
+            zone = Zone.objects.filter(name=zone_name).first()
 
-        # If zone doesn't exist in DB, try to fetch from PowerDNS
-        if not zone:
+            # If zone doesn't exist in DB, try to fetch from PowerDNS
+            if not zone:
+                service = PowerDNSService()
+                powerdns_zone = service.get_zone(zone_name)
+
+                if not powerdns_zone:
+                    raise NotFound(f"Zone '{zone_name}' not found")
+
+                # Create zone in database for reference
+                zone = Zone.objects.create(
+                    name=zone_name,
+                    kind=powerdns_zone.get('kind', Zone.ZONE_KIND_NATIVE),
+                    nameservers=powerdns_zone.get('nameservers', []),
+                    server_id=powerdns_zone.get('server_id', 'localhost'),
+                    account=powerdns_zone.get('account', ''),
+                    dnssec=powerdns_zone.get('dnssec', ''),
+                    powerdns_id=powerdns_zone.get('id')
+                )
+
+            # Fetch records from PowerDNS
             service = PowerDNSService()
-            powerdns_zone = service.get_zone(zone_name)
+            powerdns_records = service.get_records(zone_name, zone.server_id)
 
-            if not powerdns_zone:
-                raise NotFound(f"Zone '{zone_name}' not found")
+            # Convert PowerDNS record format to Record model instances (not saved)
+            record_instances = []
+            for rrset in powerdns_records:
+                rrset_name = rrset.get('name', '')
+                rrset_type = rrset.get('type', '')
+                rrset_ttl = rrset.get('ttl', 3600)
 
-            # Create zone in database for reference
-            zone = Zone.objects.create(
-                name=zone_name,
-                kind=powerdns_zone.get('kind', Zone.ZONE_KIND_NATIVE),
-                nameservers=powerdns_zone.get('nameservers', []),
-                server_id=powerdns_zone.get('server_id', 'localhost'),
-                account=powerdns_zone.get('account', ''),
-                dnssec=powerdns_zone.get('dnssec', ''),
-                powerdns_id=powerdns_zone.get('id')
+                for record_data in rrset.get('records', []):
+                    content = record_data.get('content', '')
+                    disabled = record_data.get('disabled', False)
+
+                    # Normalize name (remove zone suffix if present)
+                    normalized_name = rrset_name
+                    if normalized_name.endswith('.'):
+                        normalized_name = normalized_name.rstrip('.')
+                    zone_name_clean = zone_name.rstrip('.')
+                    if normalized_name == zone_name_clean:
+                        normalized_name = '@'
+                    elif normalized_name.endswith(f".{zone_name_clean}"):
+                        normalized_name = normalized_name[:-len(f".{zone_name_clean}")]
+
+                    # Create Record instance in memory (not saved to DB)
+                    record = Record(
+                        zone=zone,
+                        name=normalized_name,
+                        record_type=rrset_type,
+                        content=content,
+                        ttl=rrset_ttl,
+                        disabled=disabled,
+                    )
+                    record_instances.append(record)
+
+            serializer = RecordSerializer(record_instances, many=True)
+            return Response(serializer.data)
+        elif request.method == 'POST':
+            service = PowerDNSService()
+            if not zone_name.endswith('.'):
+                zone_name = f"{zone_name}."
+
+            zone = Zone.objects.filter(name=zone_name).first()
+            if not zone:
+                powerdns_zone = service.get_zone(zone_name)
+
+                if not powerdns_zone:
+                    raise NotFound(f"Zone '{zone_name}' not found")
+
+                # Create zone in database for reference
+                zone = Zone.objects.create(
+                    name=zone_name,
+                    kind=powerdns_zone.get('kind', Zone.ZONE_KIND_NATIVE),
+                    nameservers=powerdns_zone.get('nameservers', []),
+                    server_id=powerdns_zone.get('server_id', 'localhost'),
+                    account=powerdns_zone.get('account', ''),
+                    dnssec=powerdns_zone.get('dnssec', ''),
+                    powerdns_id=powerdns_zone.get('id')
+                )
+
+            record = Record(
+                zone=zone,
+                name=request.data.get('name'),
+                record_type=request.data.get('record_type'),
+                content=request.data.get('content'),
+                ttl=request.data.get('ttl', '3600'),
+                disabled=request.data.get('disabled', 'false'),
             )
 
-        # Fetch records from PowerDNS
-        service = PowerDNSService()
-        powerdns_records = service.get_records(zone_name, zone.server_id)
-
-        # Convert PowerDNS record format to Record model instances (not saved)
-        record_instances = []
-        for rrset in powerdns_records:
-            rrset_name = rrset.get('name', '')
-            rrset_type = rrset.get('type', '')
-            rrset_ttl = rrset.get('ttl', 3600)
-
-            for record_data in rrset.get('records', []):
-                content = record_data.get('content', '')
-                disabled = record_data.get('disabled', False)
-
-                # Normalize name (remove zone suffix if present)
-                normalized_name = rrset_name
-                if normalized_name.endswith('.'):
-                    normalized_name = normalized_name.rstrip('.')
-                zone_name_clean = zone_name.rstrip('.')
-                if normalized_name == zone_name_clean:
-                    normalized_name = '@'
-                elif normalized_name.endswith(f".{zone_name_clean}"):
-                    normalized_name = normalized_name[:-len(f".{zone_name_clean}")]
-
-                # Create Record instance in memory (not saved to DB)
-                record = Record(
-                    zone=zone,
-                    name=normalized_name,
-                    record_type=rrset_type,
-                    content=content,
-                    ttl=rrset_ttl,
-                    disabled=disabled,
-                )
-                record_instances.append(record)
-
-        serializer = RecordSerializer(record_instances, many=True)
-        return Response(serializer.data)
-
+            try:
+                record.full_clean()
+            except ValidationError as e:
+                return Response(400, "Error Validating record")
+            service.create_record(zone.name, record.name, record.record_type, record.content, record.ttl)
+            return Response(RecordSerializer(record).data)
