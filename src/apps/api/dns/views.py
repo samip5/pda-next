@@ -265,7 +265,7 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(RecordSerializer(record).data)
 
     @action(detail=False, methods=['get', 'post', 'delete'], url_path='zones/(?P<zone_name>[^/]+)/dnssec')
-    def zone_records(self, request, zone_name=None):
+    def dnssec(self, request, zone_name=None):
         service = PowerDNSService()
         if request.method == 'GET':
             # Ensure zone name has trailing dot
