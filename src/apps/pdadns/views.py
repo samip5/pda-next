@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
 from apps.api.dns.client import PowerDNSError
+from apps.api.dns.helpers import recordUpdateHelper
 from apps.api.dns.models import Zone, Record
 from apps.api.dns.serializers import ZoneSerializer, RecordSerializer
 from apps.api.dns.services import PowerDNSService
@@ -95,7 +96,7 @@ def domain(request, id):
             except Exception as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
         elif request.POST.get('formName') == "editForm":
-            recordEdit = Record(
+            newRecord = Record(
                 zone=zone,
                 name=request.POST.get('name'),
                 record_type=request.POST.get('record_type'),
@@ -112,23 +113,15 @@ def domain(request, id):
                 disabled=False,
             )
             try:
-                recordEdit.full_clean()
+                newRecord.full_clean()
+                oldRecord.full_clean()
             except ValidationError as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
-            if oldRecord.name == recordEdit.name and oldRecord.record_type == recordEdit.record_type:
-                try:
-                    service.update_record(zone.name, recordEdit.name, recordEdit.record_type, request.POST.get('old_content'), recordEdit.content)
-                    messages.add_message(request, messages.SUCCESS, f"Record {recordEdit.name} {recordEdit.record_type} updated")
-                except PowerDNSError as e:
-                    messages.add_message(request, messages.WARNING, f"{e}")
-            elif oldRecord.name != recordEdit.name or oldRecord.record_type != recordEdit.record_type:
-                try:
-                    service.delete_record(zone.name, oldRecord.name, oldRecord.record_type, oldRecord.content)
-                    service.create_record(zone.name, recordEdit.name, recordEdit.record_type, recordEdit.content, recordEdit.ttl)
-                    messages.add_message(request, messages.SUCCESS, f"Record {recordEdit.name} {recordEdit.record_type} updated")
-                except PowerDNSError as e:
-                    messages.add_message(request, messages.WARNING, f"{e}")
-
+            try:
+                updated = recordUpdateHelper(zone.name, oldRecord, newRecord)
+                messages.add_message(request, messages.SUCCESS, f"{updated}")
+            except Exception as e:
+                messages.add_message(request, messages.WARNING, f"{e}")
 
     powerdns_records = service.get_records(zone_name)
 
