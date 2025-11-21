@@ -115,7 +115,7 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
 
             return Response(resp)
 
-    @action(detail=False, methods=['get', 'delete'], url_path='zones/(?P<zone_name>[^/]+)')
+    @action(detail=False, methods=['get', 'post', 'delete'], url_path='zones/(?P<zone_name>[^/]+)')
     def zone(self, request, zone_name=None):
         """
         Get zone.
@@ -124,29 +124,39 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
         returns them. If the zone doesn't exist in the database, it will
         attempt to fetch from PowerDNS.
         """
+        if not zone_name.endswith('.'):
+            zone_name = f"{zone_name}."
+
+        service = PowerDNSService()
+        powerdns_zone = service.get_zone(zone_name)
+
+        if not powerdns_zone:
+            raise NotFound(f"Zone '{zone_name}' not found")
+
+        # Convert PowerDNS record format to Record model instances (not saved)
+
+        zone = Zone(
+            name=powerdns_zone.get('name', ''),
+            kind=powerdns_zone.get('kind', Zone.ZONE_KIND_NATIVE),
+            nameservers=powerdns_zone.get('nameservers', []),
+            server_id=powerdns_zone.get('server_id', 'localhost'),
+            powerdns_id=powerdns_zone.get('id'),
+            account=powerdns_zone.get('account', ''),
+            dnssec=powerdns_zone.get('dnssec', '')
+        )
         if request.method == 'GET':
-            if not zone_name.endswith('.'):
-                zone_name = f"{zone_name}."
-
-            service = PowerDNSService()
-            powerdns_zone = service.get_zone(zone_name)
-
-            if not powerdns_zone:
-                raise NotFound(f"Zone '{zone_name}' not found")
-
-            # Convert PowerDNS record format to Record model instances (not saved)
-
-            zone = Zone(
-                name=powerdns_zone.get('name', ''),
-                kind=powerdns_zone.get('kind', Zone.ZONE_KIND_NATIVE),
-                nameservers=powerdns_zone.get('nameservers', []),
-                server_id=powerdns_zone.get('server_id', 'localhost'),
-                powerdns_id=powerdns_zone.get('id'),
-                account=powerdns_zone.get('account', ''),
-                dnssec=powerdns_zone.get('dnssec', '')
-            )
             serializer = ZoneSerializer(zone, many=False)
             return Response(serializer.data)
+        elif request.method == 'POST':
+            updatedZone = Zone(
+                name=zone.name,
+                account=request.data.get('account', zone.account),
+                nameservers=request.data.get('nameservers', zone.nameservers),
+                dnssec=request.data.get('dnssec', zone.dnssec)
+            )
+
+            resp = service.update_zone(zone_name=zone_name, account=updatedZone.account, nameservers=updatedZone.nameservers, dnssec=updatedZone.dnssec)
+            return Response(resp)
         elif request.method == 'DELETE':
             service = PowerDNSService()
             resp = service.delete_zone(zone_name=zone_name)
