@@ -264,64 +264,11 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
             service.create_record(zone.name, record.name, record.record_type, record.content, record.ttl)
             return Response(RecordSerializer(record).data)
 
-    @action(detail=False, methods=['get', 'post', 'delete'], url_path='zones/(?P<zone_name>[^/]+)/dnssec')
+    @action(detail=False, methods=['post', 'delete'], url_path='zones/(?P<zone_name>[^/]+)/dnssec')
     def dnssec(self, request, zone_name=None):
         service = PowerDNSService()
-        if request.method == 'GET':
-            # Ensure zone name has trailing dot
-            if not zone_name.endswith('.'):
-                zone_name = f"{zone_name}."
-
-            # Try to get zone from database
-            zone = Zone.objects.filter(name=zone_name).first()
-
-            # If zone doesn't exist in DB, try to fetch from PowerDNS
-            if not zone:
-                powerdns_zone = service.get_zone(zone_name)
-
-                if not powerdns_zone:
-                    raise NotFound(f"Zone '{zone_name}' not found")
-
-                # Create zone in database for reference
-                zone = Zone.objects.create(
-                    name=zone_name,
-                    kind=powerdns_zone.get('kind', Zone.ZONE_KIND_NATIVE),
-                    nameservers=powerdns_zone.get('nameservers', []),
-                    server_id=powerdns_zone.get('server_id', 'localhost'),
-                    account=powerdns_zone.get('account', ''),
-                    dnssec=powerdns_zone.get('dnssec', ''),
-                    powerdns_id=powerdns_zone.get('id')
-                )
-            service.dnssec_records(zone.name)
-
-            return Response('')
-        elif request.method == 'POST':
-            # Ensure zone name has trailing dot
-            if not zone_name.endswith('.'):
-                zone_name = f"{zone_name}."
-
-            # Try to get zone from database
-            zone = Zone.objects.filter(name=zone_name).first()
-
-            # If zone doesn't exist in DB, try to fetch from PowerDNS
-            if not zone:
-                powerdns_zone = service.get_zone(zone_name)
-
-                if not powerdns_zone:
-                    raise NotFound(f"Zone '{zone_name}' not found")
-
-                # Create zone in database for reference
-                zone = Zone.objects.create(
-                    name=zone_name,
-                    kind=powerdns_zone.get('kind', Zone.ZONE_KIND_NATIVE),
-                    nameservers=powerdns_zone.get('nameservers', []),
-                    server_id=powerdns_zone.get('server_id', 'localhost'),
-                    account=powerdns_zone.get('account', ''),
-                    dnssec=powerdns_zone.get('dnssec', ''),
-                    powerdns_id=powerdns_zone.get('id')
-                )
-            resp = service.dnssec_keys(zone.name)
-
+        if request.method == 'POST':
+            resp = service.dnssec_keys(zone_name)
             return Response(resp)
         elif request.method == 'DELETE':
             resp = service.disable_dnssec(zone_name)
