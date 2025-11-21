@@ -247,3 +247,26 @@ class PowerDNSService:
         except PowerDNSError as e:
             logger.error(f"Failed to delete record {name} {record_type} from zone {zone_name}: {e}")
             return None
+
+    def dnssec_keys(
+        self,
+        zone_name: str,
+        keytype: str = 'ksk',
+        server_id: str = 'localhost'
+    ):
+        try:
+            return self.client.dnssec_keys(zone_name, keytype, server_id)
+        except PowerDNSError as e:
+            logger.error(f"Failed to create dnssec keys ({keytype}) for zone {zone_name}: {e}")
+            return None
+
+    def disable_dnssec(
+        self,
+        zone_name: str,
+        server_id: str = 'localhost'
+    ):
+        try:
+            return self.client.disable_DNSSEC(zone_name, server_id)
+        except PowerDNSError as e:
+            logger.error(f"Failed to disable dnssec for zone {zone_name}: {e}")
+            return None
