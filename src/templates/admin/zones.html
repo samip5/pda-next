@@ -1,0 +1,92 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% block app %}
+<section class="app-card">
+  <h1 class="pg-title">Zones</h1>
+<button class="btn btn-info p-2" data-bs-toggle="modal" data-bs-target="#zoneCreateModal">
+  <span class="pg-icon"><i class="fa fa-plus"></i></span>
+</button>
+    <div class="modal fade" id="zoneCreateModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content bg-gray-800">
+
+          <div class="modal-header">
+            <h5 class="modal-title">Create DNS Record</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            {{ message }}
+                <form class="d-flex flex-column" method="post">
+                    {% csrf_token %}
+                    <div class="mb-3 input-group input-group-static">
+                        <label class="text-white" for="name">Name</label>
+                        <input id="name" name="name" class="form-control" type="text" value="{{ zone.name }}">
+                    </div>
+
+                    <div class="mb-3 input-group input-group-static">
+                        <label class="text-white" for="account">Account</label>
+                        <select id="account" name="account" class="form-control">
+                            {% for account in accounts %}
+                                <option value="{{ account.id }}">{{ account.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3 input-group input-group-static">
+                        <label class="text-white" for="name">DNSSEC</label>
+                        <input disabled id="name" name="name" class="form-control" type="text" value="false" >
+                    </div>
+                    <input class="btn btn-info w-100" type="submit" value="{% translate "Save" %}">
+                </form>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  <table class="table text-white text-center">
+      <thead>
+        <tr>
+            <th>Name</th>
+            <th>DNSSEC</th>
+            <th>Type</th>
+            <th>Primary</th>
+            <th>Account</th>
+            <th>Serial</th>
+            <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for zone in zones %}
+        <tr>
+            <td><a class="text-white" href="/admin/zones/{{ zone.name }}">{{ zone.name }}</a></td>
+            <td>{% if zone.dnssec %}
+                <span class="pg-icon bg-success p-3 rounded-3"><i class="fa fa-lock"></i></span>
+                {% else %}
+                <span class="pg-icon bg-danger p-3 rounded-3"><i class="fa fa-lock"></i></span>
+                {% endif %}
+            </td>
+            <td>{{ zone.kind }}</td>
+            <td></td>
+            <td>{{ zone.account }}</td>
+            <td></td>
+            <td>
+                <a href="/admin/zones/{{ zone.name }}" class="btn btn-warning py-1 px-2">
+                    <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
+                </a>
+                <button class="btn btn-danger py-1 px-2">
+                    <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+  </table>
+</section>
+{% endblock %}

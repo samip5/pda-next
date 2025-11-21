@@ -88,14 +88,14 @@
             <td>{{ record.content }}</td>
             <td>{{ record.comments }}</td>
             <td>
-                <button class="btn btn-danger py-1 px-2">
-                    <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
-                </button>
                 {% if record.record_type != "SOA" %}
                 <button class="btn btn-warning py-1 px-2" onclick="openEdit('{{ record.name }}-{{ record.record_type }}')">
                     <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
                 </button>
                 {% endif %}
+                <button class="btn btn-danger py-1 px-2">
+                    <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
+                </button>
             </td>
         </tr>
         <tr id="edit-{{ record.name }}-{{ record.record_type }}" class="record-edit">

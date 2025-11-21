@@ -37,6 +37,12 @@
           <span class="pg-icon"><i class="fa fa-user"></i></span><span>{% translate "Accounts" %}</span>
         </a>
       </li>
+      <li class="nav-item">
+        <a href="{% url 'pdaAdmin:zones' %}" class="nav-link {% if active_tab == 'admin_zones' %}active{% endif %}">
+          <span class="pg-icon"><i class="fa fa-globe"></i></span><span>{% translate "Zones" %}</span>
+        </a>
+      </li>
+
 
       <li class="nav-item mt-3">
         <h6 class="ps-4 ms-2 text-uppercase text-xs text-white font-weight-bolder opacity-8">{% translate "Account pages" %}</h6>

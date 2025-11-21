@@ -1,0 +1,57 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% block app %}
+<section class="app-card">
+  <h1 class="pg-title">Zones</h1>
+    <div class="pg-columns">
+        <div class="pg-column-one-third">
+            <form class="d-flex flex-column" method="post">
+                {% csrf_token %}
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="name">Name</label>
+                    <input id="name" name="name" class="form-control" type="text" value="{{ zone.name }}" disabled >
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="account">Account</label>
+                    <select id="account" name="account" class="form-control">
+                        {% for account in accounts %}
+                            <option value="{{ account.id }}" {% if account.id_str == zone.account %}selected{% endif %}>{{ account.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="name">DNSSEC</label>
+                    <input disabled id="name" name="name" class="form-control" type="text" value="{{ zone.dnssec }}" >
+                </div>
+                <input class="btn btn-info w-100" type="submit" value="{% translate "Save" %}">
+            </form>
+        </div>
+        <div class="pg-column">
+            <table class="text-white text-center">
+                <thead>
+                  <tr class="text-lg">
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>TTL</th>
+                      <th>Data</th>
+                      <th>Comments</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for record in records %}
+                  <tr class="border-top my-2 text-lg" id="show-{{ record.name }}-{{ record.record_type }}">
+                      <td class="px-4 py-2 border-1">{{ record.name }}</td>
+                      <td class="px-4 py-2 border-1">{{ record.record_type }}</td>
+                      <td class="px-4 py-2 border-1">{{ record.ttl }}</td>
+                      <td class="px-4 py-2 border-1">{{ record.content }}</td>
+                      <td class="px-4 py-2 border-1">{{ record.comments }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
