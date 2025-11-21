@@ -5,6 +5,10 @@ from rest_framework.response import Response
 from .helpers import updateAccount
 from .models.account import Account
 from .serializers import AccountSerializer
+from ..dns.models import Zone
+from ..dns.serializers import ZoneSerializer
+from ..dns.services import PowerDNSService
+
 
 class AccountViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -35,7 +39,6 @@ class AccountViewSet(viewsets.ReadOnlyModelViewSet):
         if request.method == 'GET':
             serializer = AccountSerializer(Account.objects.all(), many=True)
             return Response(serializer.data)
-
         elif request.method == 'POST':
             account_name = request.data.get('name', '')
             account = Account.objects.create(
@@ -61,3 +64,30 @@ class AccountViewSet(viewsets.ReadOnlyModelViewSet):
             account = Account.objects.filter(id=user_id).first()
             account.delete()
             return Response("Account deleted")
+
+
+    @action(detail=False, methods=['get', 'post', 'delete'], url_path='manage/(?P<user_id>[^/]+)/zones')
+    def account_zones(self, request, user_id=None):
+        account = Account.objects.filter(id=user_id).first()
+
+        service = PowerDNSService()
+        powerdns_zones = service.get_zones("localhost")
+
+        # Convert PowerDNS record format to Record model instances (not saved)
+        zone_instances = []
+        for zone in powerdns_zones:
+            zone_a = Zone(
+                name=zone.get('name', ''),
+                kind=zone.get('kind', Zone.ZONE_KIND_NATIVE),
+                nameservers=zone.get('nameservers', []),
+                server_id=zone.get('server_id', 'localhost'),
+                powerdns_id=zone.get('id'),
+                account=zone.get('account', ''),
+                dnssec=zone.get('dnssec', '')
+            )
+            zone_instances.append(zone_a)
+
+        account_zones = [zone for zone in zone_instances if zone.account == account.name]
+
+        serializer = ZoneSerializer(account_zones, many=True)
+        return Response(serializer.data)
