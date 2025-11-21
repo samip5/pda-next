@@ -33,6 +33,25 @@ def settings(request):
 @login_required
 def accounts(request):
     accountList = Account.objects.all()
+    service = PowerDNSService()
+    powerdns_zones = service.get_zones("localhost")
+
+    # Convert PowerDNS record format to Record model instances (not saved)
+    zone_instances = []
+    for zone in powerdns_zones:
+        zone_a = Zone(
+            name=zone.get('name', ''),
+            kind=zone.get('kind', Zone.ZONE_KIND_NATIVE),
+            nameservers=zone.get('nameservers', []),
+            server_id=zone.get('server_id', 'localhost'),
+            powerdns_id=zone.get('id'),
+            account=zone.get('account', ''),
+            dnssec=zone.get('dnssec', '')
+        )
+        zone_instances.append(zone_a)
+    for account in accountList:
+        account.zones = len([zone for zone in zone_instances if zone.account == account.name])
+        account.members = 1
     return render(
         request,
         "admin/accounts.html",
