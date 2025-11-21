@@ -50,7 +50,7 @@ def accounts(request):
         )
         zone_instances.append(zone_a)
     for account in accountList:
-        account.zones = len([zone for zone in zone_instances if zone.account == account.name])
+        account.zones = len([zone for zone in zone_instances if zone.account == str(account.id)])
         account.members = 1
     return render(
         request,
@@ -86,7 +86,7 @@ def account(request, id):
             account=zone.get('account', ''),
             dnssec=zone.get('dnssec', '')
         )
-        if accountElement.name == zone_a.account:
+        if str(accountElement.id) == zone_a.account:
             zone_instances.append(zone_a)
 
     accountElement = Account.objects.filter(id=id).first()

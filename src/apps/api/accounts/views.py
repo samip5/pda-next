@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -87,7 +89,7 @@ class AccountViewSet(viewsets.ReadOnlyModelViewSet):
             )
             zone_instances.append(zone_a)
 
-        account_zones = [zone for zone in zone_instances if zone.account == account.name]
+        account_zones = [zone for zone in zone_instances if zone.account == str(account.id)]
 
         serializer = ZoneSerializer(account_zones, many=True)
         return Response(serializer.data)

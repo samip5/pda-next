@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
+from apps.api.accounts.models import Account
 from apps.api.dns.client import PowerDNSError
 from apps.api.dns.helpers import recordUpdateHelper
 from apps.api.dns.models import Zone, Record
@@ -23,13 +24,16 @@ def domains(request):
     # Convert PowerDNS record format to Record model instances (not saved)
     zone_instances = []
     for zone in powerdns_zones:
+        zone_account = 'None'
+        if Account.objects.filter(id=zone.get('account', '')).first():
+            zone_account = Account.objects.filter(id=zone.get('account', '')).first()
         zone_a = Zone(
             name=zone.get('name', ''),
             kind=zone.get('kind', Zone.ZONE_KIND_NATIVE),
             nameservers=zone.get('nameservers', []),
             server_id=zone.get('server_id', 'localhost'),
             powerdns_id=zone.get('id'),
-            account=zone.get('account', ''),
+            account=zone_account,
             dnssec=zone.get('dnssec', '')
         )
 
