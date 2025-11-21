@@ -17,15 +17,20 @@
         </tr>
       </thead>
       <tbody>
-        {% for zone in zones %}
+        {% for account in accounts %}
         <tr>
-            <td>{{ account.name }}<</td>
+            <td><a class="text-white" href="/admin/accounts/{{ account.id }}">{{ account.name }}</a></td>
             <td>{{ account.description }}</td>
             <td>{{ account.contact }}</td>
             <td>{{ account.mail }}</td>
-            <td>{{ account.member }}</td>
-            <td>{{ account.zones }}<</td>
+            <td></td>
+            <td></td>
+            <td>
+                <span class="pg-icon bg-danger p-3 rounded-3 text-white"><i class="fa fa-trash-o"></i></span>
+                <a href="/admin/accounts/{{ account.id }}"><span class="pg-icon bg-warning p-3 rounded-3 text-white"><i class="fa fa-pencil-square"></i></span></a>
+            </td>
         </tr>
+
         {% endfor %}
       </tbody>
     </table>

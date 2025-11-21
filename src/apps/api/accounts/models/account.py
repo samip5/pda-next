@@ -6,7 +6,7 @@ Represents account that manages zones.
 import uuid
 
 from django.db import models
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, EmailValidator
 
 
 class Account(models.Model):
@@ -51,6 +51,7 @@ class Account(models.Model):
         max_length=255,
         unique=False,
         default='',
+        validators=[EmailValidator(message='Invalid email address')],
         help_text='Mail contact info for account'
     )
 

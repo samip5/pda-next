@@ -1,0 +1,50 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block app %}
+<section class="">
+    <h1 class="pg-title">Account</h1>
+    <a class="bg-info px-2 py-2 my-2 rounded-3 text-white" href="/admin/accounts/"><span class="pg-icon"><i class="fa fa-arrow-left"></i></span> Back </a>
+    <div class="d-flex flex-row gap-4 justify-content-center my-4">
+
+        <div class="pg-column-one-third card bg-gray-800 p-4 m-2">
+            <form class="d-flex flex-column" method="post">
+                {% csrf_token %}
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="name">Name</label>
+                    <input id="name" name="name" class="form-control" type="text" value="{{ account.name }}" >
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="description">Description</label>
+                    <input id="description" name="description" class="form-control" type="text" value="{{ account.description }}" >
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="contact">Contact</label>
+                    <input id="contact" name="contact" class="form-control" type="text" value="{{ account.contact }}" >
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="name">Mail</label>
+                    <input id="mail" name="mail" class="form-control" type="text" value="{{ account.mail }}" >
+                </div>
+
+                <input class="btn btn-info w-100" type="submit" value="{% translate "Save" %}">
+            </form>
+        </div>
+        <div class="pg-column-one-quarter card bg-gray-800 p-4 m-2">
+            <h3 class="pg-title">Zones</h3>
+            <div class="mt-4">
+                <ul class="list-unstyled">
+                    {% for zone in zones %}
+                    <li><a class="text-white bg-gray-700 px-4 py-2 my-2 rounded-3" href="/dns/domain/{{ zone.name }}">{{ zone.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</section>
+{% endblock %}

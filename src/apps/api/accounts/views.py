@@ -2,6 +2,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from .helpers import updateAccount
 from .models.account import Account
 from .serializers import AccountSerializer
 
@@ -51,17 +52,8 @@ class AccountViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(serializer.data)
 
         elif request.method == 'POST':
-            account = Account.objects.filter(id=user_id).first()
-            if request.data.get('name'):
-                account.name = request.data.get('name')
-            if request.data.get('description'):
-                account.description = request.data.get('description')
-            if request.data.get('contact'):
-                account.contact = request.data.get('contact')
-            if request.data.get('mail'):
-                account.mail = request.data.get('mail')
+            account = updateAccount(user_id, request.data.get('name'), request.data.get('description'), request.data.get('contact'), request.data.get('mail'))
 
-            account.save()
             serializer = AccountSerializer(account)
             return Response(serializer.data)
 
