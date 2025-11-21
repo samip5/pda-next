@@ -340,10 +340,21 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
             serializer = RecordSerializer(matching_records, many=True)
             return Response(serializer.data)
         elif request.method == 'POST':
-            matching_records = [
+            matching_records = []
+            if request.data.get('old_record_type'):
+                matching_records = [
                 r for r in record_instances
                 if r.name == record_id and r.record_type == request.data.get('old_record_type')]
-            oldRecord = matching_records[0]
+            else:
+                matching_records = [
+                r for r in record_instances
+                if r.name == record_id and r.record_type == request.data.get('record_type')]
+
+            try:
+                oldRecord = matching_records[0]
+            except IndexError:
+                return Response("Record not found", 404)
+
             newRecord = Record(
                 zone=zone,
                 name=request.data.get('name'),
