@@ -93,10 +93,35 @@
                     <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
                 </button>
                 {% endif %}
-                <button class="btn btn-danger py-1 px-2">
+                <button class="btn btn-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#recordDeleteModal-{{ record.name }}-{{ record.record_type }}">
                     <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
                 </button>
             </td>
+            <div class="modal fade" id="recordDeleteModal-{{ record.name }}-{{ record.record_type }}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content bg-gray-800">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title">Create DNS Record</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <form class="d-flex flex-row" method="post">
+                                {% csrf_token %}
+                                <input name="formName" type="hidden" value="deleteForm">
+                                <input id="name" name="name" type="hidden" value="{{ record.name }}">
+                                <input id="record_type" name="record_type" type="hidden" value="{{ record.record_type }}">
+                                <input id="content" name="content" type="hidden" value="{{ record.content }}">
+
+                                <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                            </form>
+                                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
         </tr>
         <tr id="edit-{{ record.name }}-{{ record.record_type }}" class="record-edit">
             <form method="post">
@@ -135,7 +160,10 @@
             </td>
             <td>
                 <button type="submit" class="btn btn-success py-1 px-2" onclick="closeEdit('{{ record.name }}-{{ record.record_type }}')">
-                <span class="pg-icon"><i class="fa fa-check"></i></span>
+                    <span class="pg-icon"><i class="fa fa-check"></i></span>
+                </button>
+                <button type="button" class="btn btn-warning py-1 px-2" onclick="closeEdit('{{ record.name }}-{{ record.record_type }}')">
+                    <span class="pg-icon"><i class="fa fa-x"></i></span>
                 </button>
             </td>
             </form>
