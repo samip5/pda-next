@@ -10,6 +10,7 @@
             <table class="table text-white text-center">
                 <thead>
                     <tr>
+                        <th>Timestamp</th>
                         <th>Action</th>
                         <th>Details</th>
                         <th>user</th>
@@ -20,6 +21,7 @@
                 <tbody>
                     {% for activity in activity_logs %}
                     <tr>
+                        <td>{{ activity.timestamp }}</td>
                         <td>{{ activity.action }}</td>
                         <td>{{ activity.details }}</td>
                         <td>{{ activity.user }}</td>

@@ -57,6 +57,13 @@ class Activity(models.Model):
         help_text='Log from api'
     )
 
+    timestamp = models.DateTimeField(
+        auto_now_add=True,
+        unique=False,
+        editable=False,
+        help_text='Timestamp of activity'
+    )
+
     class Meta:
         db_table = 'pdadns_activity'
         ordering = ['id']
