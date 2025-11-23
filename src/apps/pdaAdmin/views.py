@@ -15,7 +15,7 @@ def dashboard(request):
     activity_logs = Activity.objects.all()
     return render(
         request,
-        "admin/test.html",
+        "admin/dashboard.html",
         {
             "active_tab": "admin_dash",
             "page_title": _("Admin"),
