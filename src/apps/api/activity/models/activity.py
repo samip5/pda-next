@@ -38,6 +38,7 @@ class Activity(models.Model):
         max_length=255,
         unique=False,
         default='',
+        blank=True,
         help_text='User id'
     )
 
@@ -45,6 +46,8 @@ class Activity(models.Model):
         max_length=255,
         unique=False,
         default='',
+        null=True,
+        blank=True,
         help_text='Api key used'
     )
 
