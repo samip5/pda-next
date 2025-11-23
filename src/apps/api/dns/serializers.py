@@ -15,7 +15,6 @@ class RecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = Record
         fields = [
-            'id',
             'zone',
             'zone_name',
             'name',
@@ -24,10 +23,8 @@ class RecordSerializer(serializers.ModelSerializer):
             'content',
             'ttl',
             'disabled',
-            'created_at',
-            'updated_at',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'updated_at']
     
     def get_fqdn(self, obj):
         """Get fully qualified domain name"""
@@ -48,7 +45,6 @@ class ZoneSerializer(serializers.ModelSerializer):
             'server_id',
             'powerdns_id',
             'created_at',
-            'updated_at',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'powerdns_id']
+        read_only_fields = ['id', 'created_at', 'powerdns_id']
 

@@ -79,10 +79,6 @@ class Record(models.Model):
         help_text='Whether this record is disabled'
     )
     
-    # Metadata
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
     class Meta:
         db_table = 'pdadns_records'
         ordering = ['zone', 'name', 'record_type']

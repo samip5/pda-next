@@ -1,9 +1,12 @@
+from pathlib import Path
 import os
 import yaml
-from pathlib import Path
+import logging
 from pydantic import BaseSettings
+from typing import Any
 
-ROOT_PATH: Path = Path(__file__).parent.parent
+# Compute root paths correctly. This file lives at src/config/__init__.py so two parents up is the repo root.
+ROOT_PATH: Path = Path(__file__).resolve().parents[2]
 """ The root path of the application which is typically the project repository root path. """
 
 SRC_PATH: Path = ROOT_PATH / 'src'
@@ -11,6 +14,20 @@ SRC_PATH: Path = ROOT_PATH / 'src'
 
 TEMPLATE_PATH: Path = SRC_PATH / 'templates'
 """ The template path of the application which is typically the templates directory within the SRC_PATH. """
+
+logger = logging.getLogger("pda.config")
+# Configure basic logging for config module (before Django's logging is initialized)
+# Django will reconfigure this later when it initializes (disable_existing_loggers=False)
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        '[%(asctime)s] %(levelname)s "%(name)s" %(message)s',
+        datefmt='%d/%b/%Y %H:%M:%S'
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
 
 
 class AppSettings(BaseSettings):
@@ -102,8 +119,8 @@ class AppSettings(BaseSettings):
     use_tz: bool = True
     venv_enabled: bool = False
     venv_path: str | None = 'venv'
-    powerdns_api_url: str = 'http://172.8.0.20:8081/api/v1'
-    powerdns_api_key: str = 'secret'
+    powerdns_api_url: str = ''
+    powerdns_api_key: str = ''
     powerdns_api_timeout: int = 30
 
     """ The following settings are automatically loaded at application startup. """
@@ -124,31 +141,16 @@ def load_settings(env_file_path: str = '/etc/pda/.env', env_file_encoding: str =
         '_env_file_encoding': env_file_encoding,
     }
 
-    os.putenv('PDA_ENV_FILE', env_file_path)
-    os.putenv('PDA_ENV_FILE_ENCODING', env_file_encoding)
+#    os.putenv('PDA_ENV_FILE', env_file_path)
+#    os.putenv('PDA_ENV_FILE_ENCODING', env_file_encoding)
 
-    if secrets_path is not None:
-        valid: bool = True
+    logger.debug(f"Loading config using env file {env_file_path}")
 
-        if not os.path.exists(secrets_path):
-            valid = False
-            print(f'The given path for the "--secrets-dir" option does not exist: {secrets_path}')
-        elif not os.path.isdir(secrets_path):
-            valid = False
-            print(f'The given path for the "--secrets-dir" option is not a directory: {secrets_path}')
-
-        if valid:
-            params['_secrets_dir'] = secrets_path
-            os.putenv('PDA_ENV_SECRETS_DIR', secrets_path)
 
     # Load base app configuration settings from the given environment file and the local environment
     app_settings = AppSettings(**params)
 
-    # Load additional configuration from the given YAML configuration file (if any)
-    if app_settings.config_path is not None:
-        if not app_settings.config_path.startswith('/'):
-            app_settings.config_path = os.path.join(app_settings.root_path, app_settings.config_path)
-        app_settings = load_config(app_settings)
+    logger.debug(app_settings)
 
     # Prepend the root path to the database path if it is not an absolute path
     if isinstance(app_settings.db_path, str) and len(
@@ -196,7 +198,7 @@ def load_config(app_settings: AppSettings) -> AppSettings:
     return app_settings
 
 
-def save_config(app_settings: AppSettings, config: dict[str, any]) -> bool:
+def save_config(app_settings: AppSettings, config: dict[str, Any]) -> bool:
     """ Saves the app's configuration to the defined configuration file setting path. """
 
     config_path: str = app_settings.config_path
