@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.api.accounts.helpers import updateAccount
 from apps.api.accounts.models import Account
+from apps.api.activity.helpers import addActivityLog
 from apps.api.activity.models import Activity
 from apps.api.dns.models import Zone, Record
 from apps.api.dns.services import PowerDNSService
@@ -70,6 +71,7 @@ def account(request, id):
         try:
             updateAccount(id, request.POST.get("name"), request.POST.get('description'), request.POST.get('contact'),
                       request.POST.get('mail'))
+            addActivityLog("Update account", f"{id}", request.user.id, '', False)
         except Exception as e:
             messages.add_message(request, messages.WARNING, f"{e}")
 
@@ -119,6 +121,7 @@ def zones(request):
         try:
             service.create_zone(zone_name=newZone.name, kind=newZone.kind, account=newZone.account,
                                    nameservers=newZone.nameservers)
+            addActivityLog("Zone create", f"{newZone.name} - {newZone.account}", request.user.id, '', False)
             messages.add_message(request, messages.SUCCESS, f"Zone {newZone.name} created")
         except Exception as e:
             messages.add_message(request, messages.WARNING, f"{e}")
@@ -189,6 +192,7 @@ def zone(request, id):
             service.update_zone(zone_name=zone_name, account=updatedZone.account,
                                 nameservers=updatedZone.nameservers,
                                 dnssec=updatedZone.dnssec)
+            addActivityLog("Zone updated", f"{zone_name} - {updatedZone.account}", request.user.id, '', False)
             zone = updatedZone
         except Exception as e:
             messages.add_message(request, messages.WARNING, f"{e}")

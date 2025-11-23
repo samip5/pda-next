@@ -1,14 +1,13 @@
 from jsonschema import ValidationError
-from pydantic import UUID4
 
 from apps.api.activity.models import Activity
 
 
-def addActivityLog(action: str, details: str, user: UUID4, apikey: str, api: bool):
+def addActivityLog(action: str, details: str, user: int, apikey: str, api: bool):
     log = Activity(
         action=action,
         details=details,
-        user="",
+        user=str(user),
         apikey=apikey,
         api=api,
     )
