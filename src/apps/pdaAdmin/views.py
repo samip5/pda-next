@@ -4,18 +4,21 @@ from django.utils.translation import gettext_lazy as _
 
 from apps.api.accounts.helpers import updateAccount
 from apps.api.accounts.models import Account
+from apps.api.activity.models import Activity
 from apps.api.dns.models import Zone, Record
 from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
 
 @login_required
 def dashboard(request):
+    activity_logs = Activity.objects.all()
     return render(
         request,
         "admin/test.html",
         {
             "active_tab": "admin_dash",
             "page_title": _("Admin"),
+            "activity_logs": activity_logs
         },
     )
 
