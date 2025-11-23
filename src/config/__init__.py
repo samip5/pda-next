@@ -1,10 +1,12 @@
+from pathlib import Path
 import os
 import yaml
 import logging
-from pathlib import Path
 from pydantic import BaseSettings
+from typing import Any
 
-ROOT_PATH: Path = Path(__file__).parent.parent
+# Compute root paths correctly. This file lives at src/config/__init__.py so two parents up is the repo root.
+ROOT_PATH: Path = Path(__file__).resolve().parents[2]
 """ The root path of the application which is typically the project repository root path. """
 
 SRC_PATH: Path = ROOT_PATH / 'src'
@@ -150,16 +152,10 @@ def load_settings(env_file_path: str = '/etc/pda/.env', env_file_encoding: str =
 
     logger.debug(app_settings)
 
-    # Load additional configuration from the given YAML configuration file (if any)
-#    if app_settings.config_path is not None:
-#        if not app_settings.config_path.startswith('/'):
-#            app_settings.config_path = os.path.join(app_settings.root_path, app_settings.config_path)
-#        app_settings = load_config(app_settings)
-
     # Prepend the root path to the database path if it is not an absolute path
-#    if isinstance(app_settings.db_path, str) and len(
-#            app_settings.db_path.strip()) and not app_settings.db_path.startswith('/'):
-#        app_settings.db_path = str(os.path.join(app_settings.root_path, app_settings.db_path))
+    if isinstance(app_settings.db_path, str) and len(
+            app_settings.db_path.strip()) and not app_settings.db_path.startswith('/'):
+        app_settings.db_path = str(os.path.join(app_settings.root_path, app_settings.db_path))
 
     return app_settings
 
@@ -202,7 +198,7 @@ def load_config(app_settings: AppSettings) -> AppSettings:
     return app_settings
 
 
-def save_config(app_settings: AppSettings, config: dict[str, any]) -> bool:
+def save_config(app_settings: AppSettings, config: dict[str, Any]) -> bool:
     """ Saves the app's configuration to the defined configuration file setting path. """
 
     config_path: str = app_settings.config_path
