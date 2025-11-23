@@ -39,7 +39,8 @@ class ZoneSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'name',
-            'kind',
+            'account',
+            'dnssec',
             'nameservers',
             'server_id',
             'powerdns_id',

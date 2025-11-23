@@ -3,6 +3,8 @@ import hashlib
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from pda import settings
+
 
 class CustomUser(AbstractUser):
     """
@@ -25,9 +27,4 @@ class CustomUser(AbstractUser):
         if self.avatar:
             return self.avatar.url
         else:
-            return ""
-
-    @property
-    def gravatar_id(self) -> str:
-        # https://en.gravatar.com/site/implement/hash/
-        return hashlib.md5(self.email.lower().strip().encode("utf-8")).hexdigest()
+            return settings.STATIC_URL + "images/user.svg"

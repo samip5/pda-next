@@ -1,0 +1,196 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% block app %}
+<section class="app-card">
+  <a class="bg-info px-2 py-2 my-2 rounded-3 text-white" href="/dns/"><span class="pg-icon"><i class="fa fa-arrow-left"></i></span> Back </a>
+  <h1 class="pg-title">Records for {{ id }}</h1>
+
+<button class="btn btn-info p-2" data-bs-toggle="modal" data-bs-target="#recordCreateModal">
+  <span class="pg-icon"><i class="fa fa-plus"></i></span>
+</button>
+<div class="modal fade" id="recordCreateModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content bg-gray-800">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Create DNS Record</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        {{ message }}
+            <form class="d-flex flex-column" method="post">
+                {% csrf_token %}
+                <input name="formName" type="hidden" value="createForm">
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="name">Name</label>
+                    <input id="name" name="name" class="form-control" type="text" value="{{ account.name }}" >
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="record_type">Record Type</label>
+                    <select id="record_type" name="record_type" class="form-control">
+                        <option value="A">A</option>
+                        <option value="AAAA">AAAA</option>
+                        <option value="CNAME">CNAME</option>
+                        <option value="TXT">A</option>
+                        <option value="MX">MX</option>
+                        <option value="NS">NS</option>
+                        <option value="DS">DS</option>
+                        <option value="SRV">SRV</option>
+                        <option value="DNAME">DNAME</option>
+                        <option value="ALIAS">ALIAS</option>
+                    </select>
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="content">Content</label>
+                    <input id="content" name="content" class="form-control" type="text">
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="ttl">TTL</label>
+                    <input id="ttl" name="ttl" class="form-control" type="number" value="3600">
+                </div>
+
+                <input class="btn btn-info w-100" type="submit" value="{% translate "Save" %}">
+            </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+  <table class="table text-white text-center">
+      <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>TTL</th>
+            <th>Data</th>
+            <th>Comments</th>
+            <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for record in records %}
+        <tr id="show-{{ record.name }}-{{ record.record_type }}">
+            <td>{{ record.name }}</td>
+            <td>{{ record.record_type }}</td>
+            <td>{{ record.disabled }}</td>
+            <td>{{ record.ttl }}</td>
+            <td>{{ record.content }}</td>
+            <td>{{ record.comments }}</td>
+            <td>
+                {% if record.record_type != "SOA" %}
+                <button class="btn btn-warning py-1 px-2" onclick="openEdit('{{ record.name }}-{{ record.record_type }}')">
+                    <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
+                </button>
+                {% endif %}
+                <button class="btn btn-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#recordDeleteModal-{{ record.name }}-{{ record.record_type }}">
+                    <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
+                </button>
+            </td>
+            <div class="modal fade" id="recordDeleteModal-{{ record.name }}-{{ record.record_type }}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content bg-gray-800">
+
+                        <div class="modal-header">
+                            <h5 class="modal-title">Create DNS Record</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <form class="d-flex flex-row" method="post">
+                                {% csrf_token %}
+                                <input name="formName" type="hidden" value="deleteForm">
+                                <input id="name" name="name" type="hidden" value="{{ record.name }}">
+                                <input id="record_type" name="record_type" type="hidden" value="{{ record.record_type }}">
+                                <input id="content" name="content" type="hidden" value="{{ record.content }}">
+
+                                <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                            </form>
+                                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </tr>
+        <tr id="edit-{{ record.name }}-{{ record.record_type }}" class="record-edit">
+            <form method="post">
+                {% csrf_token %}
+                <input name="formName" type="hidden" value="editForm">
+            <td>
+                <input id="old_name" name="old_name" type="hidden" value="{{ record.name }}">
+                <input class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center w-60" id="name" name="name" type="text" value="{{ record.name }}">
+            </td>
+            <td>
+                <input id="old_record_type" name="old_record_type" type="hidden" value="{{ record.record_type }}">
+                <select id="record_type" name="record_type" class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center">
+                    <option value="A" {% if record.record_type == "A" %}selected{% endif %}>A</option>
+                    <option value="AAAA" {% if record.record_type == "AAAA" %}selected{% endif %}>AAAA</option>
+                    <option value="CNAME" {% if record.record_type == "CNAME" %}selected{% endif %}>CNAME</option>
+                    <option value="TXT" {% if record.record_type == "TXT" %}selected{% endif %}>A</option>
+                    <option value="MX" {% if record.record_type == "MX" %}selected{% endif %}>MX</option>
+                    <option value="NS" {% if record.record_type == "NS" %}selected{% endif %}>NS</option>
+                    <option value="DS" {% if record.record_type == "DS" %}selected{% endif %}>DS</option>
+                    <option value="SRV" {% if record.record_type == "SRV" %}selected{% endif %}>SRV</option>
+                    <option value="DNAME" {% if record.record_type == "DNAME" %}selected{% endif %}>DNAME</option>
+                    <option value="ALIAS" {% if record.record_type == "ALIAS" %}selected{% endif %}>ALIAS</option>
+                </select>
+            </td>
+            <td>{{ record.disabled }}</td>
+            <td>
+                <input id="old_ttl" name="old_ttl" type="hidden" value="{{ record.ttl }}">
+                <input class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center w-80" id="ttl" name="ttl" type="number" value="{{ record.ttl }}">
+            </td>
+            <td>
+                <input id="old_content" name="old_content" type="hidden" value="{{ record.content }}">
+                <input class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center w-80" id="content" name="content" type="text" value="{{ record.content }}">
+            </td>
+            <td>
+                <input class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center w-80" id="comments" name="comments" type="text" value="{{ record.comments }}">
+            </td>
+            <td>
+                <button type="submit" class="btn btn-success py-1 px-2" onclick="closeEdit('{{ record.name }}-{{ record.record_type }}')">
+                    <span class="pg-icon"><i class="fa fa-check"></i></span>
+                </button>
+                <button type="button" class="btn btn-warning py-1 px-2" onclick="closeEdit('{{ record.name }}-{{ record.record_type }}')">
+                    <span class="pg-icon"><i class="fa fa-x"></i></span>
+                </button>
+            </td>
+            </form>
+        </tr>
+        {% endfor %}
+      </tbody>
+  </table>
+<script>
+    let currentlyOpen;
+    function openEdit(id) {
+        let editElement = document.getElementById(`edit-${id}`)
+        let showElement = document.getElementById(`show-${id}`)
+        editElement.classList.remove("record-edit")
+        editElement.classList.add("record-edit-show")
+        showElement.classList.add("record-hide")
+        if(currentlyOpen) {
+            closeEdit(currentlyOpen)
+        }
+        currentlyOpen = id;
+    }
+    function closeEdit(id) {
+        let editElement = document.getElementById(`edit-${id}`)
+        let showElement = document.getElementById(`show-${id}`)
+        showElement.classList.remove("record-hide")
+        editElement.classList.add("record-edit")
+        editElement.classList.remove("record-edit-show")
+    }
+</script>
+</section>
+{% endblock %}

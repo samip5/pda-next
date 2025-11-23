@@ -42,6 +42,7 @@ services:
       - PDNS_default_ttl=1500
       - PDNS_allow_axfr_ips=172.8.0.21
       - PDNS_only_notify=172.8.0.21
+      - PDNS_gpgsql_dnssec=yes
     depends_on:
       - postgres
 

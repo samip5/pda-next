@@ -171,6 +171,7 @@ class PowerDNSClient:
         nameservers: List[str],
         kind: str = 'Native',
         server_id: str = 'localhost',
+        account: str = None,
         **kwargs
     ) -> Dict[str, Any]:
         """
@@ -181,6 +182,7 @@ class PowerDNSClient:
             nameservers: List of nameserver hostnames
             kind: Zone kind (Native, Master, Slave)
             server_id: Server ID (default: 'localhost')
+            account: Account name (default: '')
             **kwargs: Additional zone parameters
             
         Returns:
@@ -190,6 +192,7 @@ class PowerDNSClient:
             'name': zone_name,
             'kind': kind,
             'nameservers': nameservers,
+            'account': account,
             **kwargs
         }
         return self._request('POST', f'servers/{server_id}/zones', data=zone_data)
@@ -488,3 +491,49 @@ class PowerDNSClient:
                 data=rrset_data
             )
 
+    def dnssec_keys(
+            self,
+            zone_name: str,
+            keytype: str = 'ksk',
+            server_id: str = 'localhost',
+    ) -> Dict[str, Any]:
+        """
+        DNSSEC Keys for a zone.
+
+        Args:
+            zone_name: Zone name (e.g., 'example.com.')
+            keytype: Key Type for pdns backend
+            server_id: Server ID (default: 'localhost')
+
+        Returns:
+            Created zone information
+        """
+        crptokeys = {
+            "active": True,
+            "type": "Cryptokey",
+            "keytype": keytype,
+        }
+        return self._request('POST', f'servers/{server_id}/zones/{zone_name}/cryptokeys', data=crptokeys)
+
+    def disable_DNSSEC(
+            self,
+            zone_name: str,
+            server_id: str = 'localhost',
+    ) -> Dict[str, Any]:
+        """
+        Disable DNSSEC for a zone.
+
+        Args:
+            zone_name: Zone name (e.g., 'example.com.')
+            server_id: Server ID (default: 'localhost')
+
+        Returns:
+            Created zone information
+        """
+        crptokeys = {
+            "active": False,
+            "type": "Cryptokey",
+            "keytype": "ksk"
+        }
+        self.update_zone(zone_name, server_id, dnssec=False)
+        return self._request('POST', f'servers/{server_id}/zones/{zone_name}/cryptokeys', data=crptokeys)

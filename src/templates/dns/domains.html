@@ -1,0 +1,39 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% block app %}
+<section class="app-card">
+  <h1 class="pg-title">Domains</h1>
+  <table class="table text-white text-center">
+      <thead>
+        <tr>
+            <th>Name</th>
+            <th>DNSSEC</th>
+            <th>Type</th>
+            <th>Primary</th>
+            <th>Account</th>
+            <th>Serial</th>
+            <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for zone in zones %}
+        <tr>
+            <td><a class="text-white" href="/dns/domain/{{ zone.name }}">{{ zone.name }}</a></td>
+            <td>{% if zone.dnssec %}
+                <span class="pg-icon bg-success p-3 rounded-3"><i class="fa fa-lock"></i></span>
+                {% else %}
+                <span class="pg-icon bg-danger p-3 rounded-3"><i class="fa fa-lock"></i></span>
+                {% endif %}
+            </td>
+            <td>{{ zone.kind }}</td>
+            <td></td>
+            <td>{{ zone.account }}</td>
+            <td></td>
+            <td></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+  </table>
+</section>
+{% endblock %}

@@ -91,6 +91,7 @@ class PowerDNSService:
         nameservers: List[str],
         kind: str = 'Native',
         server_id: str = 'localhost',
+        account: str = None,
         **kwargs
     ) -> Optional[Dict[str, Any]]:
         """
@@ -101,13 +102,14 @@ class PowerDNSService:
             nameservers: List of nameserver hostnames
             kind: Zone kind (Native, Master, Slave)
             server_id: Server ID (default: 'localhost')
+            account: Account Name
             **kwargs: Additional zone parameters
             
         Returns:
             Created zone dictionary from PowerDNS API or None on error
         """
         try:
-            return self.client.create_zone(zone_name, nameservers, kind, server_id, **kwargs)
+            return self.client.create_zone(zone_name, nameservers, kind, server_id, account, **kwargs)
         except PowerDNSError as e:
             logger.error(f"Failed to create zone {zone_name} in PowerDNS: {e}")
             return None
@@ -244,4 +246,27 @@ class PowerDNSService:
             return self.client.delete_record(zone_name, name, record_type, content, server_id)
         except PowerDNSError as e:
             logger.error(f"Failed to delete record {name} {record_type} from zone {zone_name}: {e}")
+            return None
+
+    def dnssec_keys(
+        self,
+        zone_name: str,
+        keytype: str = 'ksk',
+        server_id: str = 'localhost'
+    ):
+        try:
+            return self.client.dnssec_keys(zone_name, keytype, server_id)
+        except PowerDNSError as e:
+            logger.error(f"Failed to create dnssec keys ({keytype}) for zone {zone_name}: {e}")
+            return None
+
+    def disable_dnssec(
+        self,
+        zone_name: str,
+        server_id: str = 'localhost'
+    ):
+        try:
+            return self.client.disable_DNSSEC(zone_name, server_id)
+        except PowerDNSError as e:
+            logger.error(f"Failed to disable dnssec for zone {zone_name}: {e}")
             return None

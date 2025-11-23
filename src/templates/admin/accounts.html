@@ -1,0 +1,38 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% block app %}
+<section class="app-card">
+    <h1 class="pg-title">Accounts</h1>
+    <table class="table text-white text-center">
+      <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Contact</th>
+            <th>Mail</th>
+            <th>Member</th>
+            <th>Zone(s)</th>
+            <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for account in accounts %}
+        <tr>
+            <td><a class="text-white" href="/admin/accounts/{{ account.id }}">{{ account.name }}</a></td>
+            <td>{{ account.description }}</td>
+            <td>{{ account.contact }}</td>
+            <td>{{ account.mail }}</td>
+            <td>{{ account.members }}</td>
+            <td>{{ account.zones }}</td>
+            <td>
+                <span class="pg-icon bg-danger p-3 rounded-3 text-white"><i class="fa fa-trash-o"></i></span>
+                <a href="/admin/accounts/{{ account.id }}"><span class="pg-icon bg-warning p-3 rounded-3 text-white"><i class="fa fa-pencil-square"></i></span></a>
+            </td>
+        </tr>
+
+        {% endfor %}
+      </tbody>
+    </table>
+</section>
+{% endblock %}

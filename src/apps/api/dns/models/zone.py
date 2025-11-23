@@ -37,7 +37,28 @@ class Zone(models.Model):
         ],
         help_text='Zone name (e.g., example.com.)'
     )
-    
+
+    # Zone account (e.g., 'cappe')
+    account = models.CharField(
+        max_length=255,
+        unique=False,
+        default=None,
+        validators=[
+            RegexValidator(
+                regex=r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*\.?$',
+                message='Invalid zone name format'
+            )
+        ],
+        help_text='Zone account (e.g., cappe)'
+    )
+    # Zone dnssec status
+    dnssec = models.BooleanField(
+        max_length=255,
+        unique=False,
+        default=False,
+        help_text='Zone DNSSEC status'
+    )
+
     # Zone kind
     kind = models.CharField(
         max_length=20,
