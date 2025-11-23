@@ -1,3 +1,4 @@
-from .activity import Activity
+from .zone_template import ZoneTemplate
+from .record_template import RecordTemplate
 
-__all__ = ['Activity']
+__all__ = ['ZoneTemplate', 'RecordTemplate']

@@ -1,74 +1,71 @@
 """
-PDA Zone Template Model
+PowerDNS Zone Model
 
-Represents a zone but in a template form.
+Represents a DNS zone in PowerDNS.
 """
 import uuid
 
 from django.db import models
-from django.core.validators import RegexValidator, EmailValidator
+from django.core.validators import RegexValidator
 
 
-class Activity(models.Model):
+class ZoneTemplate(models.Model):
     """
-    Represents ActivityLog entry.
+    Represents a DNS zone managed by PowerDNS.
+
+    This model stores zone information for reference/tracking.
+    Data is fetched on-demand from PowerDNS API.
     """
+
+    ZONE_KIND_NATIVE = 'Native'
+    ZONE_KIND_MASTER = 'Master'
+    ZONE_KIND_SLAVE = 'Slave'
+
+    ZONE_KIND_CHOICES = [
+        (ZONE_KIND_NATIVE, 'Native'),
+        (ZONE_KIND_MASTER, 'Master'),
+        (ZONE_KIND_SLAVE, 'Slave'),
+    ]
 
     id = models.UUIDField(
         primary_key=True,
         unique=True,
         default=uuid.uuid4,
     )
-
-    action = models.CharField(
+    name = models.CharField(
         max_length=255,
-        unique=False,
-        default='',
-        help_text='Action taken by user or api_key'
+        default=None,
+        help_text='Zone template name'
     )
 
-    details = models.CharField(
+    account = models.UUIDField(
         max_length=255,
         unique=False,
-        default='',
-        help_text='Details for activity'
-    )
-
-    user = models.CharField(
-        max_length=255,
-        unique=False,
-        default='',
-        blank=True,
-        help_text='User id'
-    )
-
-    apikey = models.CharField(
-        max_length=255,
-        unique=False,
-        default='',
+        default=None,
         null=True,
         blank=True,
-        help_text='Api key used'
     )
 
-    api = models.BooleanField(
-        unique=False,
-        default=False,
-        help_text='Log from api'
+    # Zone kind
+    kind = models.CharField(
+        max_length=20,
+        choices=ZONE_KIND_CHOICES,
+        default=ZONE_KIND_NATIVE,
+        help_text='Zone kind (Native, Master, or Slave)'
     )
 
-    timestamp = models.DateTimeField(
-        auto_now_add=True,
-        unique=False,
-        editable=False,
-        help_text='Timestamp of activity'
+    # Nameservers
+    nameservers = models.JSONField(
+        default=list,
+        help_text='List of nameserver hostnames'
     )
 
     class Meta:
-        db_table = 'pdadns_activity'
+        db_table = 'pdadns_templates_zones'
         ordering = ['id']
-        verbose_name = 'ActivityLog'
-        verbose_name_plural = 'ActivityLogs'
+        verbose_name = 'Zone template'
+        verbose_name_plural = 'Zone templates'
 
     def __str__(self):
-        return self.name
+        return self.id
+
