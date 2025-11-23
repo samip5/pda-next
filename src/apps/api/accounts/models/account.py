@@ -7,6 +7,7 @@ import uuid
 
 from django.db import models
 from django.core.validators import RegexValidator, EmailValidator
+from apps.users.models import CustomUser as User
 
 
 class Account(models.Model):
@@ -20,17 +21,10 @@ class Account(models.Model):
         default=uuid.uuid4,
     )
 
-    # Account name (e.g., 'cappe')
     name = models.CharField(
         max_length=255,
         unique=True,
-        validators=[
-            RegexValidator(
-                regex=r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*\.?$',
-                message='Invalid account name format'
-            )
-        ],
-        help_text='Account name (e.g., "cappe")'
+        help_text='Account name'
     )
 
     description = models.CharField(
@@ -57,10 +51,38 @@ class Account(models.Model):
 
 
     class Meta:
-        db_table = 'pdadns_accounts'
+        db_table = 'pda_accounts'
         ordering = ['id']
         verbose_name = 'Account'
         verbose_name_plural = 'Accounts'
 
     def __str__(self):
         return self.name
+
+
+
+class AccountMembership(models.Model):
+    """Links users to accounts with roles"""
+
+    class Meta:
+        db_table = "pda_account_memberships"
+        unique_together = ('user', 'account')
+
+    class Role(models.TextChoices):
+        """
+         OWNER = Zone belongs to that user
+         ADMIN = Application administrator
+         MEMBER = Regular member
+        """
+        OWNER = 'owner', 'Owner'
+        ADMIN = 'admin', 'Admin'
+        MEMBER = 'member', 'Member'
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='account_memberships')
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='memberships')
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.MEMBER)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+    def __str__(self):
+        return f"{self.user} - {self.account} ({self.role})"

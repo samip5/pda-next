@@ -5,7 +5,8 @@ Represents a DNS zone in PowerDNS.
 """
 from django.db import models
 from django.core.validators import RegexValidator
-
+from apps.api.accounts.models import Account
+from apps.users.models import CustomUser as User
 
 class Zone(models.Model):
     """
@@ -38,19 +39,16 @@ class Zone(models.Model):
         help_text='Zone name (e.g., example.com.)'
     )
 
-    # Zone account (e.g., 'cappe')
-    account = models.CharField(
-        max_length=255,
-        unique=False,
-        default=None,
-        validators=[
-            RegexValidator(
-                regex=r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*\.?$',
-                message='Invalid zone name format'
-            )
-        ],
-        help_text='Zone account (e.g., cappe)'
+    # Zone account
+    account = models.ForeignKey(
+        Account,
+        on_delete=models.CASCADE,
+        related_name='zones',
+        null=True,
+        blank=True,
+        help_text='Associated account for the zone'
     )
+
     # Zone dnssec status
     dnssec = models.BooleanField(
         max_length=255,
@@ -90,7 +88,8 @@ class Zone(models.Model):
     
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
-    
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_zones')
+
     class Meta:
         db_table = 'pdadns_zones'
         ordering = ['name']

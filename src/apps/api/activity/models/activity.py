@@ -6,7 +6,7 @@ Represents account that manages zones.
 import uuid
 
 from django.db import models
-from django.core.validators import RegexValidator, EmailValidator
+from apps.users.models import CustomUser as User
 
 
 class Activity(models.Model):
@@ -34,12 +34,11 @@ class Activity(models.Model):
         help_text='Details for activity'
     )
 
-    user = models.CharField(
-        max_length=255,
-        unique=False,
-        default='',
-        blank=True,
-        help_text='User id'
+    user = models.ForeignKey(User,
+         on_delete=models.SET_NULL,
+         null=True,
+         blank=True,
+         help_text='User who performed the action'
     )
 
     apikey = models.CharField(
@@ -69,6 +68,3 @@ class Activity(models.Model):
         ordering = ['id']
         verbose_name = 'ActivityLog'
         verbose_name_plural = 'ActivityLogs'
-
-    def __str__(self):
-        return self.name

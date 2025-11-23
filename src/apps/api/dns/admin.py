@@ -6,6 +6,7 @@ from .models.zone import Zone
 from .models.record import Record
 
 
+
 @admin.register(Zone)
 class ZoneAdmin(admin.ModelAdmin):
     """Admin interface for Zone model"""
