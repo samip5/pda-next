@@ -25,7 +25,7 @@ def domains(request):
     zone_instances = []
     for zone in powerdns_zones:
         zone_account = 'None'
-        if Account.objects.filter(id=zone.get('account', '')).first():
+        if zone.get('account', '') != '' and Account.objects.filter(id=zone.get('account', '')).first():
             zone_account = Account.objects.filter(id=zone.get('account', '')).first()
         zone_a = Zone(
             name=zone.get('name', ''),
@@ -90,13 +90,17 @@ def domain(request, id):
                 ttl=request.POST.get('ttl', '3600'),
                 disabled=False,
             )
+            new_record_name = recordCreate.name
+            if recordCreate.name == "@":
+                new_record_name = zone.name
+
             try:
                 recordCreate.full_clean()
             except ValidationError as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
 
             try:
-                service.create_record(zone.name, recordCreate.name, recordCreate.record_type, recordCreate.content, recordCreate.ttl)
+                service.create_record(zone.name, new_record_name, recordCreate.record_type, recordCreate.content, recordCreate.ttl)
             except Exception as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
         elif request.POST.get('formName') == "editForm":

@@ -126,7 +126,7 @@ def zones(request):
     zone_instances = []
     for zone in powerdns_zones:
         zone_account = 'None'
-        if Account.objects.filter(id=zone.get('account', '')).first():
+        if zone.get('account', '') != '' and Account.objects.filter(id=zone.get('account', '')).first():
             zone_account = Account.objects.filter(id=zone.get('account', '')).first()
         zone_a = Zone(
             name=zone.get('name', ''),
