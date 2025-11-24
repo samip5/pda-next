@@ -166,6 +166,14 @@ class IsZoneAccountAdminOrOwner(BasePermission):
         ).exists()
 
 
+class IsSystemAdmin(BasePermission):
+    message = "System admin privileges required."
+
+    def has_permission(self, request: HttpRequest, view: typing.Any) -> bool:
+        user = get_user_from_request(request)
+        return bool(user and getattr(user, 'is_authenticated', False) and (getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False)))
+
+
 # Composite convenience aliases (DRF supports bitwise composition)
 CanViewAccount = IsAuthenticatedOrHasUserAPIKey & IsAccountMember
 CanManageAccount = IsAuthenticatedOrHasUserAPIKey & IsAccountAdminOrOwner
@@ -179,6 +187,7 @@ __all__ = [
     'IsAccountAdminOrOwner',
     'IsZoneAccountMember',
     'IsZoneAccountAdminOrOwner',
+    'IsSystemAdmin',
     'CanViewAccount',
     'CanManageAccount',
     'CanViewZone',

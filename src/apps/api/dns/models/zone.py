@@ -4,7 +4,7 @@ PowerDNS Zone Model
 Represents a DNS zone in PowerDNS.
 """
 from django.db import models
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from apps.api.accounts.models import Account
 from apps.users.models import CustomUser as User
 

@@ -83,6 +83,7 @@ class AppSettings(BaseSettings):
     log_to_sentry: bool = False
     log_to_stdout: bool = True
     log_to_syslog: bool = False
+    maintenance: bool = False
     redis_host: str = ''
     redis_password: str | None = None
     redis_port: int = 6379
@@ -144,13 +145,13 @@ def load_settings(env_file_path: str = '/etc/pda/.env', env_file_encoding: str =
 #    os.putenv('PDA_ENV_FILE', env_file_path)
 #    os.putenv('PDA_ENV_FILE_ENCODING', env_file_encoding)
 
-    logger.debug(f"Loading config using env file {env_file_path}")
+#    logger.debug(f"Loading config using env file {env_file_path}")
 
 
     # Load base app configuration settings from the given environment file and the local environment
     app_settings = AppSettings(**params)
 
-    logger.debug(app_settings)
+    #logger.debug(app_settings)
 
     # Prepend the root path to the database path if it is not an absolute path
     if isinstance(app_settings.db_path, str) and len(
@@ -230,4 +231,50 @@ if env_conf_path is None:
         env_conf_path = '/etc/pda/.env'
 
 # Load various Django settings from an environment file and the local environment
-settings: AppSettings = load_settings(env_conf_path)
+app_settings: AppSettings = load_settings(env_conf_path)
+
+
+def load_db_settings_to_config(app_settings: AppSettings) -> AppSettings:
+    """
+    Load settings from database and merge them into the AppSettings object.
+    This is called during Django startup via AppConfig.ready()
+    """
+    try:
+        # Import here to avoid circular imports
+        from django.db import connection
+        from django.core.cache import cache
+
+        # Check if database tables exist (avoid issues during migrations)
+        table_names = connection.introspection.table_names()
+        logger.debug(f"Database tables: {table_names}")
+
+        # Adjust table name based on your app name
+        if 'global_settings' in table_names:
+            from apps.globalSettings.models import GlobalSetting
+
+            logger.info("Loading settings from database...")
+
+            # Load all settings from DB
+            db_settings = {}
+            for setting in GlobalSetting.objects.all():
+                db_settings[setting.key] = setting.get_value()
+                # Cache individual settings
+                cache.set(f'global_setting_{setting.key}', setting.get_value(), None)
+
+            # Cache all settings
+            cache.set('all_global_settings', db_settings, None)
+
+            # Update app_settings with database values (DB overrides env vars)
+            for key, value in db_settings.items():
+                # Convert db setting keys to match AppSettings field names
+                # e.g., 'site_title' in DB maps to app_settings.site_title
+                if hasattr(app_settings, key):
+                    setattr(app_settings, key, value)
+                    logger.debug(f"Loaded setting from DB: {key} = {value}")
+
+            logger.info(f"✓ Loaded {len(db_settings)} settings from database")
+
+    except Exception as e:
+        logger.warning(f"Could not load settings from database: {e}")
+
+    return app_settings

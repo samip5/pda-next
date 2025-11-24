@@ -98,40 +98,22 @@ def zones(request):
     accountList = Account.objects.all()
 
     if request.method == 'POST':
-        zone_account = Account.objects.filter(id=request.POST.get('account', '')).first()
+        #zone_account = Account.objects.filter(id=request.POST.get('account', '')).first()
         newZone = Zone(
             name=request.POST.get('name', ''),
             kind='Native',
-            account=zone_account,
+            account=None,
             nameservers=['ns1.fuckmylife.fi.']
         )
         try:
             service.create_zone(zone_name=newZone.name, kind=newZone.kind, account=str(newZone.account.id),
-                                   nameservers=newZone.nameservers)
+                                nameservers=newZone.nameservers)
             addActivityLog(ActionType.ZONE_CREATE, f"{newZone.name} - {newZone.account}", request.user)
             messages.add_message(request, messages.SUCCESS, f"Zone {newZone.name} created")
         except Exception as e:
             messages.add_message(request, messages.WARNING, f"{e}")
 
     zone_instances = get_zones()
-    powerdns_zones = service.get_zones("localhost")
-
-    # Convert PowerDNS record format to Record model instances (not saved)
-    zone_instances = []
-    for zone in powerdns_zones:
-        zone_account = None
-        zone_a = Zone(
-            name=zone.get('name', ''),
-            kind=zone.get('kind', Zone.ZONE_KIND_NATIVE),
-            nameservers=zone.get('nameservers', []),
-            server_id=zone.get('server_id', 'localhost'),
-            powerdns_id=zone.get('id'),
-            account=zone_account,
-            dnssec=zone.get('dnssec', '')
-        )
-
-        zone_instances.append(zone_a)
-
 
     return render(
         request,

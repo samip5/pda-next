@@ -13,7 +13,7 @@ from config import settings as app_settings
 if TYPE_CHECKING:
     from .models.zone import Zone
 
-logger = logging.getLogger('pda.api.dns.services')
+logger = logging.getLogger('pda')
 
 
 class PowerDNSService:
