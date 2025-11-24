@@ -1,8 +1,9 @@
-import logging
-
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+from apps.api.decorators import MethodPermissionMixin, method_permissions
+from apps.api.permissions import CanViewAccount, CanManageAccount, CanViewZone, CanManageZone
 
 from .helpers import updateAccount
 from .models.account import Account
@@ -12,7 +13,7 @@ from ..dns.serializers import ZoneSerializer
 from ..dns.services import PowerDNSService
 
 
-class AccountViewSet(viewsets.ReadOnlyModelViewSet):
+class AccountViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
     """
     ViewSet for fetching Accounts.
 
@@ -20,6 +21,7 @@ class AccountViewSet(viewsets.ReadOnlyModelViewSet):
     """
     queryset = Account.objects.all()
     serializer_class = AccountSerializer
+    permission_classes = [CanViewAccount]
 
     def get_queryset(self):
         """
@@ -29,7 +31,7 @@ class AccountViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = Account.objects.all()
 
         # Filter by record name
-        name = self.request.query_params.get('name', None)
+        name = getattr(self.request, 'query_params', {}).get('name', None)  # type: ignore[attr-defined]
         if name:
             queryset = queryset.filter(name__icontains=name)
 
@@ -37,6 +39,7 @@ class AccountViewSet(viewsets.ReadOnlyModelViewSet):
 
 
     @action(detail=False, methods=['get', 'post'], url_path='manage')
+    @method_permissions({'GET': [CanViewAccount], 'POST': [CanManageAccount]})
     def accounts(self, request):
         if request.method == 'GET':
             serializer = AccountSerializer(Account.objects.all(), many=True)
@@ -50,6 +53,7 @@ class AccountViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(serializer.data)
 
     @action(detail=False, methods=['get', 'post', 'delete'], url_path='manage/(?P<user_id>[^/]+)')
+    @method_permissions({'GET': [CanViewAccount], 'POST': [CanManageAccount], 'DELETE': [CanManageAccount]})
     def account(self, request, user_id=None):
         if request.method == 'GET':
             account = Account.objects.filter(id=user_id).first()
@@ -69,6 +73,7 @@ class AccountViewSet(viewsets.ReadOnlyModelViewSet):
 
 
     @action(detail=False, methods=['get', 'post', 'delete'], url_path='manage/(?P<user_id>[^/]+)/zones')
+    @method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone], 'DELETE': [CanManageZone]})
     def account_zones(self, request, user_id=None):
         account = Account.objects.filter(id=user_id).first()
 

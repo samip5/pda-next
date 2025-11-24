@@ -59,8 +59,11 @@ def get_zones() -> list[Any] | QuerySet[Zone, Zone]:
         for zone in powerdns_zones:
             zone_account = None
 
-            if zone.get('account', '') != "":
-                zone_account = Account.objects.filter(id=zone.get('account')).first()
+            if zone.get('nameservers') == '':
+                zone['nameservers'] = ["ns1.kapsi.fi"]
+
+            #if zone.get('account', '') != "":
+            #    zone_account = Account.objects.filter(id=zone.get('account')).first()
 
             zone = Zone(
               name=zone.get('name', ''),
@@ -74,7 +77,7 @@ def get_zones() -> list[Any] | QuerySet[Zone, Zone]:
 
             cache_zone = Zone.objects.filter(name=zone.name).first()
             if not cache_zone:
-                zone.full_clean()
+       #         zone.full_clean()
                 zone.save()
             elif cache_zone:
                 Zone.objects.filter(name=zone.name).update(kind=zone.kind, nameservers=zone.nameservers,
@@ -90,8 +93,8 @@ def get_zone(zone_name: str) -> Zone:
     try:
         zone = service.get_zone(zone_name)
 
-        if zone.get('account', '') != "":
-            zone_account = Account.objects.filter(id=zone.get('account')).first()
+        #if zone.get('account', '') != "":
+        #    zone_account = Account.objects.filter(id=zone.get('account')).first()
 
         zone = Zone(
             name=zone.get('name', ''),

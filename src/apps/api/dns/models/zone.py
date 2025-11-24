@@ -4,7 +4,7 @@ PowerDNS Zone Model
 Represents a DNS zone in PowerDNS.
 """
 from django.db import models
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from apps.api.accounts.models import Account
 from apps.users.models import CustomUser as User
 
@@ -68,8 +68,6 @@ class Zone(models.Model):
     # Nameservers
     nameservers = models.JSONField(
         default=list,
-        null=True,
-        blank=True,
         help_text='List of nameserver hostnames'
     )
     
@@ -91,23 +89,32 @@ class Zone(models.Model):
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_zones')
+    soa_serial = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        validators=(MinValueValidator(0), MaxValueValidator(4294967295)),
+        editable=False,
+        help_text='SOA serial number'
+    )
 
     class Meta:
         db_table = 'pdadns_zones'
         ordering = ['name']
         verbose_name = 'Zone'
         verbose_name_plural = 'Zones'
-    
+        permissions = [
+            ("manage_zone_dnssec", "Can enable or disable DNSSEC for the zone"),
+            ("manage_zone_records", "Can create, update, or delete records in the zone"),
+            ("sync_zone", "Can sync zone data from PowerDNS"),
+        ]
+
     def __str__(self):
         return self.name
-    
+
     def ensure_trailing_dot(self):
-        """Ensure zone name ends with a dot"""
         if not self.name.endswith('.'):
             self.name = f"{self.name}."
-    
+
     def save(self, *args, **kwargs):
-        """Override save to ensure trailing dot"""
         self.ensure_trailing_dot()
         super().save(*args, **kwargs)
-

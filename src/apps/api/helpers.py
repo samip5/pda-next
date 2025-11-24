@@ -21,6 +21,8 @@ def _get_api_key_object(request, model_class):
     return model_class.objects.get_from_key(_get_api_key(request))
 
 
+
+
 def _get_api_key(request):
     # inspired by / copied from BaseHasAPIKey.get_key()
     # loosely based on this issue: https://github.com/florimondmanca/djangorestframework-api-key/issues/98

@@ -1,9 +1,12 @@
 import logging
 
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, ValidationError
+
+from apps.api.decorators import MethodPermissionMixin, method_permissions
+from apps.api.permissions import CanViewZone, CanManageZone
 
 from .helpers import recordUpdateHelper
 from .models.record import Record
@@ -15,7 +18,7 @@ from ..accounts.models import Account
 
 logger = logging.getLogger('pda')
 
-class RecordViewSet(viewsets.ReadOnlyModelViewSet):
+class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
     """
     ViewSet for fetching DNS zones and records.
 
@@ -25,6 +28,7 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Record.objects.all()
     serializer_class = RecordSerializer
+    permission_classes = [CanViewZone]
 
     def get_queryset(self):
         """
@@ -34,8 +38,8 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = Record.objects.select_related('zone').all()
 
         # Filter by zone (by zone ID or zone name)
-        zone_id = self.request.query_params.get('zone_id', None)
-        zone_name = self.request.query_params.get('zone_name', None)
+        zone_id = getattr(self.request, 'query_params', {}).get('zone_id', None)  # type: ignore[attr-defined]
+        zone_name = getattr(self.request, 'query_params', {}).get('zone_name', None)  # type: ignore[attr-defined]
 
         if zone_id:
             queryset = queryset.filter(zone_id=zone_id)
@@ -43,29 +47,30 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(zone__name=zone_name)
 
         # Filter by record name
-        name = self.request.query_params.get('name', None)
+        name = getattr(self.request, 'query_params', {}).get('name', None)  # type: ignore[attr-defined]
         if name:
             queryset = queryset.filter(name__icontains=name)
 
         # Filter by record type
-        record_type = self.request.query_params.get('type', None)
+        record_type = getattr(self.request, 'query_params', {}).get('type', None)  # type: ignore[attr-defined]
         if record_type:
             queryset = queryset.filter(record_type=record_type)
 
         # Filter by content
-        content = self.request.query_params.get('content', None)
+        content = getattr(self.request, 'query_params', {}).get('content', None)  # type: ignore[attr-defined]
         if content:
             queryset = queryset.filter(content__icontains=content)
 
         # Filter by disabled status
-        disabled = self.request.query_params.get('disabled', None)
+        disabled = getattr(self.request, 'query_params', {}).get('disabled', None)  # type: ignore[attr-defined]
         if disabled is not None:
-            disabled_bool = disabled.lower() in ('true', '1', 'yes')
+            disabled_bool = str(disabled).lower() in ('true', '1', 'yes')
             queryset = queryset.filter(disabled=disabled_bool)
 
         return queryset.order_by('zone__name', 'name', 'record_type')
 
     @action(detail=False, methods=['get', 'post'], url_path='zones')
+    @method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone]})
     def zones(self, request):
         if request.method == 'GET':
             """
@@ -119,6 +124,7 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(resp)
 
     @action(detail=False, methods=['get', 'post', 'delete'], url_path='zones/(?P<zone_name>[^/]+)')
+    @method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone], 'DELETE': [CanManageZone]})
     def zone(self, request, zone_name=None):
         """
         Get zone.
@@ -161,11 +167,11 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
             resp = service.update_zone(zone_name=zone_name, account=updatedZone.account, nameservers=updatedZone.nameservers, dnssec=updatedZone.dnssec)
             return Response(resp)
         elif request.method == 'DELETE':
-            service = PowerDNSService()
             resp = service.delete_zone(zone_name=zone_name)
             return Response(resp)
 
     @action(detail=False, methods=['get', 'post'], url_path='zones/(?P<zone_name>[^/]+)/records')
+    @method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone]})
     def zone_records(self, request, zone_name=None):
         if request.method == 'GET':
             """
@@ -277,7 +283,9 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
                 return Response("Error Validating record", 400)
             service.create_record(zone.name, record.name, record.record_type, record.content, record.ttl)
             return Response(RecordSerializer(record).data)
+
     @action(detail=False, methods=['get', 'post','delete'], url_path='zones/(?P<zone_name>[^/]+)/records/(?P<record_id>[^/]+)')
+    @method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone], 'DELETE': [CanManageZone]})
     def zone_record(self, request, zone_name=None, record_id=None):
         service = PowerDNSService()
         # Ensure zone name has trailing dot
@@ -364,11 +372,11 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
                 if r.name == record_id and r.record_type == request.data.get('record_type')]
 
             try:
-                oldRecord = matching_records[0]
+                old_record = matching_records[0]
             except IndexError:
                 return Response("Record not found", 404)
 
-            newRecord = Record(
+            new_record = Record(
                 zone=zone,
                 name=request.data.get('name'),
                 record_type=request.data.get('record_type'),
@@ -377,7 +385,7 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
                 disabled=request.data.get('disabled'),
             )
             try:
-                response = recordUpdateHelper(zone.name, oldRecord, newRecord)
+                response = recordUpdateHelper(zone.name, old_record, new_record)
                 return Response(response)
             except Exception as e:
                 return Response(str(e), 500)
@@ -395,6 +403,7 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
                 return Response("Record not found", 404)
 
     @action(detail=False, methods=['post', 'delete'], url_path='zones/(?P<zone_name>[^/]+)/dnssec')
+    @method_permissions({'POST': [CanManageZone], 'DELETE': [CanManageZone]})
     def dnssec(self, request, zone_name=None):
         service = PowerDNSService()
         if request.method == 'POST':

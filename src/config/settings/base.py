@@ -3,29 +3,41 @@ Base Django settings for the project.
 This file contains the bulk of the project's settings and is intended to be imported
 by environment-specific settings modules (dev, prod) which can override values.
 """
-
+import sys
 import os
+import logging
+from pathlib import Path
 from django.utils.translation import gettext_lazy
 
-from config import settings
+config_parent = Path(__file__).resolve().parents[1]
+logger = logging.getLogger("pda")
+logger.debug("Config parent directory: {}".format(config_parent))
+sys.path.append(str(config_parent))
+if str(config_parent) not in sys.path:
+    sys.path.insert(0, str(config_parent))
 
-SECRET_KEY = settings.secret_key
-DEBUG = settings.debug
-ALLOWED_HOSTS = settings.allowed_hosts
-SECURE_SSL_REDIRECT = settings.secure_ssl_redirect
-SESSION_COOKIE_SECURE = settings.session_cookie_secure
-CSRF_COOKIE_SECURE = settings.csrf_cookie_secure
-USE_HTTPS_IN_ABSOLUTE_URLS = settings.use_https_in_absolute_urls
+from config import load_settings, load_config, env_conf_path
 
-if isinstance(settings.secure_hsts_seconds, int) and settings.secure_hsts_seconds > 0:
-    SECURE_HSTS_SECONDS = settings.secure_hsts_seconds
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = settings.secure_hsts_include_subdomains
-    SECURE_HSTS_PRELOAD = settings.secure_hsts_preload
+app_settings = load_settings(env_conf_path)
+app_settings = load_config(app_settings)
 
-if isinstance(settings.secure_proxy_ssl_header_name, str) and len(settings.secure_proxy_ssl_header_name.strip()) \
-        and isinstance(settings.secure_proxy_ssl_header_value, str) \
-        and len(settings.secure_proxy_ssl_header_value.strip()):
-    SECURE_PROXY_SSL_HEADER = (settings.secure_proxy_ssl_header_name, settings.secure_proxy_ssl_header_value)
+SECRET_KEY = app_settings.secret_key
+DEBUG = app_settings.debug
+ALLOWED_HOSTS = app_settings.allowed_hosts
+SECURE_SSL_REDIRECT = app_settings.secure_ssl_redirect
+SESSION_COOKIE_SECURE = app_settings.session_cookie_secure
+CSRF_COOKIE_SECURE = app_settings.csrf_cookie_secure
+USE_HTTPS_IN_ABSOLUTE_URLS = app_settings.use_https_in_absolute_urls
+
+if isinstance(app_settings.secure_hsts_seconds, int) and app_settings.secure_hsts_seconds > 0:
+    SECURE_HSTS_SECONDS = app_settings.secure_hsts_seconds
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = app_settings.secure_hsts_include_subdomains
+    SECURE_HSTS_PRELOAD = app_settings.secure_hsts_preload
+
+if isinstance(app_settings.secure_proxy_ssl_header_name, str) and len(app_settings.secure_proxy_ssl_header_name.strip()) \
+        and isinstance(app_settings.secure_proxy_ssl_header_value, str) \
+        and len(app_settings.secure_proxy_ssl_header_value.strip()):
+    SECURE_PROXY_SSL_HEADER = (app_settings.secure_proxy_ssl_header_name, app_settings.secure_proxy_ssl_header_value)
 
 ROOT_URLCONF = "pda.urls"
 WSGI_APPLICATION = "pda.wsgi.application"
@@ -33,42 +45,46 @@ FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 SITE_ID = 1
 
 PROJECT_METADATA = {
-    'NAME': gettext_lazy(settings.site_title),
-    'URL': settings.site_url,
-    'DESCRIPTION': gettext_lazy(settings.site_description),
-    'IMAGE': settings.site_logo,
+    'NAME': gettext_lazy(app_settings.site_title),
+    'URL': app_settings.site_url,
+    'DESCRIPTION': gettext_lazy(app_settings.site_description),
+    'IMAGE': app_settings.site_logo,
     'KEYWORDS': 'pdns, powerdns, pda, admin, manage, console, dns, domain, nameserver, recursor, cache, authoritative, '
                 + 'dnssec, app, ui',
-    'CONTACT_EMAIL': settings.site_email,
+    'CONTACT_EMAIL': app_settings.site_email,
 }
+
+powerdns_api_url = app_settings.powerdns_api_url
+powerdns_api_key = app_settings.powerdns_api_key
+powerdns_api_timeout = 30
 
 # Internationalization / Localization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
-LANGUAGE_CODE = settings.language_code
-LANGUAGE_COOKIE_NAME = settings.language_cookie_name
+LANGUAGE_CODE = app_settings.language_code
+LANGUAGE_COOKIE_NAME = app_settings.language_cookie_name
 LANGUAGES = [
     ('en', gettext_lazy('English')),
-    ('fr', gettext_lazy('French')),
+    ('fi', gettext_lazy('Finnish')),
 ]
-LOCALE_PATHS = (os.path.join(settings.src_path, 'locale'),)
-TIME_ZONE = settings.time_zone
-USE_I18N = settings.use_i18n
-USE_L10N = settings.use_l10n
-USE_TZ = settings.use_tz
+LOCALE_PATHS = (os.path.join(app_settings.src_path, 'locale'),)
+TIME_ZONE = app_settings.time_zone
+USE_I18N = app_settings.use_i18n
+USE_L10N = app_settings.use_l10n
+USE_TZ = app_settings.use_tz
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_ROOT = os.path.join(settings.src_path, 'static_root')
+STATIC_ROOT = os.path.join(app_settings.src_path, 'static_root')
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(settings.src_path, 'static')]
+STATICFILES_DIRS = [os.path.join(app_settings.src_path, 'static')]
 
 # uncomment to use manifest storage to bust cache when file change
 # note: this may break some image references in sass files which is why it is not enabled by default
 # STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
-MEDIA_ROOT = os.path.join(settings.root_path, 'media')
+MEDIA_ROOT = os.path.join(app_settings.root_path, 'media')
 MEDIA_URL = '/media/'
 
 # Default primary key field type
@@ -116,7 +132,8 @@ PROJECT_APPS = [
     "apps.api.dns.apps.DNSConfig",
     "apps.api.accounts.apps.AccountsConfig",
     "apps.api.activity.apps.ActivityConfig",
-    "apps.api.templates.apps.ActivityConfig"
+    "apps.api.templates.apps.ActivityConfig",
+    "apps.globalSettings.apps.GlobalSettingsConfig",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
@@ -139,7 +156,7 @@ MIDDLEWARE = [
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [settings.template_path, ],
+        "DIRS": [app_settings.template_path, ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -153,7 +170,7 @@ TEMPLATES = [
     },
     {
         'BACKEND': 'django.template.backends.jinja2.Jinja2',
-        'DIRS': [settings.template_path, ],
+        'DIRS': [app_settings.template_path, ],
         'APP_DIRS': False,
         'OPTIONS': {
             'environment': 'pda.jinja2.JinjaEnvironment',
@@ -174,32 +191,32 @@ TEMPLATES = [
 
 DATABASES = {}
 
-if isinstance(settings.db_url, str) and len(settings.db_url.strip()):
+if isinstance(app_settings.db_url, str) and len(app_settings.db_url.strip()):
     import environ
 
     env = environ.Env()
-    DATABASES['default'] = env.db_url_config(url=settings.db_url)
+    DATABASES['default'] = env.db_url_config(url=app_settings.db_url)
 
     if 'NAME' in DATABASES['default'] and isinstance(DATABASES['default']['NAME'], str) and len(
             DATABASES['default']['NAME'].strip()):
-        DATABASES['default']['NAME'] = os.path.join(settings.root_path, DATABASES['default']['NAME'])
+        DATABASES['default']['NAME'] = os.path.join(app_settings.root_path, DATABASES['default']['NAME'])
 else:
     db: dict = {}
-    db_engine: str = settings.db_engine.lower()
+    db_engine: str = app_settings.db_engine.lower()
 
     if db_engine == 'sqlite':
         db = {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': settings.db_path,
+            'NAME': app_settings.db_path,
         }
 
     elif db_engine in ['mysql', 'postgresql']:
         db = {
-            'HOST': settings.db_host,
-            'PORT': settings.db_port,
-            'USER': settings.db_user,
-            'PASSWORD': settings.db_password,
-            'NAME': settings.db_name,
+            'HOST': app_settings.db_host,
+            'PORT': app_settings.db_port,
+            'USER': app_settings.db_user,
+            'PASSWORD': app_settings.db_password,
+            'NAME': app_settings.db_name,
         }
 
         if db_engine == 'mysql':
@@ -248,12 +265,12 @@ AUTH_PASSWORD_VALIDATORS = [
 # Allauth setup
 
 ACCOUNT_ADAPTER = 'apps.users.adapter.AccountAdapter'
-ACCOUNT_AUTHENTICATION_METHOD = settings.account_authentication_method
-ACCOUNT_EMAIL_REQUIRED = settings.account_email_required
-ACCOUNT_EMAIL_SUBJECT_PREFIX = settings.email_subject_prefix
+ACCOUNT_AUTHENTICATION_METHOD = app_settings.account_authentication_method
+ACCOUNT_EMAIL_REQUIRED = app_settings.account_email_required
+ACCOUNT_EMAIL_SUBJECT_PREFIX = app_settings.email_subject_prefix
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_USERNAME_REQUIRED = settings.account_username_required
+ACCOUNT_USERNAME_REQUIRED = app_settings.account_username_required
 ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = True
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_LOGOUT_ON_GET = True
@@ -261,11 +278,27 @@ ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = False
 
 # User signup configuration: change to "mandatory" to require users to confirm email before signing in.
 # or "optional" to send confirmation emails but not require them
-ACCOUNT_EMAIL_VERIFICATION = settings.account_email_verification
+ACCOUNT_EMAIL_VERIFICATION = app_settings.account_email_verification
 
 ALLAUTH_2FA_ALWAYS_REVEAL_BACKUP_TOKENS = False
 
+# LDAP Configuration
+#AUTH_LDAP_SERVER_URI = os.environ.get('AUTH_LDAP_SERVER_URI', 'ldap://ldap.example.com')
+#AUTH_LDAP_BIND_DN = os.environ.get('AUTH_LDAP_BIND_DN', '')
+#AUTH_LDAP_BIND_PASSWORD = os.environ.get('AUTH_LDAP_BIND_PASSWORD', '')
+#AUTH_LDAP_USER_SEARCH = LDAPSearch(
+#    'ou=users,dc=example,dc=com',
+#    ldap.SCOPE_SUBTREE,
+#    '(uid=%(user)s)'
+#)
+#AUTH_LDAP_USER_ATTR_MAP = {
+#    "first_name": "givenName",
+#    "last_name": "sn",
+#    "email": "mail"
+#}
+
 AUTHENTICATION_BACKENDS = (
+#    'django_auth_ldap.backend.LDAPBackend',
     # Needed to log in by username in Django admin, regardless of `allauth`
     'django.contrib.auth.backends.ModelBackend',
     # `allauth` specific authentication methods, such as login by e-mail
@@ -275,21 +308,21 @@ AUTHENTICATION_BACKENDS = (
 # Email setup
 
 EMAIL_BACKEND = None
-if isinstance(settings.email_backend, str) and len(settings.email_backend.strip()):
-    ADMINS = [(settings.admin_name, settings.admin_email)]
-    DEFAULT_FROM_EMAIL = settings.site_from_email
-    SERVER_EMAIL = settings.admin_from_email
-    EMAIL_BACKEND = settings.email_backend
-    EMAIL_HOST = settings.email_host
-    EMAIL_HOST_PASSWORD = settings.email_host_password
-    EMAIL_HOST_USER = settings.email_host_user
-    EMAIL_PORT = settings.email_port
-    EMAIL_SSL_CERTFILE = settings.email_ssl_certfile
-    EMAIL_SSL_KEYFILE = settings.email_ssl_keyfile
-    EMAIL_SUBJECT_PREFIX = settings.email_subject_prefix
-    EMAIL_TIMEOUT = settings.email_timeout
-    EMAIL_USE_SSL = settings.email_use_ssl
-    EMAIL_USE_TLS = settings.email_use_tls
+if isinstance(app_settings.email_backend, str) and len(app_settings.email_backend.strip()):
+    ADMINS = [(app_settings.admin_name, app_settings.admin_email)]
+    DEFAULT_FROM_EMAIL = app_settings.site_from_email
+    SERVER_EMAIL = app_settings.admin_from_email
+    EMAIL_BACKEND = app_settings.email_backend
+    EMAIL_HOST = app_settings.email_host
+    EMAIL_HOST_PASSWORD = app_settings.email_host_password
+    EMAIL_HOST_USER = app_settings.email_host_user
+    EMAIL_PORT = app_settings.email_port
+    EMAIL_SSL_CERTFILE = app_settings.email_ssl_certfile
+    EMAIL_SSL_KEYFILE = app_settings.email_ssl_keyfile
+    EMAIL_SUBJECT_PREFIX = app_settings.email_subject_prefix
+    EMAIL_TIMEOUT = app_settings.email_timeout
+    EMAIL_USE_SSL = app_settings.email_use_ssl
+    EMAIL_USE_TLS = app_settings.email_use_tls
 
 # DRF config
 REST_FRAMEWORK = {
@@ -300,9 +333,9 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': settings.site_title,
-    'DESCRIPTION': settings.site_description,
-    'VERSION': settings.version,
+    'TITLE': app_settings.site_title,
+    'DESCRIPTION': app_settings.site_description,
+    'VERSION': app_settings.version,
     'SERVE_INCLUDE_SCHEMA': False,
     'SWAGGER_UI_SETTINGS': {
         'displayOperationId': True,
@@ -321,11 +354,11 @@ SPECTACULAR_SETTINGS = {
 }
 
 REDIS_URL: str | None = None
-if isinstance(settings.redis_url, str) and len(settings.redis_url.strip()):
-    REDIS_URL = settings.redis_url
-elif isinstance(settings.redis_host, str) and len(settings.redis_host.strip()):
-    REDIS_HOST = settings.redis_host
-    REDIS_PORT = settings.redis_port
+if isinstance(app_settings.redis_url, str) and len(app_settings.redis_url.strip()):
+    REDIS_URL = app_settings.redis_url
+elif isinstance(app_settings.redis_host, str) and len(app_settings.redis_host.strip()):
+    REDIS_HOST = app_settings.redis_host
+    REDIS_PORT = app_settings.redis_port
     REDIS_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
 
 if isinstance(REDIS_URL, str):
@@ -379,24 +412,25 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console', 'mail_admins'],
-            'level': settings.log_level_django,
+            'level': app_settings.log_level_django,
         },
         'django.server': {
             'handlers': ['django.server'],
-            'level': settings.log_level_django,
+            'level': app_settings.log_level_django,
             'propagate': False,
         },
         'pda': {
             'handlers': ['console'],
-            'level': settings.log_level_app,
+            'level': app_settings.log_level_app,
         },
     },
 }
 
+
 # Setup Sentry Exception Tracking
-if isinstance(settings.sentry_dsn, str) and len(settings.sentry_dsn.strip()):
+if isinstance(app_settings.sentry_dsn, str) and len(app_settings.sentry_dsn.strip()):
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
 
-    sentry_sdk.init(dsn=settings.sentry_dsn, integrations=[DjangoIntegration()])
+    sentry_sdk.init(dsn=app_settings.sentry_dsn, integrations=[DjangoIntegration()])
 

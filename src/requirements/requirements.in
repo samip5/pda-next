@@ -1,5 +1,6 @@
 Django
-django-allauth
+django-allauth[oidc]
+django-auth-ldap
 django-allauth-2fa
 django-waffle
 psycopg2-binary

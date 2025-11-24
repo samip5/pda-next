@@ -1,12 +1,13 @@
 from .base import *
 from pathlib import Path
-from config import settings as app_settings
 
 # Use the pydantic AppSettings instance (app_settings) for canonical paths and values.
-BASE_DIR = Path(app_settings.root_path)
+BASE_DIR = Path(__file__).resolve().parents[2]
 
 # Enable debug by default in dev
 DEBUG = True
+
+INTERNAL_IPS = ['127.0.0.1']
 
 # Development database: sqlite file inside the project root
 DATABASES = {
@@ -39,6 +40,3 @@ if isinstance(LOGGING, dict):
 SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
-powerdns_api_url="http://172.8.0.20:8081/api/v1"
-powerdns_api_key="secret"
-powerdns_api_timeout=30000
