@@ -171,7 +171,7 @@ class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
             return Response(resp)
 
     @action(detail=False, methods=['get', 'post'], url_path='zones/(?P<zone_name>[^/]+)/records')
-    @method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone]})
+    #@method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone]})
     def zone_records(self, request, zone_name=None):
         if request.method == 'GET':
             """
@@ -285,7 +285,7 @@ class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
             return Response(RecordSerializer(record).data)
 
     @action(detail=False, methods=['get', 'post','delete'], url_path='zones/(?P<zone_name>[^/]+)/records/(?P<record_id>[^/]+)')
-    @method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone], 'DELETE': [CanManageZone]})
+    #@method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone], 'DELETE': [CanManageZone]})
     def zone_record(self, request, zone_name=None, record_id=None):
         service = PowerDNSService()
         # Ensure zone name has trailing dot

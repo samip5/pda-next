@@ -34,7 +34,16 @@
                     {{ account_edit_form.description }}
                     {{ account_edit_form.description.errors }}
                 </div>
-
+                <div class="mb-3 input-group input-group-static">
+                    {{ account_edit_form.owner.label_tag }}
+                    {{ account_edit_form.owner }}
+                    {{ account_edit_form.owner.errors }}
+                </div>
+               <div class="mb-3 input-group input-group-static">
+                    {{ account_edit_form.members.label_tag }}
+                    {{ account_edit_form.members }}
+                    {{ account_edit_form.members.errors }}
+                </div>
                 <input class="btn btn-info w-100" type="submit" value="{% translate "Save" %}">
             </form>
         </div>
@@ -53,6 +62,9 @@
             <h3 class="pg-title">Members</h3>
             <div class="mt-4">
                 <div class="d-flex flex-row flex-wrap">
+                    {% for member in members %}
+                        <a class="btn btn-secondary  px-4 py-2 m-2 rounded-3" href="">{{ member }}</a>
+                    {% endfor %}
                 </div>
             </div>
         </div>

@@ -68,12 +68,16 @@ def accounts(request):
     accountList = Account.objects.all()
     zone_instances = get_zones()
     zone_counts = []
+    member_counts = []
     for account in accountList:
         zone_counts.append({
             "account_id": account.id,
             "count": zone_instances.filter(account=account).count()
         })
-        account.members = 1
+        member_counts.append({
+            "account_id": account.id,
+            "count": account.members.count()
+        })
     return render(
         request,
         "admin/accounts.html",
@@ -82,6 +86,7 @@ def accounts(request):
             "page_title": _("Accounts"),
             "accounts": accountList,
             "zone_counts": zone_counts,
+            "member_counts": member_counts,
             "account_create_form": account_create_form
         },
     )
@@ -99,6 +104,7 @@ def account(request, id):
         account_edit_form = AccountForm(instance=account_instance)
     zone_instances = get_zones()
     filtered_zones = zone_instances.filter(account=account_instance)
+    members = account_instance.members.all()
     return render(
         request,
         "admin/account.html",
@@ -107,6 +113,7 @@ def account(request, id):
             "page_title": _("Account"),
             "zones": filtered_zones,
             "account": account_instance,
+            "members": members,
             "account_edit_form": account_edit_form
         },
     )

@@ -44,6 +44,16 @@
                     {{ account_create_form.description }}
                     {{ account_create_form.description.errors }}
                 </div>
+                <div class="mb-3 input-group input-group-static">
+                    {{ account_create_form.owner.label_tag }}
+                    {{ account_create_form.owner }}
+                    {{ account_create_form.owner.errors }}
+                </div>
+               <div class="mb-3 input-group input-group-static">
+                    {{ account_create_form.members.label_tag }}
+                    {{ account_create_form.members }}
+                    {{ account_create_form.members.errors }}
+                </div>
                 <input class="btn btn-info w-100" type="submit" value="{% translate 'Create' %}">
             </form>
           </div>
@@ -74,7 +84,13 @@
             <td>{{ account.description }}</td>
             <td>{{ account.contact }}</td>
             <td>{{ account.mail }}</td>
-            <td>{{ account.members }}</td>
+            <td>
+                {% for z in member_counts %}
+                    {% if z.account_id == account.id %}
+                        {{ z.count }}
+                    {% endif %}
+                {% endfor %}
+            </td>
             <td>
                 {% for z in zone_counts %}
                     {% if z.account_id == account.id %}
