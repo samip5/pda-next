@@ -4,7 +4,7 @@
 {% block app %}
 <section class="app-card">
     <h1 class="pg-title">Zones</h1>
-    {% if perms.pda.admin_zones_create %}
+    {% if perms.api_dns.add_zone %}
     <button class="btn btn-info p-2" data-bs-toggle="modal" data-bs-target="#zoneCreateModal">
         <span class="pg-icon"><i class="fa fa-plus"></i></span>
     </button>
@@ -78,12 +78,12 @@
             <td>{{ zone.account }}</td>
             <td></td>
             <td class="buttons">
-                {% if perms.pda.admin_zones_edit %}
+                {% if perms.api_dns.change_zone %}
                 <a href="/admin/zones/{{ zone.name }}" class="btn btn-warning py-1 px-2">
                     <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
                 </a>
                 {% endif %}
-                {% if perms.pda.admin_zones_delete %}
+                {% if perms.api_dns.delete_zone %}
                 <button class="btn btn-danger py-1 px-2">
                     <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
                 </button>

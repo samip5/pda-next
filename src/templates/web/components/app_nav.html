@@ -18,7 +18,7 @@
           <span class="pg-icon"><i class="fa fa-globe"></i></span><span>{% translate "Domains" %}</span>
         </a>
       </li>
-    {% if perms.pda.admin %}
+    {% if perms.api_dns %}
       <li class="nav-item mt-3">
         <h6 class="ps-4 ms-2 text-uppercase text-xs text-white font-weight-bolder opacity-8">{% translate "Admin area" %}</h6>
         <div class="pt-1 mt-2 bg-gray-600"></div>
@@ -44,7 +44,7 @@
         </a>
       </li>
     {% endif %}
-    {% if perms.pda.admin_zones %}
+    {% if perms.api_dns.view_zone %}
       <li class="nav-item">
         <a href="{% url 'pdaAdmin:zones' %}" class="nav-link {% if active_tab == 'admin_zones' %}active{% endif %}">
           <span class="pg-icon"><i class="fa fa-globe"></i></span><span>{% translate "Zones" %}</span>

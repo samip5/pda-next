@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Any
 
 from django.db.models import QuerySet
@@ -62,8 +63,8 @@ def get_zones() -> list[Any] | QuerySet[Zone, Zone]:
             if zone.get('nameservers') == '':
                 zone['nameservers'] = ["ns1.kapsi.fi"]
 
-            if zone.get('account', '') != "":
-               zone_account = Account.objects.filter(id=zone.get('account')).first()
+            if _is_valid_uuid(zone.get('account', '')):
+                zone_account = Account.objects.filter(id=zone.get('account')).first()
 
             zone = Zone(
               name=zone.get('name', ''),
@@ -93,7 +94,7 @@ def get_zone(zone_name: str) -> Zone:
     try:
         zone = service.get_zone(zone_name)
 
-        if zone.get('account', '') != "":
+        if _is_valid_uuid(zone.get('account', '')):
            zone_account = Account.objects.filter(id=zone.get('account')).first()
 
         zone = Zone(
@@ -165,3 +166,9 @@ def get_records(zone_name: str):
         Record.objects.filter(zone=zone).all()
         logger.error(e)
 
+def _is_valid_uuid(value):
+    try:
+        uuid_obj = uuid.UUID(str(value))
+        return True
+    except ValueError:
+        return False

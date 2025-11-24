@@ -119,7 +119,7 @@ def account(request, id):
     )
 
 @login_required
-@permission_required('pda.admin_zones', raise_exception=True)
+@permission_required('api_dns.view_zone', raise_exception=True)
 def zones(request):
     service = PowerDNSService()
     accountList = Account.objects.all()
@@ -152,7 +152,7 @@ def zones(request):
     )
 
 @login_required
-@permission_required('pda.admin_zones', raise_exception=True)
+@permission_required('api_dns.view_zone', raise_exception=True)
 def zone(request, id):
     zone_name = id
     if not zone_name.endswith('.'):

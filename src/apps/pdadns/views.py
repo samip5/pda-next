@@ -1,9 +1,11 @@
+import logging
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
-
+from django.db.models import Q
+from apps.api.accounts.models import Account
 from apps.api.activity.helpers import addActivityLog
 from apps.api.activity.models.activity import ActionType
 from apps.api.dns.helpers import recordUpdateHelper, get_zones, get_zone, get_records
@@ -18,6 +20,8 @@ Frontend Views
 @login_required
 def domains(request):
     zone_instances = get_zones()
+    accounts = Account.objects.filter(Q(members=request.user) | Q(owner=request.user))
+    zone_instances = zone_instances.filter(account__in=accounts)
 
     return render(
         request,
