@@ -24,7 +24,13 @@
             <td>{{ account.contact }}</td>
             <td>{{ account.mail }}</td>
             <td>{{ account.members }}</td>
-            <td>{{ account.zones }}</td>
+            <td>
+                {% for z in zone_counts %}
+                    {% if z.account_id == account.id %}
+                        {{ z.count }}
+                    {% endif %}
+                {% endfor %}
+            </td>
             <td>
                 <span class="pg-icon bg-danger p-3 rounded-3 text-white"><i class="fa fa-trash-o"></i></span>
                 <a href="/admin/accounts/{{ account.id }}"><span class="pg-icon bg-warning p-3 rounded-3 text-white"><i class="fa fa-pencil-square"></i></span></a>

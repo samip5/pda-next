@@ -1,13 +1,15 @@
 from jsonschema import ValidationError
 
 from apps.api.activity.models import Activity
+from apps.api.activity.models.activity import ActionType
+from apps.users.models import CustomUser
 
 
-def addActivityLog(action: str, details: str, user: int, apikey: str, api: bool):
+def addActivityLog(action: ActionType, details: str, user: CustomUser, apikey: str = '', api: bool = False):
     log = Activity(
         action=action,
         details=details,
-        user=str(user),
+        user=user,
         apikey=apikey,
         api=api,
     )

@@ -30,7 +30,7 @@ if isinstance(LOGGING, dict):
 
     loggers = LOGGING.setdefault('loggers', {})
     if 'django' in loggers:
-        loggers['django']['level'] = 'DEBUG'
+        loggers['django']['level'] = 'INFO'
     if 'pda' in loggers:
         loggers['pda']['level'] = 'DEBUG'
 
@@ -38,3 +38,6 @@ if isinstance(LOGGING, dict):
 SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
+powerdns_api_url="http://172.8.0.20:8081/api/v1"
+powerdns_api_key="secret"
+powerdns_api_timeout=30000

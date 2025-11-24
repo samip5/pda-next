@@ -68,6 +68,8 @@ class Zone(models.Model):
     # Nameservers
     nameservers = models.JSONField(
         default=list,
+        null=True,
+        blank=True,
         help_text='List of nameserver hostnames'
     )
     
@@ -88,7 +90,7 @@ class Zone(models.Model):
     
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_zones')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_zones')
 
     class Meta:
         db_table = 'pdadns_zones'

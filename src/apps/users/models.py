@@ -28,3 +28,10 @@ class CustomUser(AbstractUser):
             return self.avatar.url
         else:
             return settings.STATIC_URL + "images/user.svg"
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "username": self.username,
+            "email": self.email,
+            "avatar_url": self.avatar_url
+        }

@@ -33,7 +33,7 @@ def domains(request):
             nameservers=zone.get('nameservers', []),
             server_id=zone.get('server_id', 'localhost'),
             powerdns_id=zone.get('id'),
-            account=zone_account,
+            account=None,
             dnssec=zone.get('dnssec', '')
         )
 

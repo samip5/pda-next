@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.utils.translation import gettext_lazy as _
@@ -6,9 +8,13 @@ from apps.api.accounts.helpers import updateAccount
 from apps.api.accounts.models import Account
 from apps.api.activity.helpers import addActivityLog
 from apps.api.activity.models import Activity
+from apps.api.activity.models.activity import ActionType
+from apps.api.dns.helpers import get_zones, get_zone, get_records
 from apps.api.dns.models import Zone, Record
 from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
+
+logger = logging.getLogger('pda')
 
 @login_required
 def dashboard(request):
@@ -37,24 +43,13 @@ def settings(request):
 @login_required
 def accounts(request):
     accountList = Account.objects.all()
-    service = PowerDNSService()
-    powerdns_zones = service.get_zones("localhost")
-
-    # Convert PowerDNS record format to Record model instances (not saved)
-    zone_instances = []
-    for zone in powerdns_zones:
-        zone_a = Zone(
-            name=zone.get('name', ''),
-            kind=zone.get('kind', Zone.ZONE_KIND_NATIVE),
-            nameservers=zone.get('nameservers', []),
-            server_id=zone.get('server_id', 'localhost'),
-            powerdns_id=zone.get('id'),
-            account=zone.get('account', ''),
-            dnssec=zone.get('dnssec', '')
-        )
-        zone_instances.append(zone_a)
+    zone_instances = get_zones()
+    zone_counts = []
     for account in accountList:
-        account.zones = len([zone for zone in zone_instances if zone.account == str(account.id)])
+        zone_counts.append({
+            "account_id": account.id,
+            "count": zone_instances.filter(account=account).count()
+        })
         account.members = 1
     return render(
         request,
@@ -62,7 +57,8 @@ def accounts(request):
         {
             "active_tab": "pda_accounts",
             "page_title": _("Accounts"),
-            "accounts": accountList
+            "accounts": accountList,
+            "zone_counts": zone_counts
         },
     )
 @login_required
@@ -75,34 +71,19 @@ def account(request, id):
         except Exception as e:
             messages.add_message(request, messages.WARNING, f"{e}")
 
-    service = PowerDNSService()
-    powerdns_zones = service.get_zones("localhost")
-    accountElement = Account.objects.filter(id=id).first()
+    account_instance = Account.objects.filter(id=id).first()
 
-    # Convert PowerDNS record format to Record model instances (not saved)
-    zone_instances = []
-    for zone in powerdns_zones:
-        zone_a = Zone(
-            name=zone.get('name', ''),
-            kind=zone.get('kind', Zone.ZONE_KIND_NATIVE),
-            nameservers=zone.get('nameservers', []),
-            server_id=zone.get('server_id', 'localhost'),
-            powerdns_id=zone.get('id'),
-            account=zone.get('account', ''),
-            dnssec=zone.get('dnssec', '')
-        )
-        if str(accountElement.id) == zone_a.account:
-            zone_instances.append(zone_a)
+    zone_instances = get_zones()
+    filtered_zones = zone_instances.filter(account=account_instance)
 
-    accountElement = Account.objects.filter(id=id).first()
     return render(
         request,
         "admin/account.html",
         {
             "active_tab": "pda_account",
             "page_title": _("Account"),
-            "zones": zone_instances,
-            "account": accountElement
+            "zones": filtered_zones,
+            "account": account_instance
         },
     )
 
@@ -126,26 +107,7 @@ def zones(request):
         except Exception as e:
             messages.add_message(request, messages.WARNING, f"{e}")
 
-    powerdns_zones = service.get_zones("localhost")
-
-    # Convert PowerDNS record format to Record model instances (not saved)
-    zone_instances = []
-    for zone in powerdns_zones:
-        zone_account = 'None'
-        if zone.get('account', '') != '' and Account.objects.filter(id=zone.get('account', '')).first():
-            zone_account = Account.objects.filter(id=zone.get('account', '')).first()
-        zone_a = Zone(
-            name=zone.get('name', ''),
-            kind=zone.get('kind', Zone.ZONE_KIND_NATIVE),
-            nameservers=zone.get('nameservers', []),
-            server_id=zone.get('server_id', 'localhost'),
-            powerdns_id=zone.get('id'),
-            account=zone_account,
-            dnssec=zone.get('dnssec', '')
-        )
-
-        zone_instances.append(zone_a)
-
+    zone_instances = get_zones()
 
     return render(
         request,
@@ -165,71 +127,31 @@ def zone(request, id):
         zone_name = f"{zone_name}."
 
     service = PowerDNSService()
-    powerdns_zone = service.get_zone(zone_name)
+    zzone = get_zone(zone_name)
     accountList = Account.objects.all()
 
     for account in accountList:
         account.id_str = str(account.id)
 
-    zone = Zone(
-        name=zone_name,
-        kind=powerdns_zone.get('kind', Zone.ZONE_KIND_NATIVE),
-        nameservers=powerdns_zone.get('nameservers', []),
-        server_id=powerdns_zone.get('server_id', 'localhost'),
-        account=powerdns_zone.get('account', ''),
-        dnssec=powerdns_zone.get('dnssec', ''),
-        powerdns_id=powerdns_zone.get('id')
-    )
     if request.method == "POST":
-        updatedZone = Zone(
-            name=zone.name,
-            account=request.POST.get('account', zone.account),
-            nameservers=zone.nameservers,
-            dnssec=zone.dnssec
+        zone_account = Account.objects.filter(id=request.POST.get('account', '')).first()
+        updated_zone = Zone(
+            name=zzone.name,
+            account=zone_account,
+            nameservers=zzone.nameservers,
+            dnssec=zzone.dnssec
         )
 
         try:
-            service.update_zone(zone_name=zone_name, account=updatedZone.account,
-                                nameservers=updatedZone.nameservers,
-                                dnssec=updatedZone.dnssec)
-            addActivityLog("Zone updated", f"{zone_name} - {updatedZone.account}", request.user.id, '', False)
-            zone = updatedZone
+            service.update_zone(zone_name=zone_name, account=str(updated_zone.account.id),
+                                nameservers=updated_zone.nameservers,
+                                dnssec=updated_zone.dnssec)
+            addActivityLog(ActionType.ZONE_UPDATE, f"{zone_name} - {updated_zone.account}", request.user, '', False)
+            zone = updated_zone
         except Exception as e:
             messages.add_message(request, messages.WARNING, f"{e}")
 
-    powerdns_records = service.get_records(zone_name)
-
-    # Convert PowerDNS record format to Record model instances (not saved)
-    record_instances = []
-    for rrset in powerdns_records:
-        rrset_name = rrset.get('name', '')
-        rrset_type = rrset.get('type', '')
-        rrset_ttl = rrset.get('ttl', 3600)
-
-        for record_data in rrset.get('records', []):
-            content = record_data.get('content', '')
-            disabled = record_data.get('disabled', False)
-
-            # Normalize name (remove zone suffix if present)
-            normalized_name = rrset_name
-            if normalized_name.endswith('.'):
-                normalized_name = normalized_name.rstrip('.')
-            zone_name_clean = zone_name.rstrip('.')
-            if normalized_name == zone_name_clean:
-                normalized_name = '@'
-            elif normalized_name.endswith(f".{zone_name_clean}"):
-                normalized_name = normalized_name[:-len(f".{zone_name_clean}")]
-
-            # Create Record instance in memory (not saved to DB)
-            record = Record(
-                zone=powerdns_zone.get("zone_name"),
-                name=normalized_name,
-                record_type=rrset_type,
-                content=content,
-                ttl=rrset_ttl,
-                disabled=disabled,
-            )
-            record_instances.append(record)
+    record_instances = get_records(zone_name)
 
     return render(
         request,
@@ -237,7 +159,7 @@ def zone(request, id):
         {
             "active_tab": "admin_zone",
             "page_title": _("Zone"),
-            "zone":zone,
+            "zone":zzone,
             "records": record_instances,
             "accounts":accountList
         },

@@ -11,6 +11,7 @@ from .models.zone import Zone
 from .serializers import ZoneSerializer
 from .serializers import RecordSerializer
 from .services import PowerDNSService
+from ..accounts.models import Account
 
 logger = logging.getLogger('pda')
 
@@ -84,6 +85,7 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
             zone_instances = []
             for zone in powerdns_zones:
                 zone_name = zone.get('name', '')
+                zone_account = Account.objects.filter(id=zone.get('account', '')).first()
 
                 zone_a = Zone(
                     name=zone_name,
@@ -91,7 +93,7 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
                     nameservers=zone.get('nameservers', []),
                     server_id=zone.get('server_id', 'localhost'),
                     powerdns_id=zone.get('id'),
-                    account=zone.get('account', ''),
+                    account=zone_account,
                     dnssec=zone.get('dnssec', '')
                 )
 
@@ -105,9 +107,10 @@ class RecordViewSet(viewsets.ReadOnlyModelViewSet):
             Create a New zone.
 
             """
+
             zone_name = request.data.get('name', '')
             zone_type = request.data.get('type', '')
-            zone_account = request.data.get('account', '')
+            zone_account = Account.objects.filter(id=request.data.get('account', '')).first()
             zone_nameservers = request.data.get('nameservers', [])
             service = PowerDNSService()
             resp = service.create_zone(zone_name=zone_name, kind=zone_type, account=zone_account,
