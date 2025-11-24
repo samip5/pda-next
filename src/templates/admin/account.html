@@ -9,37 +9,37 @@
     <div class="d-flex flex-row gap-4 justify-content-center my-4">
         {% if perms.pda.admin_accounts_edit %}
         <div class="pg-column-one-third card bg-gray-800 p-4 m-2">
-            <form class="d-flex flex-column" method="post">
+            <form class="pda-form" method="post">
                 {% csrf_token %}
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     {{ account_edit_form.name.label_tag }}
                     {{ account_edit_form.name }}
                     {{ account_edit_form.name.errors }}
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     {{ account_edit_form.mail.label_tag }}
                     {{ account_edit_form.mail }}
                     {{ account_edit_form.mail.errors }}
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     {{ account_edit_form.contact.label_tag }}
                     {{ account_edit_form.contact }}
                     {{ account_edit_form.contact.errors }}
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     {{ account_edit_form.description.label_tag }}
                     {{ account_edit_form.description }}
                     {{ account_edit_form.description.errors }}
                 </div>
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     {{ account_edit_form.owner.label_tag }}
                     {{ account_edit_form.owner }}
                     {{ account_edit_form.owner.errors }}
                 </div>
-               <div class="mb-3 input-group input-group-static">
+               <div class="pda-input-group">
                     {{ account_edit_form.members.label_tag }}
                     {{ account_edit_form.members }}
                     {{ account_edit_form.members.errors }}

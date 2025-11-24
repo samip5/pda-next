@@ -37,13 +37,13 @@
   {% empty %}
     <p>{% translate "You haven't created any API keys yet. Create one below." %}</p>
   {% endfor %}
-  <form class="" method="post" action="{% url 'users:create_api_key' %}">
+  <form class="pda-form" method="post" action="{% url 'users:create_api_key' %}">
     {% csrf_token %}
-    <div class="mb-3 input-group input-group-static">
+    <div class="pda-input-group">
         <label class="text-white" for="name">Api Key Name</label>
         <input id="name" name="name" class="form-control" type="text" required>
     </div>
-    <div class="mt-2">
+    <div>
       <input type="submit" class="btn btn-info" value="{% translate "New API Key" %}" />
     </div>
   </form>

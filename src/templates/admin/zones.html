@@ -18,22 +18,22 @@
           </div>
 
           <div class="modal-body">
-            <form class="d-flex flex-column" method="post">
+            <form class="pda-form" method="post">
                 {% csrf_token %}
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     <label class="text-white" for="{{ new_zone_form.name.id_for_label }}">Name</label>
                     {{ new_zone_form.name }}
                     {{ new_zone_form.name.errors }}
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     <label class="text-white" for="{{ new_zone_form.account.id_for_label }}">Account</label>
                     {{ new_zone_form.account }}
                     {{ new_zone_form.account.errors }}
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     <label class="text-white" for="{{ new_zone_form.dnssec.id_for_label }}">DNSSEC</label>
                     {{ new_zone_form.dnssec }}
                 </div>
@@ -51,7 +51,7 @@
     </div>
     {% endif %}
 
-  <table class="table text-white text-center">
+  <table class="pda-table w-100">
       <thead>
         <tr>
             <th>Name</th>
@@ -77,7 +77,7 @@
             <td></td>
             <td>{{ zone.account }}</td>
             <td></td>
-            <td>
+            <td class="buttons">
                 {% if perms.pda.admin_zones_edit %}
                 <a href="/admin/zones/{{ zone.name }}" class="btn btn-warning py-1 px-2">
                     <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>

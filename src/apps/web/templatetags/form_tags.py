@@ -21,7 +21,7 @@ def render_field(form_field):
 
 @register.simple_tag
 def render_text_input(form_field):
-    TEXT_INPUT_TEMPLATE = """<div class="mb-3 input-group input-group-static">
+    TEXT_INPUT_TEMPLATE = """<div class="pda-input-group">
       <label for="{{ form_field.id_for_label }}">{{ form_field.label }}</label>
       {{ form_field }}
       <small class="form-text text-muted">{{ form_field.help_text|safe }}</small>
@@ -33,7 +33,7 @@ def render_text_input(form_field):
 
 @register.simple_tag
 def render_select_input(form_field):
-    SELECT_INPUT_TEMPLATE = """<div class="mb-3">
+    SELECT_INPUT_TEMPLATE = """<div class="pda-input-group">
       <label for="{{ form_field.id_for_label }}" class="form-label text-white">{{ form_field.label }}</label>
       {{ form_field }}
       <small class="form-text text-muted">{{ form_field.help_text|safe }}</small>
@@ -46,7 +46,7 @@ def render_select_input(form_field):
 @register.simple_tag
 def render_checkbox_input(form_field):
     CHECKBOX_INPUT_TEMPLATE = """
-    <div class="mb-3">
+    <div class="pda-input-group">
       <div class="form-check">
         {{ form_field }}
         <label class="form-check-label" for="flexCheckChecked">

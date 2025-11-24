@@ -17,39 +17,39 @@
           </div>
 
           <div class="modal-body">
-            <form class="d-flex flex-column" method="post">
+            <form class="pda-form" method="post">
                 {% csrf_token %}
 
                 {% csrf_token %}
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     {{ account_create_form.name.label_tag }}
                     {{ account_create_form.name }}
                     {{ account_create_form.name.errors }}
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     {{ account_create_form.mail.label_tag }}
                     {{ account_create_form.mail }}
                     {{ account_create_form.mail.errors }}
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     {{ account_create_form.contact.label_tag }}
                     {{ account_create_form.contact }}
                     {{ account_create_form.contact.errors }}
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     {{ account_create_form.description.label_tag }}
                     {{ account_create_form.description }}
                     {{ account_create_form.description.errors }}
                 </div>
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     {{ account_create_form.owner.label_tag }}
                     {{ account_create_form.owner }}
                     {{ account_create_form.owner.errors }}
                 </div>
-               <div class="mb-3 input-group input-group-static">
+               <div class="pda-input-group">
                     {{ account_create_form.members.label_tag }}
                     {{ account_create_form.members }}
                     {{ account_create_form.members.errors }}
@@ -65,7 +65,7 @@
         </div>
       </div>
     </div>
-    <table class="table text-white text-center">
+    <table class="pda-table w-100">
       <thead>
         <tr>
             <th>Name</th>

@@ -19,10 +19,10 @@ class AccountForm(forms.ModelForm):
         model = Account
         fields = ['name', 'mail', 'contact', 'description', 'owner', 'members']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'mail': forms.EmailInput(attrs={'class': 'form-control'}),
-            'contact': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control'}),
-            'owner': forms.Select(attrs={'class': 'form-control'}),
-            'members': forms.CheckboxSelectMultiple(attrs={'class': ''}),
+            'name': forms.TextInput(),
+            'mail': forms.EmailInput(),
+            'contact': forms.TextInput(),
+            'description': forms.Textarea(),
+            'owner': forms.Select(),
+            'members': forms.CheckboxSelectMultiple(),
         }

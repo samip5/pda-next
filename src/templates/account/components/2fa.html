@@ -2,10 +2,10 @@
 <section>
   <h2 class="pg-subtitle">{% translate "Two-Factor Auth" %}</h2>
     {% if user_has_valid_totp_device %}
-        <p class="mb-3">{% translate "You already have two-factor authentication enabled." %}</p>
+        <p class="mb-3 text-white">{% translate "You already have two-factor authentication enabled." %}</p>
         <a href="{% url "two-factor-setup" %}" class="btn btn-success">{% translate "Configure" %}</a>
     {% else %}
-        <p class="mb-3">{% translate "You do not have two-factor authentication enabled." %}</p>
+        <p class="mb-3 text-white">{% translate "You do not have two-factor authentication enabled." %}</p>
         <a href="{% url "two-factor-setup" %}" class="btn btn-info">{% translate "Enable" %}</a>
     {% endif %}
 </section>

@@ -7,14 +7,14 @@
     <div class="pg-columns">
         {% if perms.pda.admin_zones_edit %}
         <div class="pg-column-one-third">
-            <form class="d-flex flex-column" method="post">
+            <form class="pda-form" method="post">
                 {% csrf_token %}
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     <label class="text-white" for="name">Name</label>
                     <input id="name" name="name" class="form-control" type="text" value="{{ zone.name }}" disabled >
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-grouptic">
                     <label class="text-white" for="account">Account</label>
                     <select id="account" name="account" class="form-control">
                         {% for account in accounts %}
@@ -22,7 +22,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     <label class="text-white" for="name">DNSSEC</label>
                     <input disabled id="name" name="name" class="form-control" type="text" value="{{ zone.dnssec }}" >
                 </div>
@@ -31,7 +31,7 @@
         </div>
         {% endif %}
         <div class="pg-column">
-            <table class="table text-white text-center">
+            <table class="pda-table">
                 <thead>
                   <tr>
                       <th>Name</th>
@@ -50,7 +50,7 @@
                         <td>{{ record.record_type }}</td>
                         <td>{{ record.disabled }}</td>
                         <td>{{ record.ttl }}</td>
-                        <td class="max-width-500 pda-text-wrap">{{ record.content }}</td>
+                        <td class="max-width-500 long-content">{{ record.content }}</td>
                         <td>{{ record.comments }}</td>
                         <td>
                             {% if record.record_type != "SOA" %}

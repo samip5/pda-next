@@ -20,15 +20,15 @@
 
       <div class="modal-body">
         {{ message }}
-            <form class="d-flex flex-column" method="post">
+            <form class="pda-form" method="post">
                 {% csrf_token %}
                 <input name="formName" type="hidden" value="createForm">
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     <label class="text-white" for="name">Name</label>
                     <input id="name" name="name" class="form-control" type="text" value="{{ account.name }}" >
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     <label class="text-white" for="record_type">Record Type</label>
                     <select id="record_type" name="record_type" class="form-control">
                         <option value="A">A</option>
@@ -44,12 +44,12 @@
                     </select>
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     <label class="text-white" for="content">Content</label>
                     <input id="content" name="content" class="form-control" type="text">
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     <label class="text-white" for="ttl">TTL</label>
                     <input id="ttl" name="ttl" class="form-control" type="number" value="3600">
                 </div>
@@ -66,7 +66,7 @@
   </div>
 </div>
 
-  <table class="table text-white text-center">
+  <table class="pda-table w-100">
       <thead>
         <tr>
             <th>Name</th>
@@ -85,7 +85,7 @@
             <td>{{ record.record_type }}</td>
             <td>{{ record.disabled }}</td>
             <td>{{ record.ttl }}</td>
-            <td class="max-width-500 pda-text-wrap">{{ record.content }}</td>
+            <td class="max-width-500 long-content">{{ record.content }}</td>
             <td>{{ record.comments }}</td>
             <td>
                 {% if record.record_type != "SOA" %}
@@ -107,7 +107,7 @@
                         </div>
 
                         <div class="modal-body">
-                            <form class="d-flex flex-row" method="post">
+                            <form class="pda-form" method="post">
                                 {% csrf_token %}
                                 <input name="formName" type="hidden" value="deleteForm">
                                 <input id="name" name="name" type="hidden" value="{{ record.name }}">

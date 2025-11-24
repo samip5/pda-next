@@ -10,7 +10,7 @@
         <div class="pg-column">
             <h2 class="pg-title">Profile</h2>
 
-            <form class="my-4 pda-form" method="post">
+            <form class="pda-form" method="post">
               {% csrf_token %}
               {% render_text_input form.email %}
               {% render_text_input form.first_name %}

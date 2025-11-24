@@ -19,22 +19,22 @@
           </div>
 
           <div class="modal-body">
-            <form class="d-flex flex-column" action="{% url 'pdaAdmin:zones' %}" method="post">
+            <form class="pda-form" action="{% url 'pdaAdmin:zones' %}" method="post">
                 {% csrf_token %}
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     <label class="text-white" for="{{ new_zone_form.name.id_for_label }}">Name</label>
                     {{ new_zone_form.name }}
                     {{ new_zone_form.name.errors }}
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     <label class="text-white" for="{{ new_zone_form.account.id_for_label }}">Account</label>
                     {{ new_zone_form.account }}
                     {{ new_zone_form.account.errors }}
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     <label class="text-white" for="{{ new_zone_form.dnssec.id_for_label }}">DNSSEC</label>
                     {{ new_zone_form.dnssec }}
                 </div>
@@ -65,29 +65,29 @@
           </div>
 
           <div class="modal-body">
-            <form class="d-flex flex-column" action="{% url 'pdaAdmin:accounts' %}" method="post">
+            <form class="pda-form" action="{% url 'pdaAdmin:accounts' %}" method="post">
                 {% csrf_token %}
 
                 {% csrf_token %}
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     {{ account_create_form.name.label_tag }}
                     {{ account_create_form.name }}
                     {{ account_create_form.name.errors }}
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     {{ account_create_form.mail.label_tag }}
                     {{ account_create_form.mail }}
                     {{ account_create_form.mail.errors }}
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     {{ account_create_form.contact.label_tag }}
                     {{ account_create_form.contact }}
                     {{ account_create_form.contact.errors }}
                 </div>
 
-                <div class="mb-3 input-group input-group-static">
+                <div class="pda-input-group">
                     {{ account_create_form.description.label_tag }}
                     {{ account_create_form.description }}
                     {{ account_create_form.description.errors }}
@@ -108,7 +108,7 @@
     <div class="pg-columns">
         <div class="pg-column card bg-gray-800 m-2 p-2">
             <h2 class="pg-title">Activity</h2>
-            <table class="table text-white text-center">
+            <table class="pda-table">
                 <thead>
                     <tr>
                         <th>Timestamp</th>
