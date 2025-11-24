@@ -4,6 +4,57 @@
 {% block app %}
 <section class="app-card">
     <h1 class="pg-title">Accounts</h1>
+    <button class="btn btn-info p-2" data-bs-toggle="modal" data-bs-target="#accountCreateModal">
+        <span class="pg-icon"><i class="fa fa-plus"></i></span>
+    </button>
+    <div class="modal fade" id="accountCreateModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content bg-gray-800">
+
+          <div class="modal-header">
+            <h5 class="modal-title">Account Creation</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <form class="d-flex flex-column" method="post">
+                {% csrf_token %}
+
+                {% csrf_token %}
+                <div class="mb-3 input-group input-group-static">
+                    {{ account_create_form.name.label_tag }}
+                    {{ account_create_form.name }}
+                    {{ account_create_form.name.errors }}
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    {{ account_create_form.mail.label_tag }}
+                    {{ account_create_form.mail }}
+                    {{ account_create_form.mail.errors }}
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    {{ account_create_form.contact.label_tag }}
+                    {{ account_create_form.contact }}
+                    {{ account_create_form.contact.errors }}
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    {{ account_create_form.description.label_tag }}
+                    {{ account_create_form.description }}
+                    {{ account_create_form.description.errors }}
+                </div>
+                <input class="btn btn-info w-100" type="submit" value="{% translate 'Create' %}">
+            </form>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
     <table class="table text-white text-center">
       <thead>
         <tr>

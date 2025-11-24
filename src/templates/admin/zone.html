@@ -31,26 +31,64 @@
         </div>
         {% endif %}
         <div class="pg-column">
-            <table class="text-white text-center">
+            <table class="table text-white text-center">
                 <thead>
-                  <tr class="text-lg">
+                  <tr>
                       <th>Name</th>
                       <th>Type</th>
+                      <th>Status</th>
                       <th>TTL</th>
                       <th>Data</th>
                       <th>Comments</th>
+                      <th></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {% for record in records %}
-                  <tr class="border-top my-2 text-lg" id="show-{{ record.name }}-{{ record.record_type }}">
-                      <td class="px-4 py-2 border-1">{{ record.name }}</td>
-                      <td class="px-4 py-2 border-1">{{ record.record_type }}</td>
-                      <td class="px-4 py-2 border-1">{{ record.ttl }}</td>
-                      <td class="px-4 py-2 border-1">{{ record.content }}</td>
-                      <td class="px-4 py-2 border-1">{{ record.comments }}</td>
-                  </tr>
-                  {% endfor %}
+                    {% for record in records %}
+                    <tr id="show-{{ record.name }}-{{ record.record_type }}">
+                        <td>{{ record.name }}</td>
+                        <td>{{ record.record_type }}</td>
+                        <td>{{ record.disabled }}</td>
+                        <td>{{ record.ttl }}</td>
+                        <td class="max-width-500 pda-text-wrap">{{ record.content }}</td>
+                        <td>{{ record.comments }}</td>
+                        <td>
+                            {% if record.record_type != "SOA" %}
+                            <button class="btn btn-warning py-1 px-2" onclick="openEdit('{{ record.name }}-{{ record.record_type }}')">
+                                <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
+                            </button>
+                            {% endif %}
+                            <button class="btn btn-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#recordDeleteModal-{{ record.name }}-{{ record.record_type }}">
+                                <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
+                            </button>
+                        </td>
+                        <div class="modal fade" id="recordDeleteModal-{{ record.name }}-{{ record.record_type }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content bg-gray-800">
+
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Create DNS Record</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+
+                                    <div class="modal-body">
+                                        <form class="d-flex flex-row" method="post">
+                                            {% csrf_token %}
+                                            <input name="formName" type="hidden" value="deleteForm">
+                                            <input id="name" name="name" type="hidden" value="{{ record.name }}">
+                                            <input id="record_type" name="record_type" type="hidden" value="{{ record.record_type }}">
+                                            <input id="content" name="content" type="hidden" value="{{ record.content }}">
+
+                                            <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                                        </form>
+                                            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>

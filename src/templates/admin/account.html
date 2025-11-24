@@ -12,23 +12,27 @@
             <form class="d-flex flex-column" method="post">
                 {% csrf_token %}
                 <div class="mb-3 input-group input-group-static">
-                    <label class="text-white" for="name">Name</label>
-                    <input id="name" name="name" class="form-control" type="text" value="{{ account.name }}" >
+                    {{ account_edit_form.name.label_tag }}
+                    {{ account_edit_form.name }}
+                    {{ account_edit_form.name.errors }}
                 </div>
 
                 <div class="mb-3 input-group input-group-static">
-                    <label class="text-white" for="description">Description</label>
-                    <input id="description" name="description" class="form-control" type="text" value="{{ account.description }}" >
+                    {{ account_edit_form.mail.label_tag }}
+                    {{ account_edit_form.mail }}
+                    {{ account_edit_form.mail.errors }}
                 </div>
 
                 <div class="mb-3 input-group input-group-static">
-                    <label class="text-white" for="contact">Contact</label>
-                    <input id="contact" name="contact" class="form-control" type="text" value="{{ account.contact }}" >
+                    {{ account_edit_form.contact.label_tag }}
+                    {{ account_edit_form.contact }}
+                    {{ account_edit_form.contact.errors }}
                 </div>
 
                 <div class="mb-3 input-group input-group-static">
-                    <label class="text-white" for="name">Mail</label>
-                    <input id="mail" name="mail" class="form-control" type="text" value="{{ account.mail }}" >
+                    {{ account_edit_form.description.label_tag }}
+                    {{ account_edit_form.description }}
+                    {{ account_edit_form.description.errors }}
                 </div>
 
                 <input class="btn btn-info w-100" type="submit" value="{% translate "Save" %}">

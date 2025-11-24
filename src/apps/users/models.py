@@ -15,7 +15,7 @@ class CustomUser(AbstractUser):
     language = models.CharField(max_length=10, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.get_full_name()} <{self.email or self.username}>"
+        return f"{self.email or self.username}"
 
     def get_display_name(self) -> str:
         if self.get_full_name().strip():

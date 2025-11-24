@@ -13,33 +13,33 @@
         <div class="modal-content bg-gray-800">
 
           <div class="modal-header">
-            <h5 class="modal-title">Create DNS Record</h5>
+            <h5 class="modal-title">Create Zone</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
 
           <div class="modal-body">
-                <form class="d-flex flex-column" method="post">
-                    {% csrf_token %}
-                    <div class="mb-3 input-group input-group-static">
-                        <label class="text-white" for="name">Name</label>
-                        <input id="name" name="name" class="form-control" type="text" value="{{ zone.name }}">
-                    </div>
+            <form class="d-flex flex-column" method="post">
+                {% csrf_token %}
 
-                    <div class="mb-3 input-group input-group-static">
-                        <label class="text-white" for="account">Account</label>
-                        <select id="account" name="account" class="form-control">
-                            {% for account in accounts %}
-                                <option value="{{ account.id }}">{{ account.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="{{ new_zone_form.name.id_for_label }}">Name</label>
+                    {{ new_zone_form.name }}
+                    {{ new_zone_form.name.errors }}
+                </div>
 
-                    <div class="mb-3 input-group input-group-static">
-                        <label class="text-white" for="name">DNSSEC</label>
-                        <input disabled id="name" name="name" class="form-control" type="text" value="false" >
-                    </div>
-                    <input class="btn btn-info w-100" type="submit" value="{% translate "Save" %}">
-                </form>
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="{{ new_zone_form.account.id_for_label }}">Account</label>
+                    {{ new_zone_form.account }}
+                    {{ new_zone_form.account.errors }}
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="{{ new_zone_form.dnssec.id_for_label }}">DNSSEC</label>
+                    {{ new_zone_form.dnssec }}
+                </div>
+
+                <input class="btn btn-info w-100" type="submit" value="{% translate 'Save' %}">
+            </form>
           </div>
 
           <div class="modal-footer">

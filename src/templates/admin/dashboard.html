@@ -4,6 +4,107 @@
 {% block app %}
 <section class="">
     <h1 class="pg-title mb-5">Dashboard</h1>
+    <div class="d-flex flex-row gap-4 mb-4">
+    {% if perms.pda.admin_zones_create %}
+    <button class="btn btn-info p-2" data-bs-toggle="modal" data-bs-target="#zoneCreateModal">
+        Create Zone <span class="pg-icon"><i class="fa fa-plus"></i></span>
+    </button>
+    <div class="modal fade" id="zoneCreateModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content bg-gray-800">
+
+          <div class="modal-header">
+            <h5 class="modal-title">Create Zone</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <form class="d-flex flex-column" action="{% url 'pdaAdmin:zones' %}" method="post">
+                {% csrf_token %}
+
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="{{ new_zone_form.name.id_for_label }}">Name</label>
+                    {{ new_zone_form.name }}
+                    {{ new_zone_form.name.errors }}
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="{{ new_zone_form.account.id_for_label }}">Account</label>
+                    {{ new_zone_form.account }}
+                    {{ new_zone_form.account.errors }}
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    <label class="text-white" for="{{ new_zone_form.dnssec.id_for_label }}">DNSSEC</label>
+                    {{ new_zone_form.dnssec }}
+                </div>
+
+                <input class="btn btn-info w-100" type="submit" value="{% translate 'Save' %}">
+            </form>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% if perms.pda.admin_accounts_create %}
+    <button class="btn btn-info p-2" data-bs-toggle="modal" data-bs-target="#accountCreateModal">
+        Create Account <span class="pg-icon"><i class="fa fa-plus"></i></span>
+    </button>
+    <div class="modal fade" id="accountCreateModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content bg-gray-800">
+
+          <div class="modal-header">
+            <h5 class="modal-title">Account Creation</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <form class="d-flex flex-column" action="{% url 'pdaAdmin:accounts' %}" method="post">
+                {% csrf_token %}
+
+                {% csrf_token %}
+                <div class="mb-3 input-group input-group-static">
+                    {{ account_create_form.name.label_tag }}
+                    {{ account_create_form.name }}
+                    {{ account_create_form.name.errors }}
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    {{ account_create_form.mail.label_tag }}
+                    {{ account_create_form.mail }}
+                    {{ account_create_form.mail.errors }}
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    {{ account_create_form.contact.label_tag }}
+                    {{ account_create_form.contact }}
+                    {{ account_create_form.contact.errors }}
+                </div>
+
+                <div class="mb-3 input-group input-group-static">
+                    {{ account_create_form.description.label_tag }}
+                    {{ account_create_form.description }}
+                    {{ account_create_form.description.errors }}
+                </div>
+                <input class="btn btn-info w-100" type="submit" value="{% translate 'Create' %}">
+            </form>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    </div>
     <div class="pg-columns">
         <div class="pg-column card bg-gray-800 m-2 p-2">
             <h2 class="pg-title">Activity</h2>
@@ -18,7 +119,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for activity in activity_logs %}
+                    {% for activity in page_obj %}
                     <tr>
                         <td>{{ activity.timestamp }}</td>
                         <td>{{ activity.action }}</td>
@@ -29,7 +130,35 @@
                     {% endfor %}
                 </tbody>
             </table>
+        <nav aria-label="Page navigation">
+    <ul class="pagination mt-3">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link border-0 bg-gray-700 text-white" href="?page={{ page_obj.previous_page_number }}"><span class="pg-icon"><i class="fa fa-chevron-left"></i></span></a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link border-0 bg-gray-700 text-white"><span class="pg-icon"><i class="fa fa-chevron-left"></i></span></span></li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link border-0 bg-info text-white">{{ num }}</span></li>
+            {% else %}
+                <li class="page-item"><a class="page-link border-0 bg-gray-700 text-white" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link border-0 bg-gray-700 text-white" href="?page={{ page_obj.next_page_number }}"><span class="pg-icon"><i class="fa fa-chevron-right"></i></span></a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link border-0 bg-gray-700 text-white"><span class="pg-icon"><i class="fa fa-chevron-right"></i></span></span></li>
+        {% endif %}
+    </ul>
+</nav>
         </div>
+
         <div class="pg-column-one-third card bg-gray-800 m-2 p-2">
             <h2 class="pg-title">Statistics</h2>
 

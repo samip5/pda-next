@@ -1,0 +1,35 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% load form_tags %}
+{% load account %}
+{% block app %}
+<section class="app-card">
+    <h1 class="pg-title">Settings</h1>
+    <div class="pg-columns d-flex flex-row just">
+        <div class="pg-column">
+            <h2 class="pg-title">Profile</h2>
+
+            <form class="my-4 pda-form" method="post">
+              {% csrf_token %}
+              {% render_text_input form.email %}
+              {% render_text_input form.first_name %}
+              {% render_text_input form.last_name %}
+              {% if form.fields.language.choices %}
+                {% render_select_input form.language %}
+              {% endif %}
+              <div class="mt-2">
+                <input class="btn btn-info" type="submit" value="{% translate "Save" %}">
+              </div>
+            </form>
+
+            {% include 'account/components/2fa.html' %}
+        </div>
+        <div class="pg-column-one-third">
+            {% include 'account/components/api_keys.html' %}
+
+
+        </div>
+    </div>
+</section>
+{% endblock %}

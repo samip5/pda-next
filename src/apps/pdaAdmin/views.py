@@ -1,24 +1,33 @@
 import logging
 
 from django.contrib.auth.decorators import login_required, permission_required
+from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.utils.translation import gettext_lazy as _
 
-from apps.api.accounts.helpers import updateAccount
+import config
 from apps.api.accounts.models import Account
 from apps.api.activity.helpers import addActivityLog
 from apps.api.activity.models import Activity
 from apps.api.activity.models.activity import ActionType
-from apps.api.dns.helpers import get_zones, get_zone, get_records, zone_account
-from apps.api.dns.models import Zone, Record
+from apps.api.dns.helpers import get_zones, get_zone, get_records
+from apps.api.dns.models import Zone
 from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
+
+from apps.pdaAdmin.forms import ZoneForm, AccountForm
 
 logger = logging.getLogger('pda')
 @login_required
 @permission_required('pda.admin_dashboard', raise_exception=True)
 def dashboard(request):
     activity_logs = Activity.objects.all()
+    new_zone_form = ZoneForm()
+    account_create_form = AccountForm()
+
+    paginator = Paginator(activity_logs, 25)
+    page_number = request.GET.get('page')  # get the page number from query params
+    page_obj = paginator.get_page(page_number)  # returns a Page object
 
     return render(
         request,
@@ -26,25 +35,36 @@ def dashboard(request):
         {
             "active_tab": "admin_dash",
             "page_title": _("Admin"),
-            "activity_logs": activity_logs
+            "activity_logs": activity_logs,
+            "page_obj": page_obj,
+            "new_zone_form": new_zone_form,
+            "account_create_form": account_create_form
         },
     )
 @login_required
 @permission_required('pda.admin_settings', raise_exception=True)
 def settings(request):
+    view_settings = {setting: getattr(config.settings, setting) for setting in dir(config.settings) if setting.isupper()}
     return render(
         request,
         "admin/settings.html",
         {
             "active_tab": "pda_settings",
             "page_title": _("Settings"),
-            "settings": {}
+            "settings": view_settings
         },
     )
 
 @login_required
 @permission_required('pda.admin_accounts', raise_exception=True)
 def accounts(request):
+    if request.method == "POST":
+        account_create_form = AccountForm(request.POST)
+        if account_create_form.is_valid():
+            account_create_form.save()  # creates and saves a new Account
+            addActivityLog(ActionType.ACCOUNT_CREATE, f"{account_create_form.name}", request.user)
+    else:
+        account_create_form = AccountForm()
     accountList = Account.objects.all()
     zone_instances = get_zones()
     zone_counts = []
@@ -61,26 +81,24 @@ def accounts(request):
             "active_tab": "pda_accounts",
             "page_title": _("Accounts"),
             "accounts": accountList,
-            "zone_counts": zone_counts
+            "zone_counts": zone_counts,
+            "account_create_form": account_create_form
         },
     )
 
 @login_required
-@permission_required('pda.admin_accounts')
+@permission_required('pda.admin_accounts', raise_exception=True)
 def account(request, id):
-    if request.method == "POST":
-        try:
-            updateAccount(id, request.POST.get("name"), request.POST.get('description'), request.POST.get('contact'),
-                      request.POST.get('mail'))
-            addActivityLog(ActionType.ACCOUNT_UPDATE, f"{id}", request.user)
-        except Exception as e:
-            messages.add_message(request, messages.WARNING, f"{e}")
-
     account_instance = Account.objects.filter(id=id).first()
-
+    if request.method == "POST":
+        account_edit_form = AccountForm(request.POST, instance=account_instance)
+        if account_edit_form.is_valid():
+            account_edit_form.save()  # creates and saves a new Account
+            addActivityLog(ActionType.ACCOUNT_UPDATE, f"{id}", request.user)
+    else:
+        account_edit_form = AccountForm(instance=account_instance)
     zone_instances = get_zones()
     filtered_zones = zone_instances.filter(account=account_instance)
-
     return render(
         request,
         "admin/account.html",
@@ -88,31 +106,30 @@ def account(request, id):
             "active_tab": "pda_account",
             "page_title": _("Account"),
             "zones": filtered_zones,
-            "account": account_instance
+            "account": account_instance,
+            "account_edit_form": account_edit_form
         },
     )
+
 @login_required
-@permission_required('pda.admin_zones')
+@permission_required('pda.admin_zones', raise_exception=True)
 def zones(request):
     service = PowerDNSService()
     accountList = Account.objects.all()
 
     if request.method == 'POST':
-        zone_account = Account.objects.filter(id=request.POST.get('account', '')).first()
-        newZone = Zone(
-            name=request.POST.get('name', ''),
-            kind='Native',
-            account=zone_account,
-            nameservers=['ns1.fuckmylife.fi.']
-        )
-        try:
-            service.create_zone(zone_name=newZone.name, kind=newZone.kind, account=str(newZone.account.id),
-                                   nameservers=newZone.nameservers)
-            addActivityLog(ActionType.ZONE_CREATE, f"{newZone.name} - {newZone.account}", request.user)
-            messages.add_message(request, messages.SUCCESS, f"Zone {newZone.name} created")
-        except Exception as e:
-            messages.add_message(request, messages.WARNING, f"{e}")
-
+        new_zone_form = ZoneForm(request.POST)
+        if new_zone_form.is_valid():
+            new_zone = new_zone_form.save(commit=False)
+            zone.dnssec = False
+            try:
+                service.create_zone(zone_name=new_zone.name, kind=new_zone.kind, account=str(new_zone.account.id),
+                                   nameservers=new_zone.nameservers)
+                addActivityLog(ActionType.ZONE_CREATE, f"{new_zone.name} - {new_zone.account}", request.user)
+                messages.add_message(request, messages.SUCCESS, f"Zone {new_zone.name} created")
+            except Exception as e:
+                messages.add_message(request, messages.WARNING, f"{e}")
+    new_zone_form = ZoneForm()
     zone_instances = get_zones()
 
     return render(
@@ -122,12 +139,13 @@ def zones(request):
             "active_tab": "admin_zones",
             "page_title": _("Zones"),
             "zones":zone_instances,
-            "accounts": accountList
+            "accounts": accountList,
+            "new_zone_form":new_zone_form
         },
     )
 
 @login_required
-@permission_required('pda.admin_zones')
+@permission_required('pda.admin_zones', raise_exception=True)
 def zone(request, id):
     zone_name = id
     if not zone_name.endswith('.'):

@@ -34,7 +34,7 @@ def render_text_input(form_field):
 @register.simple_tag
 def render_select_input(form_field):
     SELECT_INPUT_TEMPLATE = """<div class="mb-3">
-      <label for="{{ form_field.id_for_label }}" class="form-label">{{ form_field.label }}</label>
+      <label for="{{ form_field.id_for_label }}" class="form-label text-white">{{ form_field.label }}</label>
       {{ form_field }}
       <small class="form-text text-muted">{{ form_field.help_text|safe }}</small>
       {{ form_field.errors }}

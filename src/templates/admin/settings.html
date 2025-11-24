@@ -7,6 +7,10 @@
     <div class="pg-columns">
         <div class="pg-column-one-third">
             <h2 class="pg-title">Settings 1</h2>
+            {% for key, value in settings.items %}
+            <p class="text-white">{{ key }} -- {{ value }}</p>
+
+            {% endfor %}
         </div>
         <div class="pg-column-one-third">
             <h2 class="pg-title">Settings 2</h2>

@@ -4,7 +4,7 @@
     {% csrf_token %}
     <div class="row justify-content-center">
       <div class="col col-1">
-        <select class="form-select form-select-sm" name="language">
+        <select class="p-2 form-select form-select-sm" name="language">
           {% get_current_language as LANGUAGE_CODE %}
           {% get_available_languages as LANGUAGES %}
           {% get_language_info_list for LANGUAGES as languages %}

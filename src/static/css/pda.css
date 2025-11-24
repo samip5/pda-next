@@ -10,3 +10,14 @@
 .record-hide {
     display: none;
 }
+.input-group > label {
+    color: #FFFFFF;
+}
+.pda-text-wrap {
+    text-wrap: wrap !important;
+    text-align: left !important;
+    overflow-wrap: break-word;
+}
+.pda-form select {
+    padding: 10px;
+}
