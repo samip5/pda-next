@@ -19,6 +19,7 @@ DATABASES = {
 # Allow localhost during development (defensive merge with project ALLOWED_HOSTS)
 _base_allowed = list(ALLOWED_HOSTS) if isinstance(ALLOWED_HOSTS, (list, tuple)) else []
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '::1'] + _base_allowed
+INTERNAL_IPS = ['127.0.0.1']
 
 # Use simpler logging in dev — guard keys in case base logging is minimal
 if isinstance(LOGGING, dict):

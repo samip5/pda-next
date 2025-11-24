@@ -93,6 +93,6 @@ class Activity(models.Model):
 
     class Meta:
         db_table = 'pdadns_activity'
-        ordering = ['id']
+        ordering = ['-timestamp']
         verbose_name = 'ActivityLog'
         verbose_name_plural = 'ActivityLogs'

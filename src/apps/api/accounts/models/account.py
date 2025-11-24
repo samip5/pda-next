@@ -49,6 +49,22 @@ class Account(models.Model):
         help_text='Mail contact info for account'
     )
 
+    owner = models.ForeignKey(
+        User,
+        on_delete=models.SET_DEFAULT,
+        related_name='account_owner',
+        default=None,
+        null=True,
+        blank=True,
+        help_text='Account owner'
+    )
+    members = models.ManyToManyField(
+        User,
+        default=None,
+        null=True,
+        blank=True,
+        help_text='Account Members'
+    )
 
     class Meta:
         db_table = 'pda_accounts'
