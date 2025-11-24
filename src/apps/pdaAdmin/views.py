@@ -1,7 +1,7 @@
 import logging
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import render, redirect
 from django.utils.translation import gettext_lazy as _
 
 from apps.api.accounts.helpers import updateAccount
@@ -9,16 +9,17 @@ from apps.api.accounts.models import Account
 from apps.api.activity.helpers import addActivityLog
 from apps.api.activity.models import Activity
 from apps.api.activity.models.activity import ActionType
-from apps.api.dns.helpers import get_zones, get_zone, get_records
+from apps.api.dns.helpers import get_zones, get_zone, get_records, zone_account
 from apps.api.dns.models import Zone, Record
 from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
 
 logger = logging.getLogger('pda')
-
 @login_required
+@permission_required('pda.admin_dashboard', raise_exception=True)
 def dashboard(request):
     activity_logs = Activity.objects.all()
+
     return render(
         request,
         "admin/dashboard.html",
@@ -28,8 +29,8 @@ def dashboard(request):
             "activity_logs": activity_logs
         },
     )
-
 @login_required
+@permission_required('pda.admin_settings', raise_exception=True)
 def settings(request):
     return render(
         request,
@@ -40,7 +41,9 @@ def settings(request):
             "settings": {}
         },
     )
+
 @login_required
+@permission_required('pda.admin_accounts', raise_exception=True)
 def accounts(request):
     accountList = Account.objects.all()
     zone_instances = get_zones()
@@ -61,13 +64,15 @@ def accounts(request):
             "zone_counts": zone_counts
         },
     )
+
 @login_required
+@permission_required('pda.admin_accounts')
 def account(request, id):
     if request.method == "POST":
         try:
             updateAccount(id, request.POST.get("name"), request.POST.get('description'), request.POST.get('contact'),
                       request.POST.get('mail'))
-            addActivityLog("Update account", f"{id}", request.user.id, '', False)
+            addActivityLog(ActionType.ACCOUNT_UPDATE, f"{id}", request.user)
         except Exception as e:
             messages.add_message(request, messages.WARNING, f"{e}")
 
@@ -86,23 +91,24 @@ def account(request, id):
             "account": account_instance
         },
     )
-
 @login_required
+@permission_required('pda.admin_zones')
 def zones(request):
     service = PowerDNSService()
     accountList = Account.objects.all()
 
     if request.method == 'POST':
+        zone_account = Account.objects.filter(id=request.POST.get('account', '')).first()
         newZone = Zone(
             name=request.POST.get('name', ''),
             kind='Native',
-            account=request.POST.get('account', ''),
+            account=zone_account,
             nameservers=['ns1.fuckmylife.fi.']
         )
         try:
-            service.create_zone(zone_name=newZone.name, kind=newZone.kind, account=newZone.account,
+            service.create_zone(zone_name=newZone.name, kind=newZone.kind, account=str(newZone.account.id),
                                    nameservers=newZone.nameservers)
-            addActivityLog("Zone create", f"{newZone.name} - {newZone.account}", request.user.id, '', False)
+            addActivityLog(ActionType.ZONE_CREATE, f"{newZone.name} - {newZone.account}", request.user)
             messages.add_message(request, messages.SUCCESS, f"Zone {newZone.name} created")
         except Exception as e:
             messages.add_message(request, messages.WARNING, f"{e}")
@@ -121,6 +127,7 @@ def zones(request):
     )
 
 @login_required
+@permission_required('pda.admin_zones')
 def zone(request, id):
     zone_name = id
     if not zone_name.endswith('.'):
@@ -146,8 +153,8 @@ def zone(request, id):
             service.update_zone(zone_name=zone_name, account=str(updated_zone.account.id),
                                 nameservers=updated_zone.nameservers,
                                 dnssec=updated_zone.dnssec)
-            addActivityLog(ActionType.ZONE_UPDATE, f"{zone_name} - {updated_zone.account}", request.user, '', False)
-            zone = updated_zone
+            addActivityLog(ActionType.ZONE_UPDATE, f"{zone_name} - {updated_zone.account}", request.user)
+            zzone = updated_zone
         except Exception as e:
             messages.add_message(request, messages.WARNING, f"{e}")
 

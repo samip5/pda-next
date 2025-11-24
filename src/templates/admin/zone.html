@@ -5,6 +5,7 @@
 <section class="app-card">
   <h1 class="pg-title">Zones</h1>
     <div class="pg-columns">
+        {% if perms.pda.admin_zones_edit %}
         <div class="pg-column-one-third">
             <form class="d-flex flex-column" method="post">
                 {% csrf_token %}
@@ -28,6 +29,7 @@
                 <input class="btn btn-info w-100" type="submit" value="{% translate "Save" %}">
             </form>
         </div>
+        {% endif %}
         <div class="pg-column">
             <table class="text-white text-center">
                 <thead>

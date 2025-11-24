@@ -18,32 +18,40 @@
           <span class="pg-icon"><i class="fa fa-globe"></i></span><span>{% translate "Domains" %}</span>
         </a>
       </li>
+    {% if perms.pda.admin %}
       <li class="nav-item mt-3">
         <h6 class="ps-4 ms-2 text-uppercase text-xs text-white font-weight-bolder opacity-8">{% translate "Admin area" %}</h6>
         <div class="pt-1 mt-2 bg-gray-600"></div>
       </li>
+    {% if perms.pda.admin_dashboard %}
       <li class="nav-item">
         <a href="{% url 'pdaAdmin:dashboard' %}" class="nav-link {% if active_tab == 'admin_dash' %}active{% endif %}">
           <span class="pg-icon"><i class="fa fa-shield"></i></span><span>{% translate "Dashboard" %}</span>
         </a>
       </li>
+    {% endif %}
+    {% if perms.pda.admin_settings %}
       <li class="nav-item">
         <a href="{% url 'pdaAdmin:settings' %}" class="nav-link {% if active_tab == 'pda_settings' %}active{% endif %}">
           <span class="pg-icon"><i class="fa fa-cog"></i></span><span>{% translate "Settings" %}</span>
         </a>
       </li>
+    {% endif %}
+    {% if perms.pda.admin_accounts %}
       <li class="nav-item">
         <a href="{% url 'pdaAdmin:accounts' %}" class="nav-link {% if active_tab == 'pda_accounts' %}active{% endif %}">
           <span class="pg-icon"><i class="fa fa-user"></i></span><span>{% translate "Accounts" %}</span>
         </a>
       </li>
+    {% endif %}
+    {% if perms.pda.admin_zones %}
       <li class="nav-item">
         <a href="{% url 'pdaAdmin:zones' %}" class="nav-link {% if active_tab == 'admin_zones' %}active{% endif %}">
           <span class="pg-icon"><i class="fa fa-globe"></i></span><span>{% translate "Zones" %}</span>
         </a>
       </li>
-
-
+    {% endif %}
+    {% endif %}
       <li class="nav-item mt-3">
         <h6 class="ps-4 ms-2 text-uppercase text-xs text-white font-weight-bolder opacity-8">{% translate "Account pages" %}</h6>
         <div class="pt-1 mt-2 bg-gray-600"></div>
