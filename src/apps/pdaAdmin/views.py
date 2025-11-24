@@ -114,6 +114,24 @@ def zones(request):
             messages.add_message(request, messages.WARNING, f"{e}")
 
     zone_instances = get_zones()
+    powerdns_zones = service.get_zones("localhost")
+
+    # Convert PowerDNS record format to Record model instances (not saved)
+    zone_instances = []
+    for zone in powerdns_zones:
+        zone_account = None
+        zone_a = Zone(
+            name=zone.get('name', ''),
+            kind=zone.get('kind', Zone.ZONE_KIND_NATIVE),
+            nameservers=zone.get('nameservers', []),
+            server_id=zone.get('server_id', 'localhost'),
+            powerdns_id=zone.get('id'),
+            account=zone_account,
+            dnssec=zone.get('dnssec', '')
+        )
+
+        zone_instances.append(zone_a)
+
 
     return render(
         request,

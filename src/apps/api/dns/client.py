@@ -9,7 +9,6 @@ from typing import Optional, Dict, List, Any
 from urllib.parse import urljoin
 
 import requests
-from django.conf import settings
 from config import settings as app_settings
 
 logger = logging.getLogger("pdadns")
@@ -43,7 +42,7 @@ class PowerDNSClient:
     managing zones and records.
     """
     
-    def __init__(self):
+    def __init__(self, api_url: str = None, api_key: str = None, timeout: int = None):
         """
         Initialize PowerDNS client.
         
@@ -52,10 +51,10 @@ class PowerDNSClient:
             api_key: PowerDNS API key (defaults to config setting)
             timeout: Request timeout in seconds (defaults to config setting)
         """
-        self.api_url = app_settings.powerdns_api_url
-        self.api_key = app_settings.powerdns_api_key
-        self.timeout = app_settings.powerdns_api_timeout
-        
+        self.api_url = api_url or app_settings.powerdns_api_url
+        self.api_key = api_key or app_settings.powerdns_api_key
+        self.timeout = timeout or app_settings.powerdns_api_timeout
+
         if not self.api_url:
             raise ValueError("PowerDNS API URL is required")
         if not self.api_key:

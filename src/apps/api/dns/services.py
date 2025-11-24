@@ -8,11 +8,12 @@ import logging
 from typing import Optional, List, Dict, Any, TYPE_CHECKING
 
 from .client import PowerDNSClient, PowerDNSError, PowerDNSNotFoundError
+from config import settings as app_settings
 
 if TYPE_CHECKING:
     from .models.zone import Zone
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('pda.api.dns.services')
 
 
 class PowerDNSService:
@@ -23,14 +24,22 @@ class PowerDNSService:
     from the PowerDNS API.
     """
     
-    def __init__(self, client: Optional[PowerDNSClient] = None):
+    def __init__(self, api_url: str | None = None, api_key: str | None = None, timeout: int | None = None, client: Optional[PowerDNSClient] = None):
         """
         Initialize PowerDNS service.
         
         Args:
+            api_url: Optional override for API URL
+            api_key: Optional override for API key
+            timeout: Optional override for timeout
             client: PowerDNS client instance (creates new one if not provided)
         """
-        self.client = client or PowerDNSClient()
+        # Fallback to application settings if not provided
+        api_url = api_url or app_settings.powerdns_api_url
+        api_key = api_key or app_settings.powerdns_api_key
+        timeout = timeout or app_settings.powerdns_api_timeout
+
+        self.client = client or PowerDNSClient(api_url, api_key, timeout)
     
     def get_zones(self, server_id: str = 'localhost') -> List[Dict[str, Any]]:
         """
@@ -68,7 +77,7 @@ class PowerDNSService:
             logger.error(f"Failed to fetch zone {zone_name} from PowerDNS: {e}")
             return None
     
-    def get_records(self, zone_name: str, server_id: str = 'localhost') -> List[Dict[str, Any]]:
+    def get_records(self, zone_name: str, server_id: str = 'localhost') -> List[Dict[str, Any]]| Exception:
         """
         Fetch all records for a zone from PowerDNS.
         
@@ -83,7 +92,7 @@ class PowerDNSService:
             return self.client.get_records(zone_name, server_id)
         except PowerDNSError as e:
             logger.error(f"Failed to fetch records for zone {zone_name} from PowerDNS: {e}")
-            return []
+            return Exception("Unable to fetch records")
     
     def create_zone(
         self,
@@ -93,7 +102,7 @@ class PowerDNSService:
         server_id: str = 'localhost',
         account: str = None,
         **kwargs
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[Dict[str, Any]]|Exception:
         """
         Create a new zone in PowerDNS.
         
@@ -112,7 +121,7 @@ class PowerDNSService:
             return self.client.create_zone(zone_name, nameservers, kind, server_id, account, **kwargs)
         except PowerDNSError as e:
             logger.error(f"Failed to create zone {zone_name} in PowerDNS: {e}")
-            return None
+            return Exception(PowerDNSError)
     
     def update_zone(
         self,
@@ -167,7 +176,7 @@ class PowerDNSService:
         content: str,
         ttl: int = 3600,
         server_id: str = 'localhost'
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[Dict[str, Any]]|Exception:
         """
         Create a new DNS record in PowerDNS.
         
@@ -180,13 +189,13 @@ class PowerDNSService:
             server_id: Server ID (default: 'localhost')
             
         Returns:
-            Updated zone dictionary from PowerDNS API or None on error
+            Updated zone dictionary from PowerDNS API or Exception on error
         """
         try:
             return self.client.create_record(zone_name, name, record_type, content, ttl, server_id)
         except PowerDNSError as e:
             logger.error(f"Failed to create record {name} {record_type} in zone {zone_name}: {e}")
-            return None
+            return Exception(PowerDNSError)
     
     def update_record(
         self,
@@ -253,20 +262,20 @@ class PowerDNSService:
         zone_name: str,
         keytype: str = 'ksk',
         server_id: str = 'localhost'
-    ):
+    ) -> Optional[Dict[str, Any]]|Exception:
         try:
             return self.client.dnssec_keys(zone_name, keytype, server_id)
         except PowerDNSError as e:
             logger.error(f"Failed to create dnssec keys ({keytype}) for zone {zone_name}: {e}")
-            return None
+            return Exception(PowerDNSError("Unable to create dnssec keys"))
 
     def disable_dnssec(
         self,
         zone_name: str,
         server_id: str = 'localhost'
-    ):
+    ) -> Optional[Dict[str, Any]]|Exception:
         try:
             return self.client.disable_DNSSEC(zone_name, server_id)
         except PowerDNSError as e:
             logger.error(f"Failed to disable dnssec for zone {zone_name}: {e}")
-            return None
+            return Exception(PowerDNSError("Unable to disable DNSSEC"))

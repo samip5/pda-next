@@ -214,7 +214,20 @@ def save_config(app_settings: AppSettings, config: dict[str, Any]) -> bool:
 
 
 # Define the default environment file path to load settings from
-env_conf_path: str = os.getenv('PDA_ENV_FILE', '/etc/pda/.env')
+env_type: str = os.getenv('PDA_ENV_TYPE', 'production')
+env_conf_path: str | None = os.getenv('PDA_ENV_FILE')
+
+if env_conf_path is None:
+    # We check for environment specific env files first, e.g. .env.development
+    env_file_name = f'.env.{env_type}'
+    if os.path.exists(os.path.join(ROOT_PATH, env_file_name)):
+        env_conf_path = os.path.join(ROOT_PATH, env_file_name)
+    # If that doesn't exist, we check for a regular .env file
+    elif os.path.exists(os.path.join(ROOT_PATH, '.env')):
+        env_conf_path = os.path.join(ROOT_PATH, '.env')
+    # Finally, we fall back to the old default
+    else:
+        env_conf_path = '/etc/pda/.env'
 
 # Load various Django settings from an environment file and the local environment
 settings: AppSettings = load_settings(env_conf_path)

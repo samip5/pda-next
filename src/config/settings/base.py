@@ -42,6 +42,10 @@ PROJECT_METADATA = {
     'CONTACT_EMAIL': settings.site_email,
 }
 
+powerdns_api_url = settings.powerdns_api_url
+powerdns_api_key = settings.powerdns_api_key
+powerdns_api_timeout = 30
+
 # Internationalization / Localization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
@@ -265,7 +269,23 @@ ACCOUNT_EMAIL_VERIFICATION = settings.account_email_verification
 
 ALLAUTH_2FA_ALWAYS_REVEAL_BACKUP_TOKENS = False
 
+# LDAP Configuration
+#AUTH_LDAP_SERVER_URI = os.environ.get('AUTH_LDAP_SERVER_URI', 'ldap://ldap.example.com')
+#AUTH_LDAP_BIND_DN = os.environ.get('AUTH_LDAP_BIND_DN', '')
+#AUTH_LDAP_BIND_PASSWORD = os.environ.get('AUTH_LDAP_BIND_PASSWORD', '')
+#AUTH_LDAP_USER_SEARCH = LDAPSearch(
+#    'ou=users,dc=example,dc=com',
+#    ldap.SCOPE_SUBTREE,
+#    '(uid=%(user)s)'
+#)
+#AUTH_LDAP_USER_ATTR_MAP = {
+#    "first_name": "givenName",
+#    "last_name": "sn",
+#    "email": "mail"
+#}
+
 AUTHENTICATION_BACKENDS = (
+#    'django_auth_ldap.backend.LDAPBackend',
     # Needed to log in by username in Django admin, regardless of `allauth`
     'django.contrib.auth.backends.ModelBackend',
     # `allauth` specific authentication methods, such as login by e-mail
@@ -392,6 +412,7 @@ LOGGING = {
         },
     },
 }
+
 
 # Setup Sentry Exception Tracking
 if isinstance(settings.sentry_dsn, str) and len(settings.sentry_dsn.strip()):
