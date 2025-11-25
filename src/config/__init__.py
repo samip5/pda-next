@@ -123,7 +123,7 @@ class AppSettings(BaseSettings):
     powerdns_api_url: str = ''
     powerdns_api_key: str = ''
     powerdns_api_timeout: int = 30
-
+    disable_landing_page: bool = False
     """ The following settings are automatically loaded at application startup. """
 
     config: dict | None = None

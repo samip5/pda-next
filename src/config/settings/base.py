@@ -57,6 +57,7 @@ PROJECT_METADATA = {
 powerdns_api_url = app_settings.powerdns_api_url
 powerdns_api_key = app_settings.powerdns_api_key
 powerdns_api_timeout = 30
+DISABLE_LANDING_PAGE = app_settings.disable_landing_page
 
 # Internationalization / Localization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
