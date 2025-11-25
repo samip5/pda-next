@@ -48,29 +48,23 @@ def dashboard(request):
 @login_required
 @permission_required('pda.admin_settings', raise_exception=True)
 def settings(request):
-    ldap_settings = []
-    ldap_settings.append({"name": "ldap_server_uri", "value": f"{get_setting('ldap_server_uri')}"})
-    ldap_settings.append({"name": "ldap_bind_on", "value": f"{get_setting('ldap_bind_on')}"})
-    ldap_settings.append({"name": "ldap_bind_password", "value": f"{get_setting('ldap_bind_password')}"})
-    ldap_settings.append({"name": "ldap_user_search_base", "value": f"{get_setting('ldap_user_search_base')}"})
-    ldap_settings.append({"name": "ldap_user_search_filter", "value": f"{get_setting('ldap_user_search_filter')}"})
-
+    ldap_settings = {
+        "ldap_server_uri": f"{get_setting('ldap_server_uri')}",
+        "ldap_bind_on": f"{get_setting('ldap_bind_on')}",
+        "ldap_bind_password": f"{get_setting('ldap_bind_password')}",
+        "ldap_user_search_base": f"{get_setting('ldap_user_search_base')}",
+        "ldap_user_search_filter": f"{get_setting('ldap_user_search_filter')}"
+    }
     if request.method == "POST":
-        for ldap_setting in ldap_settings:
-            logger.info(f'{ldap_setting["name"]} {request.POST.get(ldap_setting["name"])}')
-            set_setting(ldap_setting["name"], request.POST.get(ldap_setting["name"]))
-
-    ldap_settings.clear()
-    ldap_settings.append({"name": "ldap_server_uri", "value": f"{get_setting('ldap_server_uri')}"})
-    ldap_settings.append({"name": "ldap_bind_on", "value": f"{get_setting('ldap_bind_on')}"})
-    ldap_settings.append({"name": "ldap_bind_password", "value": f"{get_setting('ldap_bind_password')}"})
-    ldap_settings.append({"name": "ldap_user_search_base", "value": f"{get_setting('ldap_user_search_base')}"})
-    ldap_settings.append({"name": "ldap_user_search_filter", "value": f"{get_setting('ldap_user_search_filter')}"})
+        for key in ldap_settings:
+            logger.info(f'{key} {request.POST.get(key)}')
+            set_setting(key, request.POST.get(key))
+            ldap_settings[key] = request.POST.get(key)
 
     view_settings = []
     view_settings.append({"name": "disable_landing_page", "value": f"{get_setting('disable_landing_page')}"})
 
-    logger.info(view_settings)
+    logger.info(ldap_settings)
     return render(
         request,
         "admin/settings.html",
