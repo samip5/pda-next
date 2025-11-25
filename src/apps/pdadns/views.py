@@ -14,6 +14,8 @@ from apps.api.dns.models import Zone, Record
 from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
 
+from apps.globalSettings.utils import get_setting
+
 """
 Frontend Views
 """
@@ -37,6 +39,8 @@ def domains(request):
 @login_required
 def domain(request, id):
     zone_name = id
+    setting_record_types = get_setting('record_types')
+
     service = PowerDNSService()
     if not zone_name.endswith('.'):
         zone_name = f"{zone_name}."
@@ -100,7 +104,8 @@ def domain(request, id):
             "page_title": _("Domain"),
             "id": id,
             "zone": zone,
-            "records": record_instances
+            "records": record_instances,
+            "setting_record_types": setting_record_types,
         },
     )
 @login_required

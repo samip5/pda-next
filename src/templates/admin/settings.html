@@ -1,6 +1,7 @@
 {% extends "web/app/app_base.html" %}
 {% load static %}
 {% load i18n %}
+{% load pda_tags %}
 {% block app %}
 <section class="app-card">
     <h1 class="pg-title">Settings</h1>
@@ -35,12 +36,23 @@
                         <label for="auth_ldap_user_search_filter">auth_ldap_user_search_filter</label>
                         <textarea class="form-control" name="auth_ldap_user_search_filter" id="auth_ldap_user_search_filter" rows="5">{{ ldap_settings.auth_ldap_user_search_filter }}</textarea>
                     </div>
-                <button type="submit" class="btn btn-info">Save</button>
+                <button type="submit" name="form_type" value="ldap" class="btn btn-info">Save</button>
             </form>
         </div>
         <div class="pg-column-one-third">
-            <h2 class="pg-title">Settings 3</h2>
+            <h2 class="pg-title">Enable/Disable DNS Record types</h2>
+            <p class="text-white">This only affects the user side of pda</p>
+            <form class="pda-form d-flex flex-row flex-wrap" method="post">
+                {% csrf_token %}
+            {% for record_type, val in record_types %}
+                <div class="pda-input-group w-30 d-flex flex-row gap-2 align-items-center">
+                    <input class="form-control" type="checkbox" name="{{ record_type }}" id="{{ record_type }}" {% if setting_record_types|dict_get:record_type %}checked{% endif %}>
+                    <label for="{{ record_type }}">{{ record_type }}</label>
+                </div>
+            {% endfor %}
+                <button type="submit" name="form_type" value="record_types" class="btn btn-info">Save</button>
 
+            </form>
         </div>
     </div>
 </section>

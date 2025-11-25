@@ -63,16 +63,25 @@ def settings(request):
         "auth_ldap_user_search_base": f"{get_setting('auth_ldap_user_search_base')}",
         "auth_ldap_user_search_filter": f"{get_setting('auth_ldap_user_search_filter')}"
     }
+    record_types = Record.RECORD_TYPE_CHOICES
+    setting_record_types = get_setting('record_types')
+
     if request.method == "POST":
-        for key in ldap_settings:
-            logger.info(f'{key} {request.POST.get(key)}')
-            set_setting(key, request.POST.get(key))
-            ldap_settings[key] = request.POST.get(key)
-        load_db_settings_to_config(app_settings)
+        form_type = request.POST.get('form_type')
+        if form_type == "ldap":
+            for key in ldap_settings:
+                logger.info(f'{key} {request.POST.get(key)}')
+                set_setting(key, request.POST.get(key))
+                ldap_settings[key] = request.POST.get(key)
+            load_db_settings_to_config(app_settings)
+        if form_type == "record_types":
+            for record_type, i in record_types:
+                is_active = record_type in request.POST
+                setting_record_types[record_type] = is_active
+                logger.info(f'{record_type} {setting_record_types[record_type]}')
+            set_setting('record_types', setting_record_types, 'json')
     view_settings = []
     view_settings.append({"name": "disable_landing_page", "value": f"{get_setting('disable_landing_page')}"})
-
-    logger.info(ldap_settings)
     return render(
         request,
         "admin/settings.html",
@@ -80,7 +89,9 @@ def settings(request):
             "active_tab": "pda_settings",
             "page_title": _("Settings"),
             "settings": view_settings,
-            "ldap_settings": ldap_settings
+            "ldap_settings": ldap_settings,
+            "record_types": record_types,
+            "setting_record_types": setting_record_types
         },
     )
 

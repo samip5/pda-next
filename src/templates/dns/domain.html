@@ -1,6 +1,7 @@
 {% extends "web/app/app_base.html" %}
 {% load static %}
 {% load i18n %}
+{% load pda_tags %}
 {% block app %}
 <section class="app-card">
   <a class="bg-info px-2 py-2 my-2 rounded-3 text-white" href="/dns/"><span class="pg-icon"><i class="fa fa-arrow-left"></i></span> Back </a>
@@ -28,19 +29,15 @@
                     <input id="name" name="name" class="form-control" type="text" value="{{ account.name }}" >
                 </div>
 
+
                 <div class="pda-input-group">
                     <label class="text-white" for="record_type">Record Type</label>
                     <select id="record_type" name="record_type" class="form-control">
-                        <option value="A">A</option>
-                        <option value="AAAA">AAAA</option>
-                        <option value="CNAME">CNAME</option>
-                        <option value="TXT">TXT</option>
-                        <option value="MX">MX</option>
-                        <option value="NS">NS</option>
-                        <option value="DS">DS</option>
-                        <option value="SRV">SRV</option>
-                        <option value="DNAME">DNAME</option>
-                        <option value="ALIAS">ALIAS</option>
+                        {% for record_type, enabled in setting_record_types.items %}
+                            {% if enabled %}
+                                <option value="{{ record_type }}">{{ record_type }}</option>
+                            {% endif %}
+                        {% endfor %}
                     </select>
                 </div>
 
@@ -80,6 +77,7 @@
       </thead>
       <tbody>
         {% for record in records %}
+        {% if setting_record_types|dict_get:record.record_type %}
         <tr id="show-{{ forloop.counter }}">
             <td>{{ record.name }}</td>
             <td>{{ record.record_type }}</td>
@@ -88,11 +86,9 @@
             <td class="max-width-500 long-content">{{ record.content }}</td>
             <td>{{ record.comments }}</td>
             <td>
-                {% if record.record_type != "SOA" %}
                 <button class="btn btn-warning py-1 px-2" onclick="openEdit('{{ forloop.counter }}')">
                     <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
                 </button>
-                {% endif %}
                 <button class="btn btn-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#recordDeleteModal-{{ forloop.counter }}">
                     <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
                 </button>
@@ -137,16 +133,11 @@
             <td>
                 <input id="old_record_type" name="old_record_type" type="hidden" value="{{ record.record_type }}">
                 <select id="record_type" name="record_type" class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center">
-                    <option value="A" {% if record.record_type == "A" %}selected{% endif %}>A</option>
-                    <option value="AAAA" {% if record.record_type == "AAAA" %}selected{% endif %}>AAAA</option>
-                    <option value="CNAME" {% if record.record_type == "CNAME" %}selected{% endif %}>CNAME</option>
-                    <option value="TXT" {% if record.record_type == "TXT" %}selected{% endif %}>A</option>
-                    <option value="MX" {% if record.record_type == "MX" %}selected{% endif %}>MX</option>
-                    <option value="NS" {% if record.record_type == "NS" %}selected{% endif %}>NS</option>
-                    <option value="DS" {% if record.record_type == "DS" %}selected{% endif %}>DS</option>
-                    <option value="SRV" {% if record.record_type == "SRV" %}selected{% endif %}>SRV</option>
-                    <option value="DNAME" {% if record.record_type == "DNAME" %}selected{% endif %}>DNAME</option>
-                    <option value="ALIAS" {% if record.record_type == "ALIAS" %}selected{% endif %}>ALIAS</option>
+                    {% for record_type, enabled in setting_record_types.items %}
+                        {% if enabled %}
+                            <option value="{{ record_type }}" {% if record.record_type == record_type %}selected{% endif %}>{{ record_type }}</option>
+                        {% endif %}
+                    {% endfor %}
                 </select>
             </td>
             <td>{{ record.disabled }}</td>
@@ -171,6 +162,7 @@
             </td>
             </form>
         </tr>
+        {% endif %}
         {% endfor %}
       </tbody>
   </table>
