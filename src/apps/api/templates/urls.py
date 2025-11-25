@@ -1,13 +1,16 @@
 """
-URL Configuration for PowerDNS API
+URL Configuration for PDA Template API
+
+Note: This file is kept for backwards compatibility, but viewsets
+are now registered in the centralized apps.api.urls module using PDARouter.
 """
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from ..routers import PDARouter
 
 from .views import TemplateViewSet
 
-router = DefaultRouter()
-router.register(r'', TemplateViewSet, basename='record')
+router = PDARouter()
+router.register(r'', TemplateViewSet, basename='template')
 
 app_name = "pdaTemplateAPI"
 urlpatterns = [

@@ -141,6 +141,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
 MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "pda.middleware.CoreMiddleware",  # Core middleware for request logging and Sentry tracing
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -330,6 +331,15 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 100,
+    'DEFAULT_RENDERER_CLASSES': [
+        'apps.api.renderers.APIRequestLogRenderer',
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    # API Versioning configuration
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
+    'ALLOWED_VERSIONS': ['v1'],  # Add new versions here as they're created
+    'DEFAULT_VERSION': 'v1',  # Default version if none specified
+    'VERSION_PARAM': 'version',  # URL parameter name for version
 }
 
 SPECTACULAR_SETTINGS = {
@@ -351,6 +361,8 @@ SPECTACULAR_SETTINGS = {
             'ApiKeyAuth': [],
         }
     ],
+    # Versioning support - drf-spectacular will automatically detect versions from URLPathVersioning
+    'SCHEMA_PATH_PREFIX': '/api/v[0-9]',  # Match versioned API paths
 }
 
 REDIS_URL: str | None = None
@@ -427,10 +439,20 @@ LOGGING = {
 }
 
 
-# Setup Sentry Exception Tracking
+# Setup Sentry Exception Tracking with best practices
 if isinstance(app_settings.sentry_dsn, str) and len(app_settings.sentry_dsn.strip()):
-    import sentry_sdk
-    from sentry_sdk.integrations.django import DjangoIntegration
-
-    sentry_sdk.init(dsn=app_settings.sentry_dsn, integrations=[DjangoIntegration()])
+    from pda.utils.sentry import configure_sentry
+    
+    # Determine environment from DEBUG setting
+    environment = 'development' if DEBUG else 'production'
+    
+    # Configure Sentry with best practices
+    configure_sentry(
+        dsn=app_settings.sentry_dsn,
+        environment=environment,
+        release=getattr(app_settings, 'version', None),
+        traces_sample_rate=0.1,  # Sample 10% of transactions for performance monitoring
+        profiles_sample_rate=0.1,  # Sample 10% of transactions for profiling
+        send_default_pii=False,  # Don't send PII by default
+    )
 
