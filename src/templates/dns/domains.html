@@ -2,9 +2,9 @@
 {% load static %}
 {% load i18n %}
 {% block app %}
-<section class="app-card">
-  <h1 class="pg-title">Domains</h1>
-  <table class="pda-table w-100">
+<section class="bg-neutral-800 rounded-xl shadow p-6">
+  <h1 class="text-xl mb-4">Domains</h1>
+  <table class="pda-table w-full">
       <thead>
         <tr>
             <th>Name</th>
@@ -21,9 +21,9 @@
         <tr>
             <td><a class="text-white" href="/dns/domain/{{ zone.name }}">{{ zone.name }}</a></td>
             <td>{% if zone.dnssec %}
-                <span class="pg-icon bg-success p-3 rounded-3"><i class="fa fa-lock"></i></span>
+                <span><i class="fa fa-lock bg-green-600 p-2 rounded-lg"></i></span>
                 {% else %}
-                <span class="pg-icon bg-danger p-3 rounded-3"><i class="fa fa-lock"></i></span>
+                <span><i class="fa fa-lock bg-red-600 p-2 rounded-lg"></i></span>
                 {% endif %}
             </td>
             <td>{{ zone.kind }}</td>

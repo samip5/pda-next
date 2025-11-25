@@ -1,0 +1,34 @@
+@import "tailwindcss";
+:root {
+  @apply bg-neutral-900 text-white;
+}
+html {
+  scroll-behavior: smooth;
+}
+.btn {
+  @apply px-4 py-2 w-fit shadow-xl rounded-xl ease-in-out duration-300 hover:shadow-md
+}
+.btn-primary {
+  @apply bg-sky-600 hover:bg-sky-500
+}
+.btn-secondary {
+  @apply bg-neutral-600 hover:bg-neutral-500
+}
+.btn-danger {
+  @apply bg-red-600
+}
+.btn-success {
+  @apply bg-green-600
+}
+.btn-warning {
+  @apply bg-yellow-600
+}
+.nav-item {
+    @apply mx-4 flex items-center px-4 py-2 rounded hover:bg-neutral-700
+}
+.nav-title {
+    @apply mx-4 text-white text-xl
+}
+.nav-seperator {
+    @apply border-b-4 border-neutral-600
+}

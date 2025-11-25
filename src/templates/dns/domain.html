@@ -3,67 +3,77 @@
 {% load i18n %}
 {% load pda_tags %}
 {% block app %}
-<section class="app-card">
-  <a class="bg-info px-2 py-2 my-2 rounded-3 text-white" href="/dns/"><span class="pg-icon"><i class="fa fa-arrow-left"></i></span> Back </a>
-  <h1 class="pg-title">Records for {{ id }}</h1>
+<section class="bg-neutral-800 rounded-xl shadow p-6">
+  <a class="btn btn-secondary" href="/dns/"><span class="pg-icon"><i class="fa fa-arrow-left"></i></span> Back </a>
+  <h1 class="my-4 text-xl">Records for {{ id }}</h1>
 
-<button class="btn btn-info p-2" data-bs-toggle="modal" data-bs-target="#recordCreateModal">
-  <span class="pg-icon"><i class="fa fa-plus"></i></span>
-</button>
-<div class="modal fade" id="recordCreateModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content bg-gray-800">
+    <div x-data="{ open: false }">
+        <!-- Button -->
+        <button
+            @click="open = true"
+            class="btn btn-primary mb-4">
+            <i class="fa fa-plus"></i>
+        </button>
 
-      <div class="modal-header">
-        <h5 class="modal-title">Create DNS Record</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
+        <!-- Backdrop -->
+        <div
+            x-show="open"
+            x-transition.opacity
+            @click="open = false"
+            class="fixed inset-0 bg-black/50">
+        </div>
 
-      <div class="modal-body">
-        {{ message }}
-            <form class="pda-form" method="post">
-                {% csrf_token %}
-                <input name="formName" type="hidden" value="createForm">
-                <div class="pda-input-group">
-                    <label class="text-white" for="name">Name</label>
-                    <input id="name" name="name" class="form-control" type="text" value="{{ account.name }}" >
-                </div>
+        <!-- Modal -->
+        <div
+            x-show="open"
+            x-transition
+            class="fixed inset-0 flex items-center justify-center p-4"
+            @keydown.escape.window="open = false">
 
+            <div class="bg-neutral-800 rounded-lg shadow p-6 w-full max-w-md"
+                 @click.stop>
 
-                <div class="pda-input-group">
-                    <label class="text-white" for="record_type">Record Type</label>
-                    <select id="record_type" name="record_type" class="form-control">
-                        {% for record_type, enabled in setting_record_types.items %}
-                            {% if enabled %}
-                                <option value="{{ record_type }}">{{ record_type }}</option>
-                            {% endif %}
-                        {% endfor %}
-                    </select>
-                </div>
+                <h2>Create Record</h2>
+                <form class="pda-form" method="post">
+                    {% csrf_token %}
+                    <input name="formName" type="hidden" value="createForm">
+                    <div class="pda-input-group">
+                        <label class="text-white" for="name">Name</label>
+                        <input id="name" name="name" class="form-control" type="text" value="{{ account.name }}" >
+                    </div>
+                    <div class="pda-input-group">
+                        <label class="text-white" for="record_type">Record Type</label>
+                        <select id="record_type" name="record_type" class="form-control">
+                            {% for record_type, enabled in setting_record_types.items %}
+                                {% if enabled %}
+                                    <option value="{{ record_type }}">{{ record_type }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="pda-input-group">
+                        <label class="text-white" for="content">Content</label>
+                        <input id="content" name="content" class="form-control" type="text">
+                    </div>
+                    <div class="pda-input-group">
+                        <label class="text-white" for="ttl">TTL</label>
+                        <input id="ttl" name="ttl" class="form-control" type="number" value="3600">
+                    </div>
+                    <input class="btn btn-info w-100" type="submit" value="{% translate "Save" %}">
+                </form>
 
-                <div class="pda-input-group">
-                    <label class="text-white" for="content">Content</label>
-                    <input id="content" name="content" class="form-control" type="text">
-                </div>
-
-                <div class="pda-input-group">
-                    <label class="text-white" for="ttl">TTL</label>
-                    <input id="ttl" name="ttl" class="form-control" type="number" value="3600">
-                </div>
-
-                <input class="btn btn-info w-100" type="submit" value="{% translate "Save" %}">
-            </form>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
-
+                <button
+                    @click="open = false"
+                    class="px-4 py-2 bg-neutral-700 text-white rounded">
+                    Close
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-  <table class="pda-table w-100">
+
+
+  <table class="pda-table w-full">
       <thead>
         <tr>
             <th>Name</th>
@@ -85,42 +95,63 @@
             <td>{{ record.ttl }}</td>
             <td class="max-width-500 long-content">{{ record.content }}</td>
             <td>{{ record.comments }}</td>
-            <td>
+            <td class="flex flex-row gap-2">
                 <button class="btn btn-warning py-1 px-2" onclick="openEdit('{{ forloop.counter }}')">
                     <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
                 </button>
-                <button class="btn btn-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#recordDeleteModal-{{ forloop.counter }}">
-                    <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
                 </button>
-            </td>
-            <div class="modal fade" id="recordDeleteModal-{{ forloop.counter }}" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content bg-gray-800">
+                <div x-data="{ open: false }">
+                    <!-- Button -->
+                    <button
+                        @click="open = true"
+                        class="btn btn-danger">
+                        <i class="fa fa-trash-o"></i>
+                    </button>
 
-                        <div class="modal-header">
-                            <h5 class="modal-title">Delete DNS Record</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
+                    <!-- Backdrop -->
+                    <div
+                        x-show="open"
+                        x-transition.opacity
+                        @click="open = false"
+                        class="fixed inset-0 bg-black/50">
+                    </div>
 
-                        <div class="modal-body">
+                    <!-- Modal -->
+                    <div
+                        x-show="open"
+                        x-transition
+                        class="fixed inset-0 flex items-center justify-center p-4"
+                        @keydown.escape.window="open = false">
+
+                        <div class="bg-neutral-800 rounded-lg shadow p-6 w-full max-w-md"
+                             @click.stop>
+
+                            <h2>Delete DNS Record</h2>
                             <form class="pda-form" action="{% url 'pdadns:delete_record' zone.name %}" method="post">
                                 {% csrf_token %}
                                 <input id="name" name="name" type="hidden" value="{{ record.name }}">
                                 <input id="record_type" name="record_type" type="hidden" value="{{ record.record_type }}">
                                 <input id="content" name="content" type="hidden" value="{{ record.content }}">
                                 <p class="text-white text-xl">You are about to delete record
-                                    <span class="text-xl text-danger bg-gray-900 p-2 rounded-3">
+                                    <span class="text-xl text-danger bg-neutral-900 p-2 rounded-lg">
                                     {{ record.name }}</span>
-                                    <span class="text-xl text-danger bg-gray-900 p-2 rounded-3">
+                                    <span class="text-xl text-danger bg-neutral-900 p-2 rounded-lg">
                                     {{ record.record_type }}</span>
                                     are you sure you want to delete the record?</p>
                                 <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
                             </form>
-                            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+
+                            <button
+                                @click="open = false"
+                                class="px-4 py-2 bg-neutral-700 text-white rounded">
+                                Close
+                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
+
+            </td>
+
         </tr>
         <tr id="edit-{{ forloop.counter }}" class="record-edit">
             <form method="post">
@@ -128,11 +159,11 @@
                 <input name="formName" type="hidden" value="editForm">
             <td>
                 <input id="old_name" name="old_name" type="hidden" value="{{ record.name }}">
-                <input class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center w-60" id="name" name="name" type="text" value="{{ record.name }}">
+                <input class="border-1 rounded-lg bg-neutral-700 text-white py-1 px-2 text-center w-3/8" id="name" name="name" type="text" value="{{ record.name }}">
             </td>
             <td>
                 <input id="old_record_type" name="old_record_type" type="hidden" value="{{ record.record_type }}">
-                <select id="record_type" name="record_type" class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center">
+                <select id="record_type" name="record_type" class="border-1 rounded-lg bg-neutral-700 text-white py-1 px-2 text-center">
                     {% for record_type, enabled in setting_record_types.items %}
                         {% if enabled %}
                             <option value="{{ record_type }}" {% if record.record_type == record_type %}selected{% endif %}>{{ record_type }}</option>
@@ -143,14 +174,14 @@
             <td>{{ record.disabled }}</td>
             <td>
                 <input id="old_ttl" name="old_ttl" type="hidden" value="{{ record.ttl }}">
-                <input class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center w-80" id="ttl" name="ttl" type="number" value="{{ record.ttl }}">
+                <input class="border-1 rounded-lg bg-neutral-700 text-white py-1 px-2 text-center w-4/8" id="ttl" name="ttl" type="number" value="{{ record.ttl }}">
             </td>
             <td>
                 <input id="old_content" name="old_content" type="hidden" value="{{ record.content }}">
-                <input class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center w-80" id="content" name="content" type="text" value="{{ record.content }}">
+                <input class="border-1 rounded-lg bg-neutral-700 text-white py-1 px-2 text-center w-6/8" id="content" name="content" type="text" value="{{ record.content }}">
             </td>
             <td>
-                <input class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center w-80" id="comments" name="comments" type="text" value="{{ record.comments }}">
+                <input class="border-1 rounded-lg bg-neutral-700 text-white py-1 px-2 text-center w-4/8" id="comments" name="comments" type="text" value="{{ record.comments }}">
             </td>
             <td>
                 <button type="submit" class="btn btn-success py-1 px-2" onclick="closeEdit('{{ forloop.counter }}')">

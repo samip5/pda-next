@@ -24,7 +24,6 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, Spec
 
 from apps.web.sitemaps import StaticViewSitemap
 
-from debug_toolbar.toolbar import debug_toolbar_urls
 
 sitemaps = {
     "static": StaticViewSitemap(),
@@ -52,4 +51,4 @@ urlpatterns = [
     # Optional UI - you may wish to remove one of these depending on your preference
     path("api/schema/swagger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("api/schema/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + debug_toolbar_urls()
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

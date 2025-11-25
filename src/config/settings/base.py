@@ -125,7 +125,6 @@ THIRD_PARTY_APPS = [
     "rest_framework_api_key",
     "celery_progress",
     "waffle",
-    "debug_toolbar"
 ]
 
 # Put your project-specific apps here
@@ -143,7 +142,6 @@ PROJECT_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS
 
 MIDDLEWARE = [
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "pda.middleware.CoreMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
