@@ -1,0 +1,84 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% block app %}
+<section class="app-card">
+    <h1 class="pg-title">Templates</h1>
+    {% if perms.api_dns.add_zone %}
+    <button class="btn btn-info p-2" data-bs-toggle="modal" data-bs-target="#templateCreateModal">
+        <span class="pg-icon"><i class="fa fa-plus"></i></span>
+    </button>
+    <div class="modal fade" id="templateCreateModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content bg-gray-800">
+
+          <div class="modal-header">
+            <h5 class="modal-title">Create Zone</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <form method="post" class="pda-form">
+                {% csrf_token %}
+
+                <div class="pda-input-group">
+                    {{ zone_template_form.name.label_tag }}
+                    {{ zone_template_form.name }}
+                    {{ zone_template_form.name.errors }}
+                </div>
+                <div class="pda-input-group">
+                    {{ zone_template_form.kind.label_tag }}
+                    {{ zone_template_form.kind }}
+                    {{ zone_template_form.kind.errors }}
+                </div>
+
+                <div class="pda-input-group">
+                    {{ zone_template_form.nameservers.label_tag }}
+                    {{ zone_template_form.nameservers }}
+                    {{ zone_template_form.nameservers.errors }}
+                </div>
+
+                <input class="btn btn-info w-100" type="submit" value="{% translate 'Save' %}">
+            </form>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  <table class="pda-table w-100">
+      <thead>
+        <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for template in templates %}
+        <tr>
+            <td><a class="text-white" href="/admin/templates/{{ template.id }}">{{ template.name }}</a></td>
+            <td>{{ template.kind }}</td>
+            <td class="buttons">
+                {% if perms.api_dns.change_zone %}
+                <a href="/admin/templates/{{ template.id }}" class="btn btn-warning py-1 px-2">
+                    <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
+                </a>
+                {% endif %}
+                {% if perms.api_dns.delete_zone %}
+                <button class="btn btn-danger py-1 px-2">
+                    <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
+                </button>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+  </table>
+</section>
+{% endblock %}

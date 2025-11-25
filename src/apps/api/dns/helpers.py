@@ -9,6 +9,8 @@ from apps.api.accounts.models import Account
 from apps.api.dns.client import PowerDNSError
 from apps.api.dns.models import Record, Zone
 from apps.api.dns.services import PowerDNSService
+from apps.api.templates.models import ZoneTemplate, RecordTemplate
+
 logger = logging.getLogger('pda')
 
 service = PowerDNSService()
@@ -59,6 +61,7 @@ def get_zones() -> list[Any] | QuerySet[Zone, Zone]:
         powerdns_zones = service.get_zones("localhost")
         for zone in powerdns_zones:
             zone_account = None
+            zone['nameservers'] = ["ns1.fuckmylife.fi"]
 
             if zone.get('nameservers') == '':
                 zone['nameservers'] = ["ns1.kapsi.fi"]
@@ -91,6 +94,9 @@ def get_zones() -> list[Any] | QuerySet[Zone, Zone]:
         return Zone.objects.all()
 
 def get_zone(zone_name: str) -> Zone:
+    if not zone_name.endswith('.'):
+        zone_name = f"{zone_name}."
+
     try:
         zone = service.get_zone(zone_name)
 
@@ -100,7 +106,7 @@ def get_zone(zone_name: str) -> Zone:
         zone = Zone(
             name=zone.get('name', ''),
             kind=zone.get('kind', Zone.ZONE_KIND_NATIVE),
-            nameservers=zone.get('nameservers', []),
+            nameservers=["ns1.fuckmylife.fi"],
             server_id=zone.get('server_id', 'localhost'),
             powerdns_id=zone.get('id'),
             account=zone_account,
@@ -120,7 +126,7 @@ def get_zone(zone_name: str) -> Zone:
         logger.error(e)
         return Zone.objects.get(name=zone_name)
 
-def get_records(zone_name: str):
+def get_records(zone_name: str) -> QuerySet[Record, Record] | None:
     try:
         zone = get_zone(zone_name)
         records = service.get_records(zone_name, zone.server_id)
@@ -160,7 +166,7 @@ def get_records(zone_name: str):
                     Record.objects.filter(name=normalized_name, zone=zone, content=content).update(content=record.content,
                                                                ttl=record.ttl, disabled=record.disabled)
                 record_instances.append(record)
-        return record_instances
+        return Record.objects.filter(zone=zone).all()
     except PowerDNSError as e:
         zone = get_zone(zone_name)
         Record.objects.filter(zone=zone).all()
@@ -172,3 +178,76 @@ def _is_valid_uuid(value):
         return True
     except ValueError:
         return False
+
+def delete_record(zone_name: str, record: Record):
+    try:
+        zone = get_zone(zone_name)
+        records = get_records(zone_name=zone.name)
+        crecord = records.filter(name=record.name,content=record.content, record_type=record.record_type).first()
+        record_name = str(crecord.name).replace("@", zone.name)
+        crecord.delete()
+        service.delete_record(zone.name, record_name, crecord.record_type, crecord.content)
+        return True
+    except PowerDNSError as e:
+        logger.error(e)
+        return False
+
+
+def delete_zone(zone_name: str):
+    try:
+        zone = get_zone(zone_name)
+        zone.delete()
+        service.delete_zone(zone.name)
+        return True
+    except PowerDNSError as e:
+        logger.error(e)
+        return False
+
+
+def create_zone_from_template(zone: Zone, template: ZoneTemplate = None):
+    template = ZoneTemplate.objects.filter(id=template).first()
+    if not zone.name.endswith('.'):
+        zone.name = f"{zone.name}."
+
+    try:
+        if template is not None:
+            resp = service.create_zone(zone_name=zone.name, kind=template.kind, account=str(zone.account.id),
+                            nameservers=['ns1.fuckmylife.fi.'])
+        else:
+            resp = service.create_zone(zone_name=zone.name, kind=zone.kind, account=str(zone.account.id),
+                            nameservers=['ns1.example.com.'])
+
+        if resp is not PowerDNSError and template is not None:
+            zone = get_zone(zone.name)
+            template_records = RecordTemplate.objects.filter(zone_template=template)
+            logger.info(template_records)
+            for record in template_records:
+                logger.info(record.name)
+                record_name = str(record.name).replace("@", zone.name)
+                record_content = record.content.replace("@", zone.name)
+                if record.record_type == "TXT" and not record_content.startswith('"') and not record_content.endswith('"'):
+                    record_content = f'"{record_content}"'
+                create_record(zone, record_name, record.record_type, record_content, record.ttl)
+
+    except Exception as e:
+        logger.error(e)
+    return
+
+
+def create_record(zone: Zone, name: str, record_type: str, content: str, ttl: int=3600, disabled: bool=False):
+    record = Record(
+        zone=zone,
+        name=name,
+        record_type=record_type,
+        content=content,
+        ttl=ttl,
+        disabled=disabled
+    )
+    logger.info(content)
+
+    try:
+        record.full_clean()
+        record.save()
+        service.create_record(zone.name, name, record_type, content, ttl)
+    except ValidationError as e:
+        logger.error(e)

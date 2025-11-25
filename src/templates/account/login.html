@@ -20,7 +20,7 @@
             </div>
           </div>
           <div class="card-body bg-gray-800">
-            <form method="post" role="form" class="text-start">
+            <form method="post" role="form" class="pda-form">
               {% csrf_token %}
               {{ form.non_field_errors }}
               {% render_text_input form.login %}

@@ -80,7 +80,7 @@
       </thead>
       <tbody>
         {% for record in records %}
-        <tr id="show-{{ record.name }}-{{ record.record_type }}">
+        <tr id="show-{{ forloop.counter }}">
             <td>{{ record.name }}</td>
             <td>{{ record.record_type }}</td>
             <td>{{ record.disabled }}</td>
@@ -89,41 +89,44 @@
             <td>{{ record.comments }}</td>
             <td>
                 {% if record.record_type != "SOA" %}
-                <button class="btn btn-warning py-1 px-2" onclick="openEdit('{{ record.name }}-{{ record.record_type }}')">
+                <button class="btn btn-warning py-1 px-2" onclick="openEdit('{{ forloop.counter }}')">
                     <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
                 </button>
                 {% endif %}
-                <button class="btn btn-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#recordDeleteModal-{{ record.name }}-{{ record.record_type }}">
+                <button class="btn btn-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#recordDeleteModal-{{ forloop.counter }}">
                     <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
                 </button>
             </td>
-            <div class="modal fade" id="recordDeleteModal-{{ record.name }}-{{ record.record_type }}" tabindex="-1">
+            <div class="modal fade" id="recordDeleteModal-{{ forloop.counter }}" tabindex="-1">
                 <div class="modal-dialog">
                     <div class="modal-content bg-gray-800">
 
                         <div class="modal-header">
-                            <h5 class="modal-title">Create DNS Record</h5>
+                            <h5 class="modal-title">Delete DNS Record</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
 
                         <div class="modal-body">
-                            <form class="pda-form" method="post">
+                            <form class="pda-form" action="{% url 'pdadns:delete_record' zone.name %}" method="post">
                                 {% csrf_token %}
-                                <input name="formName" type="hidden" value="deleteForm">
                                 <input id="name" name="name" type="hidden" value="{{ record.name }}">
                                 <input id="record_type" name="record_type" type="hidden" value="{{ record.record_type }}">
                                 <input id="content" name="content" type="hidden" value="{{ record.content }}">
-
+                                <p class="text-white text-xl">You are about to delete record
+                                    <span class="text-xl text-danger bg-gray-900 p-2 rounded-3">
+                                    {{ record.name }}</span>
+                                    <span class="text-xl text-danger bg-gray-900 p-2 rounded-3">
+                                    {{ record.record_type }}</span>
+                                    are you sure you want to delete the record?</p>
                                 <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
                             </form>
-                                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-
+                            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         </div>
                     </div>
                 </div>
             </div>
         </tr>
-        <tr id="edit-{{ record.name }}-{{ record.record_type }}" class="record-edit">
+        <tr id="edit-{{ forloop.counter }}" class="record-edit">
             <form method="post">
                 {% csrf_token %}
                 <input name="formName" type="hidden" value="editForm">
@@ -159,10 +162,10 @@
                 <input class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center w-80" id="comments" name="comments" type="text" value="{{ record.comments }}">
             </td>
             <td>
-                <button type="submit" class="btn btn-success py-1 px-2" onclick="closeEdit('{{ record.name }}-{{ record.record_type }}')">
+                <button type="submit" class="btn btn-success py-1 px-2" onclick="closeEdit('{{ forloop.counter }}')">
                     <span class="pg-icon"><i class="fa fa-check"></i></span>
                 </button>
-                <button type="button" class="btn btn-warning py-1 px-2" onclick="closeEdit('{{ record.name }}-{{ record.record_type }}')">
+                <button type="button" class="btn btn-warning py-1 px-2" onclick="closeEdit('{{ forloop.counter }}')">
                     <span class="pg-icon"><i class="fa fa-x"></i></span>
                 </button>
             </td>

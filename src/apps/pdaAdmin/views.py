@@ -2,20 +2,23 @@ import logging
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator
+from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.http import require_POST
 
 import config
 from apps.api.accounts.models import Account
 from apps.api.activity.helpers import addActivityLog
 from apps.api.activity.models import Activity
 from apps.api.activity.models.activity import ActionType
-from apps.api.dns.helpers import get_zones, get_zone, get_records
+from apps.api.dns.helpers import get_zones, get_zone, get_records, create_zone_from_template, delete_zone
 from apps.api.dns.models import Zone
 from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
 
-from apps.pdaAdmin.forms import ZoneForm, AccountForm
+from apps.api.templates.models import ZoneTemplate, RecordTemplate, zone_template
+from apps.pdaAdmin.forms import ZoneForm, AccountForm, ZoneTemplateForm, RecordTemplateForm, CreateZoneForm
 
 logger = logging.getLogger('pda')
 @login_required
@@ -125,18 +128,17 @@ def zones(request):
     accountList = Account.objects.all()
 
     if request.method == 'POST':
-        new_zone_form = ZoneForm(request.POST)
+        new_zone_form = CreateZoneForm(request.POST)
         if new_zone_form.is_valid():
             new_zone = new_zone_form.save(commit=False)
             zone.dnssec = False
             try:
-                service.create_zone(zone_name=new_zone.name, kind=new_zone.kind, account=str(new_zone.account.id),
-                                   nameservers=new_zone.nameservers)
+                create_zone_from_template(new_zone, template=new_zone_form.data["template"])
                 addActivityLog(ActionType.ZONE_CREATE, f"{new_zone.name} - {new_zone.account}", request.user)
                 messages.add_message(request, messages.SUCCESS, f"Zone {new_zone.name} created")
             except Exception as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
-    new_zone_form = ZoneForm()
+    new_zone_form = CreateZoneForm()
     zone_instances = get_zones()
 
     return render(
@@ -150,6 +152,14 @@ def zones(request):
             "new_zone_form":new_zone_form
         },
     )
+
+@login_required
+@require_POST
+def delete_zone_view(request, id):
+    zone = get_zone(id)
+    delete_zone(zone_name=zone.name)
+    addActivityLog(ActionType.ZONE_DELETE, f"{zone.name} - {zone.account}", request.user)
+    return redirect('pdaAdmin:zones')
 
 @login_required
 @permission_required('api_dns.view_zone', raise_exception=True)
@@ -194,5 +204,65 @@ def zone(request, id):
             "zone":zzone,
             "records": record_instances,
             "accounts":accountList
+        },
+    )
+
+
+@login_required
+@permission_required('api_templates.view_zonetemplate', raise_exception=True)
+def templates(request):
+    if request.method == "POST":
+        zone_template_form = ZoneTemplateForm(request.POST)
+        if zone_template_form.is_valid():
+            zone_template_form.save()
+            addActivityLog(ActionType.TEMPLATE_CREATE, f"{zone_template_form.data['name']}", request.user)
+    else:
+        zone_template_form = ZoneTemplateForm()
+    zone_templates = ZoneTemplate.objects.all()
+    return render(
+        request,
+        "admin/templates/index.html",
+        {
+            "active_tab": "templates",
+            "page_title": _("Templates"),
+            "templates": zone_templates,
+            "zone_template_form":zone_template_form
+        },
+    )
+
+@login_required
+@permission_required('api_templates.add_zonetemplate', raise_exception=True)
+def edit_template(request, id):
+    template = ZoneTemplate.objects.get(id=id)
+    template_records = RecordTemplate.objects.filter(zone_template=template)
+    if request.method == "POST":
+        record_template_form = RecordTemplateForm(request.POST)
+        zone_template_form = ZoneTemplateForm(request.POST, instance=template)
+
+        if record_template_form.is_valid():
+            record_template = record_template_form.save(commit=False)
+            record_template.zone_template = template
+            record_template.save()
+            addActivityLog(ActionType.TEMPLATE_RECORD_CREATE, f"{record_template_form.data['name']}", request.user)
+            return redirect("pdaAdmin:edit_template", id)
+        if zone_template_form.is_valid():
+            zone_template_form.save()
+            addActivityLog(ActionType.TEMPLATE_UPDATE, f"{zone_template_form.data['name']}", request.user)
+            return redirect("pdaAdmin:edit_template", id)
+
+    else:
+        record_template_form = RecordTemplateForm()
+        zone_template_form = ZoneTemplateForm(instance=template)
+
+    return render(
+        request,
+        "admin/templates/edit.html",
+        {
+            "active_tab": "templates_create",
+            "page_title": _("Zone"),
+            "template":template,
+            "template_records":template_records,
+            "zone_template_form": zone_template_form,
+            "record_template_form": record_template_form
         },
     )

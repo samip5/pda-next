@@ -1,0 +1,127 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% block app %}
+<section class="app-card">
+  <h1 class="pg-title">Template Edit</h1>
+    <div class="pg-columns">
+        {% if perms.pda.admin_zones_edit %}
+        <div class="pg-column-one-third">
+            <form method="post" class="pda-form">
+                {% csrf_token %}
+
+                <div class="pda-input-group">
+                    {{ zone_template_form.name.label_tag }}
+                    {{ zone_template_form.name }}
+                    {{ zone_template_form.name.errors }}
+                </div>
+                <div class="pda-input-group">
+                    {{ zone_template_form.kind.label_tag }}
+                    {{ zone_template_form.kind }}
+                    {{ zone_template_form.kind.errors }}
+                </div>
+
+                <div class="pda-input-group">
+                    {{ zone_template_form.nameservers.label_tag }}
+                    {{ zone_template_form.nameservers }}
+                    {{ zone_template_form.nameservers.errors }}
+                </div>
+
+                <input class="btn btn-info w-100" type="submit" value="{% translate 'Save' %}">
+            </form>
+            <h4 class="pg-title">Add Record</h4>
+            <form method="post" class="pda-form">
+                {% csrf_token %}
+
+                <div class="pda-input-group">
+                    {{ record_template_form.name.label_tag }}
+                    {{ record_template_form.name }}
+                    {{ record_template_form.name.errors }}
+                </div>
+
+                <div class="pda-input-group">
+                    {{ record_template_form.record_type.label_tag }}
+                    {{ record_template_form.record_type }}
+                    {{ record_template_form.record_type.errors }}
+                </div>
+
+                <div class="pda-input-group">
+                    {{ record_template_form.ttl.label_tag }}
+                    {{ record_template_form.ttl }}
+                    {{ record_template_form.ttl.errors }}
+                </div>
+
+                <div class="pda-input-group">
+                    {{ record_template_form.content.label_tag }}
+                    {{ record_template_form.content }}
+                    {{ record_template_form.content.errors }}
+                </div>
+
+                <input class="btn btn-info w-100" type="submit" value="{% translate 'Save' %}">
+            </form>
+        </div>
+        {% endif %}
+        <div class="pg-column">
+            <h4 class="pg-title">Records</h4>
+            <table class="pda-table w-100">
+                <thead>
+                  <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Status</th>
+                      <th>TTL</th>
+                      <th>Data</th>
+                      <th>Comments</th>
+                      <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for record in template_records %}
+                    <tr id="show-{{ record.name }}-{{ record.record_type }}">
+                        <td>{{ record.name }}</td>
+                        <td>{{ record.record_type }}</td>
+                        <td>{{ record.ttl }}</td>
+                        <td class="max-width-500 long-content">{{ record.content }}</td>
+                        <td>
+                            {% if record.record_type != "SOA" %}
+                            <button class="btn btn-warning py-1 px-2" onclick="openEdit('{{ record.name }}-{{ record.record_type }}')">
+                                <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
+                            </button>
+                            {% endif %}
+                            <button class="btn btn-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#recordDeleteModal-{{ record.name }}-{{ record.record_type }}">
+                                <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
+                            </button>
+                        </td>
+                        <div class="modal fade" id="recordDeleteModal-{{ record.name }}-{{ record.record_type }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content bg-gray-800">
+
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Create DNS Record</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+
+                                    <div class="modal-body">
+                                        <form class="d-flex flex-row" method="post">
+                                            {% csrf_token %}
+                                            <input name="formName" type="hidden" value="deleteForm">
+                                            <input id="name" name="name" type="hidden" value="{{ record.name }}">
+                                            <input id="record_type" name="record_type" type="hidden" value="{{ record.record_type }}">
+                                            <input id="content" name="content" type="hidden" value="{{ record.content }}">
+
+                                            <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                                        </form>
+                                            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

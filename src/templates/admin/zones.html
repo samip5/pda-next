@@ -37,7 +37,11 @@
                     <label class="text-white" for="{{ new_zone_form.dnssec.id_for_label }}">DNSSEC</label>
                     {{ new_zone_form.dnssec }}
                 </div>
-
+                <div class="pda-input-group">
+                    {{ new_zone_form.template.label_tag }}
+                    {{ new_zone_form.template }}
+                    {{ new_zone_form.template.errors }}
+                </div>
                 <input class="btn btn-info w-100" type="submit" value="{% translate 'Save' %}">
             </form>
           </div>
@@ -84,11 +88,35 @@
                 </a>
                 {% endif %}
                 {% if perms.api_dns.delete_zone %}
-                <button class="btn btn-danger py-1 px-2">
+                <button class="btn btn-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#zoneDeleteModal-{{ forloop.counter }}">
                     <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
                 </button>
                 {% endif %}
             </td>
+            <div class="modal fade" id="zoneDeleteModal-{{ forloop.counter }}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content bg-gray-800">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Delete Zone</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+
+                        <div class="modal-body">
+                            <form class="pda-form" action="{% url 'pdaAdmin:delete_zone' zone.name %}" method="post">
+                                {% csrf_token %}
+                                <input id="name" name="name" type="hidden" value="{{ zone.name }}">
+                                <p class="text-white text-xl">You are about to delete the zone
+                                    <span class="text-xl text-danger bg-gray-900 p-2 rounded-3">
+                                    {{ zone.name }}</span>
+                                    are you sure you want to delete the zone?</p>
+                                <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                            </form>
+                            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
         </tr>
         {% endfor %}
       </tbody>

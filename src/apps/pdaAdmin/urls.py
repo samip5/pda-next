@@ -10,4 +10,8 @@ urlpatterns = [
     path("accounts/<str:id>/", views.account, name="account"),
     path("zones/", views.zones, name="zones"),
     path("zones/<str:id>/", views.zone, name="zone"),
+    path("zones/<str:id>/delete", views.delete_zone_view, name="delete_zone"),
+    path("templates/", views.templates, name="templates"),
+    path("templates/<str:id>/", views.edit_template, name="edit_template"),
+
 ]

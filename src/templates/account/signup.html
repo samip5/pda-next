@@ -20,7 +20,7 @@
                 <p class="mb-0">{% translate "Enter your email and password to register" %}</p>
               </div>
               <div class="card-body">
-                <form method="post" role="form">
+                <form method="post" role="form" class="pda-form">
                   {% csrf_token %}
                   {{ form.non_field_errors }}
                   {% render_text_input form.email %}

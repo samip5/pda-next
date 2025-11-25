@@ -1,14 +1,15 @@
 import logging
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.http import require_POST
 from rest_framework.exceptions import ValidationError
 from django.db.models import Q
 from apps.api.accounts.models import Account
 from apps.api.activity.helpers import addActivityLog
 from apps.api.activity.models.activity import ActionType
-from apps.api.dns.helpers import recordUpdateHelper, get_zones, get_zone, get_records
+from apps.api.dns.helpers import recordUpdateHelper, get_zones, get_zone, get_records, delete_record
 from apps.api.dns.models import Zone, Record
 from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
@@ -103,6 +104,20 @@ def domain(request, id):
             "active_tab": "domain",
             "page_title": _("Domain"),
             "id": id,
+            "zone": zone,
             "records": record_instances
         },
     )
+@login_required
+@require_POST
+def delete_record_view(request, id):
+    zone_name = id
+    if not zone_name.endswith('.'):
+        zone_name = f"{zone_name}."
+    request.POST.get('record_type')
+    zone = get_zone(zone_name)
+    records = get_records(zone_name)
+    record = records.filter(record_type=request.POST.get('record_type'), name=request.POST.get('name'), content=request.POST.get('content')).first()
+    delete_record(zone_name=zone.name, record=record)
+    addActivityLog(ActionType.RECORD_DELETE, f"{zone.name} - {record.name}", request.user)
+    return redirect('pdadns:domain', id)

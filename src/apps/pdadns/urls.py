@@ -8,5 +8,6 @@ app_name = "pdadns"
 urlpatterns = [
     path("", views.domains, name="domains"),
     path("domain/<str:id>/", views.domain, name="domain"),
+    path("domain/<str:id>/delete/record", views.delete_record_view, name="delete_record"),
 ]
 
