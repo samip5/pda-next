@@ -58,6 +58,34 @@
         </a>
       </li>
     {% endif %}
+    <li class="nav-item">
+        <a
+            class="nav-link d-flex justify-content-between align-items-center {% if active_tab in 'pda_users pda_groups pda_permissions' %}active{% endif %}"
+            href="#accountsCollapse"
+            data-bs-toggle="collapse"
+            role="button"
+            aria-expanded="{% if active_tab in 'pda_users pda_groups pda_permissions' %}true{% else %}false{% endif %}"
+            aria-controls="accountsCollapse"
+        >
+            <span>
+                <span>{% translate "User Accounts" %}</span>
+            </span>
+        </a>
+
+        <div class="collapse {% if active_tab in 'pda_users pda_groups pda_permissions' %}show{% endif %}" id="accountsCollapse">
+            <ul class="nav flex-column ms-3">
+                <li class="nav-item">
+                    <a href="{% url 'pdaAdmin:users' %}" class="nav-link text-white {% if active_tab == 'pda_users' %}active{% endif %}">
+                        <span class="pg-icon"><i class="fa fa-user-group"></i></span>
+
+                        {% translate "Users" %}
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+    </li>
+
 
     {% endif %}
       <li class="nav-item mt-3">

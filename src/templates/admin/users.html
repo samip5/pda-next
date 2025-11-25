@@ -1,0 +1,90 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% block app %}
+<section class="app-card">
+    <h1 class="pg-title">Users</h1>
+    <button class="btn btn-info p-2" data-bs-toggle="modal" data-bs-target="#accountCreateModal">
+        <span class="pg-icon"><i class="fa fa-plus"></i></span>
+    </button>
+    <div class="modal fade" id="accountCreateModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content bg-gray-800">
+
+          <div class="modal-header">
+            <h5 class="modal-title">Account Creation</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <div class="modal-body">
+            <form class="pda-form" method="post">
+                {% csrf_token %}
+                <div class="pda-input-group">
+                    {{ user_form.username.label_tag }}
+                    {{ user_form.username }}
+                    {{ user_form.username.errors }}
+                </div>
+                <div class="pda-input-group">
+                    {{ user_form.email.label_tag }}
+                    {{ user_form.email }}
+                    {{ user_form.email.errors }}
+                </div>
+                <div class="pda-input-group">
+                    {{ user_form.first_name.label_tag }}
+                    {{ user_form.first_name }}
+                    {{ user_form.first_name.errors }}
+                </div>
+                <div class="pda-input-group">
+                    {{ user_form.last_name.label_tag }}
+                    {{ user_form.last_name }}
+                    {{ user_form.last_name.errors }}
+                </div>
+                <div class="pda-input-group">
+                    {{ user_form.is_superuser.label_tag }}
+                    {{ user_form.is_superuser }}
+                    {{ user_form.is_superuser.errors }}
+                </div>
+                <div class="pda-input-group">
+                    {{ user_form.is_active.label_tag }}
+                    {{ user_form.is_active }}
+                    {{ user_form.is_active.errors }}
+                </div>
+                <input class="btn btn-info w-100" type="submit" value="{% translate 'Create' %}">
+            </form>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <table class="pda-table w-100">
+      <thead>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Full Namet</th>
+            <th>Superuser Status</th>
+            <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+            <td><a class="text-white" href="/admin/users/{{ user.id }}">{{ user.username }}</a></td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.first_name }} {{ user.last_name }}</td>
+            <td>{{ user.is_superuser }}</td>
+            <td>
+                <span class="pg-icon bg-danger p-3 rounded-3 text-white"><i class="fa fa-trash-o"></i></span>
+                <a href="/admin/users/{{ user.id }}"><span class="pg-icon bg-warning p-3 rounded-3 text-white"><i class="fa fa-pencil-square"></i></span></a>
+            </td>
+        </tr>
+
+        {% endfor %}
+      </tbody>
+    </table>
+</section>
+{% endblock %}

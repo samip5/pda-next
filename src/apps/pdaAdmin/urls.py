@@ -14,4 +14,7 @@ urlpatterns = [
     path("templates/", views.templates, name="templates"),
     path("templates/<str:id>/", views.edit_template, name="edit_template"),
     path("clear_cache", views.clear_cache, name="clear_cache"),
+    path('users/', views.users, name="users"),
+    path('users/<str:id>', views.user, name="user"),
+
 ]

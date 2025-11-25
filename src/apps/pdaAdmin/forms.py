@@ -1,8 +1,10 @@
 from django import forms
+from django.contrib.auth.models import Permission, Group
 
 from apps.api.accounts.models import Account
 from apps.api.dns.models import Zone
 from apps.api.templates.models import ZoneTemplate, RecordTemplate
+from apps.users.models import CustomUser
 
 
 class ZoneForm(forms.ModelForm):
@@ -75,3 +77,41 @@ class DeleteZoneForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(),
         }
+
+
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields= ['username', 'email', 'first_name', 'last_name', 'is_superuser', 'is_active']
+        widgets = {
+            'username': forms.TextInput(),
+            'email': forms.EmailInput(),
+            'first_name': forms.TextInput(),
+            'last_name': forms.TextInput(),
+            'is_superuser': forms.CheckboxInput(),
+            'is_active': forms.CheckboxInput(),
+        }
+
+class UserPermissionsForm(forms.ModelForm):
+    user_permissions = forms.ModelMultipleChoiceField(
+        queryset=Permission.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={'id': 'all-permissions', 'size': 10}),
+        label="Permissions"
+    )
+
+    class Meta:
+        model = CustomUser
+        fields = ['user_permissions']
+
+class UserGroupsForm(forms.ModelForm):
+    user_groups = forms.ModelMultipleChoiceField(
+        queryset=Group.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={'id': 'all-permissions', 'size': 10}),
+        label="Groups"
+    )
+
+    class Meta:
+        model = CustomUser
+        fields = ['groups']

@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.utils.translation import gettext_lazy as _
@@ -19,7 +20,9 @@ from django.contrib import messages
 
 from apps.api.templates.models import ZoneTemplate, RecordTemplate, zone_template
 from apps.globalSettings.utils import get_setting, set_setting
-from apps.pdaAdmin.forms import ZoneForm, AccountForm, ZoneTemplateForm, RecordTemplateForm, CreateZoneForm
+from apps.pdaAdmin.forms import ZoneForm, AccountForm, ZoneTemplateForm, RecordTemplateForm, CreateZoneForm, UserForm, \
+    UserPermissionsForm, UserGroupsForm
+from apps.users.models import CustomUser
 from config import load_db_settings_to_config, save_config
 from config.settings import app_settings
 
@@ -298,3 +301,70 @@ def clear_cache(request):
         addActivityLog(ActionType.CLEAR_CACHE, f"Clearing Zone and Record Cache's", request.user)
         return redirect('pdaAdmin:dashboard')
     return redirect('pdaAdmin:dashboard')
+
+@login_required
+@permission_required('pda.admin_accounts', raise_exception=True)
+def users(request):
+    if request.method == "POST":
+        user_form = UserForm(request.POST)
+        if user_form.is_valid():
+            user_form.save()  # creates and saves a new Account
+            addActivityLog(ActionType.USER_CREATE, f"{user_form.data['username']}", request.user)
+    else:
+        user_form = UserForm()
+    users = CustomUser.objects.all()
+
+    return render(
+        request,
+        "admin/users.html",
+        {
+            "active_tab": "pda_users",
+            "page_title": _("Accounts"),
+            "users": users,
+            "user_form": user_form
+        },
+    )
+
+@login_required
+@permission_required('pda.admin_accounts', raise_exception=True)
+def user(request, id):
+    _user = CustomUser.objects.get(id=id)
+    if request.method == "POST":
+        form_type = request.POST.get('form_type')
+
+        if form_type == 'user':
+            user_form = UserForm(request.POST, instance=_user)
+            if user_form.is_valid():
+                user_form.save()  # creates and saves a new Account
+                addActivityLog(ActionType.USER_CREATE, f"{user_form.data['username']}", request.user)
+                return redirect("pdaAdmin:user", id)
+        if form_type == 'permissions':
+            user_permission_form = UserPermissionsForm(request.POST, instance=_user)
+            if user_permission_form.is_valid():
+                user_permission_form.save()  # creates and saves a new Account
+                addActivityLog(ActionType.USER_UPDATE, f"Permissions updated for {_user.username}", request.user)
+                return redirect("pdaAdmin:user", id)
+        if form_type == 'groups':
+            user_groups_form = UserGroupsForm(request.POST, instance=_user)
+            if user_groups_form.is_valid():
+                user_groups_form.save()  # creates and saves a new Account
+                addActivityLog(ActionType.USER_UPDATE, f"Groups updated for {_user.username}", request.user)
+                return redirect("pdaAdmin:user", id)
+    else:
+        user_form = UserForm(instance=_user)
+        user_permission_form = UserPermissionsForm(instance=_user)
+        user_groups_form = UserGroupsForm(instance=_user)
+
+    return render(
+        request,
+        "admin/user.html",
+        {
+            "active_tab": "pda_user",
+            "page_title": _("Account"),
+            "user": _user,
+            "user_form": user_form,
+            "user_permission_form":user_permission_form,
+            "user_groups_form":user_groups_form
+        },
+    )
+
