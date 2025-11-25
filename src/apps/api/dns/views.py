@@ -4,6 +4,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, ValidationError
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 
 from apps.api.decorators import MethodPermissionMixin, method_permissions
 from apps.api.permissions import CanViewZone, CanManageZone
@@ -19,22 +21,11 @@ from ..accounts.models import Account
 logger = logging.getLogger('pda')
 
 class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
-    """
-    ViewSet for fetching DNS zones and records.
-
-    Provides endpoints to list and retrieve zones and records from the database.
-    Records can be filtered by zone.
-    """
-
     queryset = Record.objects.all()
     serializer_class = RecordSerializer
     permission_classes = [CanViewZone]
 
     def get_queryset(self):
-        """
-        Optionally restricts the returned records by filtering against
-        query parameters in the URL.
-        """
         queryset = Record.objects.select_related('zone').all()
 
         # Filter by zone (by zone ID or zone name)
@@ -69,17 +60,100 @@ class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
 
         return queryset.order_by('zone__name', 'name', 'record_type')
 
+    @extend_schema(
+        summary="List DNS records",
+        description="List DNS records with optional filtering. Records can be filtered by zone, name, type, content, and disabled status. Results are paginated with 100 items per page.",
+        parameters=[
+            OpenApiParameter(
+                name='page',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Page number (default: 1)',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='zone_id',
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                description='Filter records by zone ID',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='zone_name',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Filter records by zone name',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='name',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Filter records by name (case-insensitive partial match)',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='type',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Filter records by record type (A, AAAA, MX, etc.)',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='content',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                description='Filter records by content (case-insensitive partial match)',
+                required=False,
+            ),
+            OpenApiParameter(
+                name='disabled',
+                type=OpenApiTypes.BOOL,
+                location=OpenApiParameter.QUERY,
+                description='Filter by disabled status (true/false/1/0/yes)',
+                required=False,
+            ),
+        ],
+        responses={
+            200: RecordSerializer,
+        }
+    )
+    def list(self, request):
+        return super().list(request)
+
+    @extend_schema(
+        summary="Retrieve a specific DNS record",
+        description="Retrieve a single DNS record by ID.",
+        responses={
+            200: RecordSerializer,
+            404: OpenApiTypes.OBJECT,
+        }
+    )
+    def retrieve(self, request, pk=None):
+        return super().retrieve(request, pk)
+
+    @extend_schema(
+        methods=['GET'],
+        summary="List all zones",
+        description="Get all zones. This endpoint fetches zones from PowerDNS API on-demand and returns them.",
+        responses={
+            200: ZoneSerializer,
+            404: OpenApiTypes.OBJECT,
+        }
+    )
+    @extend_schema(
+        methods=['POST'],
+        summary="Create a new zone",
+        description="Create a new DNS zone in PowerDNS.",
+        request=ZoneSerializer,
+        responses={
+            200: OpenApiTypes.OBJECT,
+        }
+    )
     @action(detail=False, methods=['get', 'post'], url_path='zones')
     @method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone]})
     def zones(self, request):
         if request.method == 'GET':
-            """
-            Get all Zones.
-
-            This endpoint fetches zones from PowerDNS API on-demand and
-            returns them. If the zone doesn't exist in the database, it will
-            attempt to fetch from PowerDNS.
-            """
             service = PowerDNSService()
             powerdns_zones = service.get_zones("localhost")
 
@@ -108,11 +182,6 @@ class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
             return Response(serializer.data)
 
         elif request.method == 'POST':
-            """
-            Create a New zone.
-
-            """
-
             zone_name = request.data.get('name', '')
             zone_type = request.data.get('type', '')
             zone_account = Account.objects.filter(id=request.data.get('account', '')).first()
@@ -123,16 +192,62 @@ class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
 
             return Response(resp)
 
+    @extend_schema(
+        methods=['GET'],
+        summary="Retrieve a specific zone",
+        description="Get zone details by zone name. Fetches from PowerDNS API on-demand.",
+        parameters=[
+            OpenApiParameter(
+                name='zone_name',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Zone name (with or without trailing dot)',
+                required=True,
+            ),
+        ],
+        responses={
+            200: ZoneSerializer,
+            404: OpenApiTypes.OBJECT,
+        }
+    )
+    @extend_schema(
+        methods=['POST'],
+        summary="Update a zone",
+        description="Update zone settings (account, nameservers, DNSSEC).",
+        parameters=[
+            OpenApiParameter(
+                name='zone_name',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Zone name (with or without trailing dot)',
+                required=True,
+            ),
+        ],
+        request=ZoneSerializer,
+        responses={
+            200: OpenApiTypes.OBJECT,
+        }
+    )
+    @extend_schema(
+        methods=['DELETE'],
+        summary="Delete a zone",
+        description="Delete a zone from PowerDNS.",
+        parameters=[
+            OpenApiParameter(
+                name='zone_name',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Zone name (with or without trailing dot)',
+                required=True,
+            ),
+        ],
+        responses={
+            200: OpenApiTypes.OBJECT,
+        }
+    )
     @action(detail=False, methods=['get', 'post', 'delete'], url_path='zones/(?P<zone_name>[^/]+)')
     @method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone], 'DELETE': [CanManageZone]})
     def zone(self, request, zone_name=None):
-        """
-        Get zone.
-
-        This endpoint fetches zone from PowerDNS API on-demand and
-        returns them. If the zone doesn't exist in the database, it will
-        attempt to fetch from PowerDNS.
-        """
         if not zone_name.endswith('.'):
             zone_name = f"{zone_name}."
 
@@ -170,17 +285,48 @@ class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
             resp = service.delete_zone(zone_name=zone_name)
             return Response(resp)
 
+    @extend_schema(
+        methods=['GET'],
+        summary="List all records for a zone",
+        description="Get all DNS records for a specific zone. Fetches from PowerDNS API on-demand.",
+        parameters=[
+            OpenApiParameter(
+                name='zone_name',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Zone name (with or without trailing dot)',
+                required=True,
+            ),
+        ],
+        responses={
+            200: RecordSerializer,
+            404: OpenApiTypes.OBJECT,
+        }
+    )
+    @extend_schema(
+        methods=['POST'],
+        summary="Create a new DNS record",
+        description="Create a new DNS record in a zone.",
+        parameters=[
+            OpenApiParameter(
+                name='zone_name',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Zone name (with or without trailing dot)',
+                required=True,
+            ),
+        ],
+        request=RecordSerializer,
+        responses={
+            200: RecordSerializer,
+            400: OpenApiTypes.OBJECT,
+            404: OpenApiTypes.OBJECT,
+        }
+    )
     @action(detail=False, methods=['get', 'post'], url_path='zones/(?P<zone_name>[^/]+)/records')
     @method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone]})
     def zone_records(self, request, zone_name=None):
         if request.method == 'GET':
-            """
-            Get all records for a specific zone by zone name.
-
-            This endpoint fetches records from PowerDNS API on-demand and
-            returns them. If the zone doesn't exist in the database, it will
-            attempt to fetch from PowerDNS.
-            """
             # Ensure zone name has trailing dot
             if not zone_name.endswith('.'):
                 zone_name = f"{zone_name}."
@@ -284,6 +430,84 @@ class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
             service.create_record(zone.name, record.name, record.record_type, record.content, record.ttl)
             return Response(RecordSerializer(record).data)
 
+    @extend_schema(
+        methods=['GET'],
+        summary="Get records by name",
+        description="Get all DNS records with a specific name in a zone.",
+        parameters=[
+            OpenApiParameter(
+                name='zone_name',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Zone name (with or without trailing dot)',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='record_id',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Record name (e.g., "www" or "@" for zone apex)',
+                required=True,
+            ),
+        ],
+        responses={
+            200: RecordSerializer,
+            404: {},
+        }
+    )
+    @extend_schema(
+        methods=['POST'],
+        summary="Update a DNS record",
+        description="Update an existing DNS record. Requires old_record_type if multiple records exist with the same name.",
+        parameters=[
+            OpenApiParameter(
+                name='zone_name',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Zone name (with or without trailing dot)',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='record_id',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Record name (e.g., "www" or "@" for zone apex)',
+                required=True,
+            ),
+        ],
+        request=RecordSerializer,
+        responses={
+            200: OpenApiTypes.OBJECT,
+            404: OpenApiTypes.OBJECT,
+            500: OpenApiTypes.OBJECT,
+        }
+    )
+    @extend_schema(
+        methods=['DELETE'],
+        summary="Delete a DNS record",
+        description="Delete a DNS record from a zone. Requires record_type in request body.",
+        parameters=[
+            OpenApiParameter(
+                name='zone_name',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Zone name (with or without trailing dot)',
+                required=True,
+            ),
+            OpenApiParameter(
+                name='record_id',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Record name (e.g., "www" or "@" for zone apex)',
+                required=True,
+            ),
+        ],
+        request=RecordSerializer,
+        responses={
+            200: OpenApiTypes.STR,
+            404: OpenApiTypes.OBJECT,
+        }
+    )
     @action(detail=False, methods=['get', 'post','delete'], url_path='zones/(?P<zone_name>[^/]+)/records/(?P<record_id>[^/]+)')
     @method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone], 'DELETE': [CanManageZone]})
     def zone_record(self, request, zone_name=None, record_id=None):
@@ -350,13 +574,6 @@ class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
                 record_instances.append(record)
 
         if request.method == 'GET':
-            """
-            Get all records for a specific zone by zone name.
-
-            This endpoint fetches records from PowerDNS API on-demand and
-            returns them. If the zone doesn't exist in the database, it will
-            attempt to fetch from PowerDNS.
-            """
             matching_records = [r for r in record_instances if r.name.lower() == record_id.lower()]
             serializer = RecordSerializer(matching_records, many=True)
             return Response(serializer.data)
@@ -402,6 +619,40 @@ class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
             except IndexError:
                 return Response("Record not found", 404)
 
+    @extend_schema(
+        methods=['POST'],
+        summary="Enable DNSSEC for a zone",
+        description="Generate and enable DNSSEC keys for a zone.",
+        parameters=[
+            OpenApiParameter(
+                name='zone_name',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Zone name (with or without trailing dot)',
+                required=True,
+            ),
+        ],
+        responses={
+            200: OpenApiTypes.OBJECT,
+        }
+    )
+    @extend_schema(
+        methods=['DELETE'],
+        summary="Disable DNSSEC for a zone",
+        description="Disable DNSSEC for a zone.",
+        parameters=[
+            OpenApiParameter(
+                name='zone_name',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Zone name (with or without trailing dot)',
+                required=True,
+            ),
+        ],
+        responses={
+            200: OpenApiTypes.OBJECT,
+        }
+    )
     @action(detail=False, methods=['post', 'delete'], url_path='zones/(?P<zone_name>[^/]+)/dnssec')
     @method_permissions({'POST': [CanManageZone], 'DELETE': [CanManageZone]})
     def dnssec(self, request, zone_name=None):
