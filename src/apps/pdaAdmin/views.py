@@ -5,6 +5,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
+from django_auth_ldap.config import LDAPSearch
 
 import config
 from apps.api.accounts.models import Account
@@ -19,6 +20,7 @@ from django.contrib import messages
 from apps.api.templates.models import ZoneTemplate, RecordTemplate, zone_template
 from apps.globalSettings.utils import get_setting, set_setting
 from apps.pdaAdmin.forms import ZoneForm, AccountForm, ZoneTemplateForm, RecordTemplateForm, CreateZoneForm
+from config import load_db_settings_to_config, save_config
 from config.settings import app_settings
 
 logger = logging.getLogger('pda')
@@ -49,18 +51,20 @@ def dashboard(request):
 @permission_required('pda.admin_settings', raise_exception=True)
 def settings(request):
     ldap_settings = {
-        "ldap_server_uri": f"{get_setting('ldap_server_uri')}",
-        "ldap_bind_on": f"{get_setting('ldap_bind_on')}",
-        "ldap_bind_password": f"{get_setting('ldap_bind_password')}",
-        "ldap_user_search_base": f"{get_setting('ldap_user_search_base')}",
-        "ldap_user_search_filter": f"{get_setting('ldap_user_search_filter')}"
+        "auth_ldap_start_tls": f"{get_setting('auth_ldap_start_tls')}",
+        "auth_ldap_server_uri": f"{get_setting('auth_ldap_server_uri')}",
+        "auth_ldap_bind_dn": f"{get_setting('auth_ldap_bind_dn')}",
+        "auth_ldap_bind_password": f"{get_setting('auth_ldap_bind_password')}",
+        "auth_ldap_create_users": f"{get_setting('auth_ldap_create_users')}",
+        "auth_ldap_user_search_base": f"{get_setting('auth_ldap_user_search_base')}",
+        "auth_ldap_user_search_filter": f"{get_setting('auth_ldap_user_search_filter')}"
     }
     if request.method == "POST":
         for key in ldap_settings:
             logger.info(f'{key} {request.POST.get(key)}')
             set_setting(key, request.POST.get(key))
             ldap_settings[key] = request.POST.get(key)
-
+        load_db_settings_to_config(app_settings)
     view_settings = []
     view_settings.append({"name": "disable_landing_page", "value": f"{get_setting('disable_landing_page')}"})
 

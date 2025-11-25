@@ -7,7 +7,10 @@ import sys
 import os
 import logging
 from pathlib import Path
+
+import ldap
 from django.utils.translation import gettext_lazy
+from django_auth_ldap.config import LDAPSearch
 
 config_parent = Path(__file__).resolve().parents[1]
 logger = logging.getLogger("pda")
@@ -285,30 +288,28 @@ ACCOUNT_EMAIL_VERIFICATION = app_settings.account_email_verification
 ALLAUTH_2FA_ALWAYS_REVEAL_BACKUP_TOKENS = False
 
 # LDAP Configuration
-#AUTH_LDAP_SERVER_URI = os.environ.get('AUTH_LDAP_SERVER_URI', 'ldap://ldap.example.com')
-#AUTH_LDAP_BIND_DN = os.environ.get('AUTH_LDAP_BIND_DN', '')
-#AUTH_LDAP_BIND_PASSWORD = os.environ.get('AUTH_LDAP_BIND_PASSWORD', '')
-#AUTH_LDAP_USER_SEARCH = LDAPSearch(
-#    'ou=users,dc=example,dc=com',
-#    ldap.SCOPE_SUBTREE,
-#    '(uid=%(user)s)'
-#)
-#AUTH_LDAP_USER_ATTR_MAP = {
-#    "first_name": "givenName",
-#    "last_name": "sn",
-#    "email": "mail"
-#}
+AUTH_LDAP_START_TLS = app_settings.auth_ldap_start_tls
+AUTH_LDAP_SERVER_URI = app_settings.auth_ldap_server_uri
+AUTH_LDAP_BIND_DN = app_settings.auth_ldap_bind_dn
+AUTH_LDAP_BIND_PASSWORD = app_settings.auth_ldap_bind_password
+AUTH_LDAP_USER_SEARCH = LDAPSearch(
+    app_settings.auth_ldap_user_search_base,
+    ldap.SCOPE_SUBTREE,
+    app_settings.auth_ldap_user_search_filter
+)
+AUTH_LDAP_CREATE_USERS = app_settings.auth_ldap_create_users
 
 AUTHENTICATION_BACKENDS = (
-#    'django_auth_ldap.backend.LDAPBackend',
     # Needed to log in by username in Django admin, regardless of `allauth`
     'django.contrib.auth.backends.ModelBackend',
     # `allauth` specific authentication methods, such as login by e-mail
     'allauth.account.auth_backends.AuthenticationBackend',
 )
 
-# Email setup
+if app_settings.ldap_enable:
+    AUTHENTICATION_BACKENDS.insert(0, "django_auth_ldap.backend.LDAPBackend")
 
+# Email setup
 EMAIL_BACKEND = None
 if isinstance(app_settings.email_backend, str) and len(app_settings.email_backend.strip()):
     ADMINS = [(app_settings.admin_name, app_settings.admin_email)]
@@ -431,6 +432,13 @@ LOGGING = {
             'handlers': ['django.server'],
             'level': app_settings.log_level_django,
             'propagate': False,
+        },
+        'loggers': {
+            'django_auth_ldap': {
+                'handlers': ['console'],
+                'level': 'DEBUG',
+                'propagate': True,
+            },
         },
         'pda': {
             'handlers': ['console'],

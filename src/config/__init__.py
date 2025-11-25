@@ -124,6 +124,15 @@ class AppSettings(BaseSettings):
     powerdns_api_key: str = ''
     powerdns_api_timeout: int = 30
     disable_landing_page: bool = False
+    auth_ldap_start_tls: bool = False
+    auth_ldap_server_uri: str = ''
+    auth_ldap_bind_dn: str = ''
+    auth_ldap_bind_password: str = ''
+    auth_ldap_create_users: bool = True
+    auth_ldap_user_search_base: str = ''
+    auth_ldap_user_search_filter: str = ''
+    ldap_enable: bool = False
+
     """ The following settings are automatically loaded at application startup. """
 
     config: dict | None = None
