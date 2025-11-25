@@ -168,7 +168,12 @@ def get_records(zone_name: str) -> QuerySet[Record, Record] | None:
                     record.save()
                 elif cache_record:
                     Record.objects.filter(name=normalized_name, zone=zone, content=content).update(content=record.content,
-                                                               ttl=record.ttl, disabled=record.disabled)
+                                                              ttl=record.ttl, disabled=record.disabled)
+                if record.record_type == Record.RECORD_TYPE_SOA and not cache_record:
+                    Record.objects.filter(name=normalized_name, zone=zone).delete()
+                    record.full_clean()
+                    record.save()
+
                 record_instances.append(record)
         return Record.objects.filter(zone=zone).all()
     except PowerDNSError as e:
