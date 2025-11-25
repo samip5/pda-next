@@ -7,6 +7,7 @@ from django.shortcuts import render, redirect
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 from django_auth_ldap.config import LDAPSearch
+from rest_framework.exceptions import ValidationError
 
 import config
 from apps.api.accounts.models import Account
@@ -14,7 +15,7 @@ from apps.api.activity.helpers import addActivityLog
 from apps.api.activity.models import Activity
 from apps.api.activity.models.activity import ActionType
 from apps.api.dns.helpers import get_zones, get_zone, get_records, create_zone_from_template, delete_zone, \
-    recordUpdateHelper
+    recordUpdateHelper, create_record
 from apps.api.dns.models import Zone, Record
 from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
@@ -161,7 +162,6 @@ def account(request, id):
 @login_required
 @permission_required('api_dns.view_zone', raise_exception=True)
 def zones(request):
-    service = PowerDNSService()
     accountList = Account.objects.all()
 
     if request.method == 'POST':
@@ -202,6 +202,8 @@ def delete_zone_view(request, id):
 @permission_required('api_dns.view_zone', raise_exception=True)
 def zone(request, id):
     zone_name = id
+    setting_record_types = get_setting('record_types')
+
     if not zone_name.endswith('.'):
         zone_name = f"{zone_name}."
 
@@ -253,6 +255,29 @@ def zone(request, id):
                 messages.add_message(request, messages.SUCCESS, f"{updated}")
             except Exception as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
+        if form_type == "recordCreate":
+            recordCreate = Record(
+                zone=zone,
+                name=request.POST.get('name'),
+                record_type=request.POST.get('record_type'),
+                content=request.POST.get('content'),
+                ttl=request.POST.get('ttl', '3600'),
+                disabled=False,
+            )
+            new_record_name = recordCreate.name
+            if recordCreate.name == "@":
+                new_record_name = zone.name
+            try:
+                recordCreate.full_clean()
+            except ValidationError as e:
+                messages.add_message(request, messages.WARNING, f"{e}")
+
+            try:
+                addActivityLog(ActionType.RECORD_CREATE, f"({recordCreate.record_type}) {recordCreate.name} - {zzone.name} created", request.user)
+                create_record(zone, new_record_name, recordCreate.record_type, recordCreate.content, recordCreate.ttl)
+            except Exception as e:
+                messages.add_message(request, messages.WARNING, f"{e}")
+
 
     record_instances = get_records(zone_name)
 
@@ -263,6 +288,7 @@ def zone(request, id):
             "active_tab": "admin_zone",
             "page_title": _("Zone"),
             "zone":zzone,
+            "setting_record_types": setting_record_types,
             "records": record_instances,
             "accounts":accountList
         },
@@ -294,6 +320,7 @@ def templates(request):
 @login_required
 @permission_required('api_templates.add_zonetemplate', raise_exception=True)
 def edit_template(request, id):
+    setting_record_types = get_setting('record_types')
     template = ZoneTemplate.objects.get(id=id)
     template_records = RecordTemplate.objects.filter(zone_template=template)
     if request.method == "POST":
@@ -322,6 +349,7 @@ def edit_template(request, id):
             "active_tab": "templates_create",
             "page_title": _("Zone"),
             "template":template,
+            "setting_record_types":setting_record_types,
             "template_records":template_records,
             "zone_template_form": zone_template_form,
             "record_template_form": record_template_form
