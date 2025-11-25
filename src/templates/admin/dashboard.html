@@ -5,6 +5,12 @@
 <section class="">
     <h1 class="pg-title mb-5">Dashboard</h1>
     <div class="d-flex flex-row gap-4 mb-4">
+        {% if request.user.is_superuser %}
+            <button class="btn btn-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#clearCacheModal">
+                Clear Cache<span class="pg-icon"><i class="fa fa-trash-o"></i></span>
+            </button>
+        {% endif %}
+
     {% if perms.pda.admin_zones_create %}
     <button class="btn btn-info p-2" data-bs-toggle="modal" data-bs-target="#zoneCreateModal">
         Create Zone <span class="pg-icon"><i class="fa fa-plus"></i></span>
@@ -164,6 +170,26 @@
 
         </div>
     </div>
+    {% if request.user.is_superuser %}
+    <div class="modal fade" id="clearCacheModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-gray-800">
+                <div class="modal-header">
+                    <h5 class="modal-title">CLEAR CACHE</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form class="pda-form" action="{% url 'pdaAdmin:clear_cache' %}" method="post">
+                        {% csrf_token %}
+                        <p class="text-white text-xl bg-danger p-2 rounded-3">You are about to clear the entire zone and record cache are you sure you want to do this?</p>
+                        <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                    </form>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </section>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.min.js" integrity="sha512-n/G+dROKbKL3GVngGWmWfwK0yPctjZQM752diVYnXZtD/48agpUKLIn0xDQL9ydZ91x6BiOmTIFwWjjFi2kEFg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 {% endblock %}

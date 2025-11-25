@@ -12,7 +12,7 @@ from apps.api.activity.helpers import addActivityLog
 from apps.api.activity.models import Activity
 from apps.api.activity.models.activity import ActionType
 from apps.api.dns.helpers import get_zones, get_zone, get_records, create_zone_from_template, delete_zone
-from apps.api.dns.models import Zone
+from apps.api.dns.models import Zone, Record
 from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
 
@@ -265,3 +265,13 @@ def edit_template(request, id):
             "record_template_form": record_template_form
         },
     )
+
+@login_required
+@require_POST
+def clear_cache(request):
+    if request.user.is_superuser:
+        Zone.objects.all().delete()
+        Record.objects.all().delete()
+        addActivityLog(ActionType.CLEAR_CACHE, f"Clearing Zone and Record Cache's", request.user)
+        return redirect('pdaAdmin:dashboard')
+    return redirect('pdaAdmin:dashboard')

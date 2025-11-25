@@ -34,6 +34,7 @@ class ActionType(models.TextChoices):
     USER_APIKEY_UPDATE = 'user_apikey_update', 'User APIKey Update'
     USER_APIKEY_DELETE = 'user_apikey_delete', 'User APIKey Delete'
     APP_SETTING_CHANGE = 'app_setting_change', 'App Setting Change'
+    CLEAR_CACHE = 'clear_cache', 'Clear Cached Records and Zones'
 
 
 class Activity(models.Model):
