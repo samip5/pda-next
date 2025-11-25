@@ -83,7 +83,7 @@
         <tr id="show-{{ forloop.counter }}">
             <td>{{ record.name }}</td>
             <td>{{ record.record_type }}</td>
-            <td>{{ record.disabled }}</td>
+            <td>{% if record.disabled %}Disabled{% else %}Active{% endif %}</td>
             <td>{{ record.ttl }}</td>
             <td class="max-width-500 long-content">{{ record.content }}</td>
             <td>{{ record.comments }}</td>

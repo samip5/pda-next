@@ -45,53 +45,122 @@
                 </thead>
                 <tbody>
                     {% for record in records %}
-                    <tr id="show-{{ record.name }}-{{ record.record_type }}">
-                        <td>{{ record.name }}</td>
-                        <td>{{ record.record_type }}</td>
-                        <td>{{ record.disabled }}</td>
-                        <td>{{ record.ttl }}</td>
-                        <td class="max-width-500 long-content">{{ record.content }}</td>
-                        <td>{{ record.comments }}</td>
-                        <td>
-                            {% if record.record_type != "SOA" %}
-                            <button class="btn btn-warning py-1 px-2" onclick="openEdit('{{ record.name }}-{{ record.record_type }}')">
-                                <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
-                            </button>
-                            {% endif %}
-                            <button class="btn btn-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#recordDeleteModal-{{ record.name }}-{{ record.record_type }}">
-                                <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
-                            </button>
-                        </td>
-                        <div class="modal fade" id="recordDeleteModal-{{ record.name }}-{{ record.record_type }}" tabindex="-1">
-                            <div class="modal-dialog">
-                                <div class="modal-content bg-gray-800">
+                      <tr id="show-{{ forloop.counter }}">
+                          <td>{{ record.name }}</td>
+                          <td>{{ record.record_type }}</td>
+                          <td>{% if record.disabled %}Disabled{% else %}Active{% endif %}</td>
+                          <td>{{ record.ttl }}</td>
+                          <td class="max-width-500 long-content">{{ record.content }}</td>
+                          <td>{{ record.comments }}</td>
+                          <td>
+                              {% if record.record_type != "SOA" %}
+                              <button class="btn btn-warning py-1 px-2" onclick="openEdit('{{ forloop.counter }}')">
+                                  <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
+                              </button>
+                              {% endif %}
+                              <button class="btn btn-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#recordDeleteModal-{{ forloop.counter }}">
+                                  <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
+                              </button>
+                          </td>
+                          <div class="modal fade" id="recordDeleteModal-{{ forloop.counter }}" tabindex="-1">
+                              <div class="modal-dialog">
+                                  <div class="modal-content bg-gray-800">
 
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Create DNS Record</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
+                                      <div class="modal-header">
+                                          <h5 class="modal-title">Delete DNS Record</h5>
+                                          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                      </div>
 
-                                    <div class="modal-body">
-                                        <form class="d-flex flex-row" method="post">
-                                            {% csrf_token %}
-                                            <input name="formName" type="hidden" value="deleteForm">
-                                            <input id="name" name="name" type="hidden" value="{{ record.name }}">
-                                            <input id="record_type" name="record_type" type="hidden" value="{{ record.record_type }}">
-                                            <input id="content" name="content" type="hidden" value="{{ record.content }}">
-
-                                            <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
-                                        </form>
-                                            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </tr>
+                                      <div class="modal-body">
+                                          <form class="pda-form" action="{% url 'pdadns:delete_record' zone.name %}" method="post">
+                                              {% csrf_token %}
+                                              <input id="name" name="name" type="hidden" value="{{ record.name }}">
+                                              <input id="record_type" name="record_type" type="hidden" value="{{ record.record_type }}">
+                                              <input id="content" name="content" type="hidden" value="{{ record.content }}">
+                                              <p class="text-white text-xl">You are about to delete record
+                                                  <span class="text-xl text-danger bg-gray-900 p-2 rounded-3">
+                                                  {{ record.name }}</span>
+                                                  <span class="text-xl text-danger bg-gray-900 p-2 rounded-3">
+                                                  {{ record.record_type }}</span>
+                                                  are you sure you want to delete the record?</p>
+                                              <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                                          </form>
+                                          <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </tr>
+                      <tr id="edit-{{ forloop.counter }}" class="record-edit">
+                          <form method="post">
+                              {% csrf_token %}
+                              <input name="formName" type="hidden" value="editForm">
+                          <td>
+                              <input id="old_name" name="old_name" type="hidden" value="{{ record.name }}">
+                              <input class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center w-60" id="name" name="name" type="text" value="{{ record.name }}">
+                          </td>
+                          <td>
+                              <input id="old_record_type" name="old_record_type" type="hidden" value="{{ record.record_type }}">
+                              <select id="record_type" name="record_type" class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center">
+                                  <option value="A" {% if record.record_type == "A" %}selected{% endif %}>A</option>
+                                  <option value="AAAA" {% if record.record_type == "AAAA" %}selected{% endif %}>AAAA</option>
+                                  <option value="CNAME" {% if record.record_type == "CNAME" %}selected{% endif %}>CNAME</option>
+                                  <option value="TXT" {% if record.record_type == "TXT" %}selected{% endif %}>A</option>
+                                  <option value="MX" {% if record.record_type == "MX" %}selected{% endif %}>MX</option>
+                                  <option value="NS" {% if record.record_type == "NS" %}selected{% endif %}>NS</option>
+                                  <option value="DS" {% if record.record_type == "DS" %}selected{% endif %}>DS</option>
+                                  <option value="SRV" {% if record.record_type == "SRV" %}selected{% endif %}>SRV</option>
+                                  <option value="DNAME" {% if record.record_type == "DNAME" %}selected{% endif %}>DNAME</option>
+                                  <option value="ALIAS" {% if record.record_type == "ALIAS" %}selected{% endif %}>ALIAS</option>
+                              </select>
+                          </td>
+                          <td>{{ record.disabled }}</td>
+                          <td>
+                              <input id="old_ttl" name="old_ttl" type="hidden" value="{{ record.ttl }}">
+                              <input class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center w-80" id="ttl" name="ttl" type="number" value="{{ record.ttl }}">
+                          </td>
+                          <td>
+                              <input id="old_content" name="old_content" type="hidden" value="{{ record.content }}">
+                              <input class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center w-80" id="content" name="content" type="text" value="{{ record.content }}">
+                          </td>
+                          <td>
+                              <input class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center w-80" id="comments" name="comments" type="text" value="{{ record.comments }}">
+                          </td>
+                          <td>
+                              <button type="submit" class="btn btn-success py-1 px-2" onclick="closeEdit('{{ forloop.counter }}')">
+                                  <span class="pg-icon"><i class="fa fa-check"></i></span>
+                              </button>
+                              <button type="button" class="btn btn-warning py-1 px-2" onclick="closeEdit('{{ forloop.counter }}')">
+                                  <span class="pg-icon"><i class="fa fa-x"></i></span>
+                              </button>
+                          </td>
+                          </form>
+                      </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 </section>
+<script>
+    let currentlyOpen;
+    function openEdit(id) {
+        let editElement = document.getElementById(`edit-${id}`)
+        let showElement = document.getElementById(`show-${id}`)
+        editElement.classList.remove("record-edit")
+        editElement.classList.add("record-edit-show")
+        showElement.classList.add("record-hide")
+        if(currentlyOpen) {
+            closeEdit(currentlyOpen)
+        }
+        currentlyOpen = id;
+    }
+    function closeEdit(id) {
+        let editElement = document.getElementById(`edit-${id}`)
+        let showElement = document.getElementById(`show-${id}`)
+        showElement.classList.remove("record-hide")
+        editElement.classList.add("record-edit")
+        editElement.classList.remove("record-edit-show")
+    }
+</script>
 {% endblock %}

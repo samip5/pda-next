@@ -84,11 +84,6 @@ def domain(request, id):
                 disabled=False,
             )
             try:
-                newRecord.full_clean()
-                oldRecord.full_clean()
-            except ValidationError as e:
-                messages.add_message(request, messages.WARNING, f"{e}")
-            try:
                 updated = recordUpdateHelper(zone.name, oldRecord, newRecord)
                 addActivityLog(ActionType.RECORD_UPDATE, f"{zone.name} - {newRecord.name}", request.user)
                 messages.add_message(request, messages.SUCCESS, f"{updated}")
