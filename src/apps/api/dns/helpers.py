@@ -17,22 +17,21 @@ service = PowerDNSService()
 
 def recordUpdateHelper(zone_name: str, oldRecord: Record, newRecord: Record):
 
-    try:
-        newRecord.full_clean()
-        oldRecord.full_clean()
-    except ValidationError as e:
-        logger.error(e)
-        raise Exception("Invalid record(s)")
+    # try:
+    #     newRecord.full_clean()
+    #     oldRecord.full_clean()
+    # except ValidationError as e:
+    #     logger.error(e)
+    #     raise Exception("Invalid record(s)")
 
-    new_record_name = newRecord.name
-    if newRecord.name == "@":
-        new_record_name = zone_name
-    old_record_name = oldRecord.name
-    if oldRecord.name == "@":
-        old_record_name = zone_name
-
+    new_record_name = str(newRecord.name).replace("@", zone_name)
+    old_record_name = str(oldRecord.name).replace("@", zone_name)
+    zone = get_zone(zone_name)
     if oldRecord.name == newRecord.name and oldRecord.record_type == newRecord.record_type:
         try:
+            cache_record = Record.objects.filter(name=oldRecord.name, record_type=oldRecord.record_type, zone=zone).first()
+            if cache_record:
+                cache_record.delete()
             service.update_record(zone_name, old_record_name, newRecord.record_type, oldRecord.content, newRecord.content, ttl=newRecord.ttl)
             return f"Updated {old_record_name} {oldRecord.record_type}"
         except PowerDNSError as e:
@@ -40,12 +39,17 @@ def recordUpdateHelper(zone_name: str, oldRecord: Record, newRecord: Record):
             raise Exception("Unable to update record(s)")
     elif oldRecord.name != newRecord.name or oldRecord.record_type != newRecord.record_type:
         try:
+            cache_record = Record.objects.filter(name=oldRecord.name, record_type=oldRecord.record_type, zone=zone).first()
+            if cache_record:
+                cache_record.delete()
             service.delete_record(zone_name, old_record_name, oldRecord.record_type, oldRecord.content)
         except PowerDNSError as e:
             logger.error(e)
             raise Exception("Unable to update record(s)")
-
         try:
+            cache_record = Record.objects.filter(name=oldRecord.name, record_type=oldRecord.record_type, zone=zone).first()
+            if cache_record:
+                cache_record.delete()
             service.create_record(zone_name, new_record_name, newRecord.record_type, newRecord.content, newRecord.ttl)
             return f"Updated {old_record_name} {oldRecord.record_type}"
         except PowerDNSError as e:
