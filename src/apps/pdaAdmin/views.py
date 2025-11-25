@@ -13,7 +13,8 @@ from apps.api.accounts.models import Account
 from apps.api.activity.helpers import addActivityLog
 from apps.api.activity.models import Activity
 from apps.api.activity.models.activity import ActionType
-from apps.api.dns.helpers import get_zones, get_zone, get_records, create_zone_from_template, delete_zone
+from apps.api.dns.helpers import get_zones, get_zone, get_records, create_zone_from_template, delete_zone, \
+    recordUpdateHelper
 from apps.api.dns.models import Zone, Record
 from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
@@ -201,22 +202,46 @@ def zone(request, id):
         account.id_str = str(account.id)
 
     if request.method == "POST":
-        zone_account = Account.objects.filter(id=request.POST.get('account', '')).first()
-        updated_zone = Zone(
-            name=zzone.name,
-            account=zone_account,
-            nameservers=zzone.nameservers,
-            dnssec=zzone.dnssec
-        )
-
-        try:
-            service.update_zone(zone_name=zone_name, account=str(updated_zone.account.id),
-                                nameservers=updated_zone.nameservers,
-                                dnssec=updated_zone.dnssec)
-            addActivityLog(ActionType.ZONE_UPDATE, f"{zone_name} - {updated_zone.account}", request.user)
-            zzone = updated_zone
-        except Exception as e:
-            messages.add_message(request, messages.WARNING, f"{e}")
+        form_type = request.POST.get('form_type')
+        if form_type == 'zone':
+            zone_account = Account.objects.filter(id=request.POST.get('account', '')).first()
+            updated_zone = Zone(
+                name=zzone.name,
+                account=zone_account,
+                nameservers=zzone.nameservers,
+                dnssec=zzone.dnssec
+            )
+            try:
+                service.update_zone(zone_name=zone_name, account=str(updated_zone.account.id),
+                                    nameservers=updated_zone.nameservers,
+                                    dnssec=updated_zone.dnssec)
+                addActivityLog(ActionType.ZONE_UPDATE, f"{zone_name} - {updated_zone.account}", request.user)
+                zzone = updated_zone
+            except Exception as e:
+                messages.add_message(request, messages.WARNING, f"{e}")
+        if form_type == "recordEdit":
+            newRecord = Record(
+                zone=zzone,
+                name=request.POST.get('name'),
+                record_type=request.POST.get('record_type'),
+                content=request.POST.get('content'),
+                ttl=request.POST.get('ttl', '3600'),
+                disabled=False,
+            )
+            oldRecord = Record(
+                zone=zzone,
+                name=request.POST.get('old_name'),
+                record_type=request.POST.get('old_record_type'),
+                content=request.POST.get('old_content'),
+                ttl=request.POST.get('old_ttl', '3600'),
+                disabled=False,
+            )
+            try:
+                updated = recordUpdateHelper(zzone.name, oldRecord, newRecord)
+                addActivityLog(ActionType.RECORD_UPDATE, f"({newRecord.record_type}) {newRecord.name} - {zzone.name} updated", request.user)
+                messages.add_message(request, messages.SUCCESS, f"{updated}")
+            except Exception as e:
+                messages.add_message(request, messages.WARNING, f"{e}")
 
     record_instances = get_records(zone_name)
 

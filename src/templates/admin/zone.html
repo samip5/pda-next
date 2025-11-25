@@ -26,7 +26,7 @@
                     <label class="text-white" for="name">DNSSEC</label>
                     <input disabled id="name" name="name" class="form-control" type="text" value="{{ zone.dnssec }}" >
                 </div>
-                <input class="btn btn-info w-100" type="submit" value="{% translate "Save" %}">
+                <button class="btn btn-info w-100" type="submit" name="form_type" value="zone">{% translate "Save" %}</button>
             </form>
         </div>
         {% endif %}
@@ -127,7 +127,7 @@
                               <input class="border-1 rounded-3 bg-gray-700 text-white py-1 px-2 text-center w-80" id="comments" name="comments" type="text" value="{{ record.comments }}">
                           </td>
                           <td>
-                              <button type="submit" class="btn btn-success py-1 px-2" onclick="closeEdit('{{ forloop.counter }}')">
+                              <button type="submit" class="btn btn-success py-1 px-2" name="form_type" value="recordEdit" onclick="closeEdit('{{ forloop.counter }}')">
                                   <span class="pg-icon"><i class="fa fa-check"></i></span>
                               </button>
                               <button type="button" class="btn btn-warning py-1 px-2" onclick="closeEdit('{{ forloop.counter }}')">
