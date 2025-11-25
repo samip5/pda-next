@@ -43,9 +43,10 @@ urlpatterns = [
     path("admin/", include("apps.pdaAdmin.urls")),
     path("dns/", include("apps.pdadns.urls")),
     path("", include("apps.web.urls")),
-    # API endpoints
-    path("api/v1/dns/", include("apps.api.dns.urls")),
-    path("api/v1/accounts/", include("apps.api.accounts.urls")),
+    # API endpoints - version-aware routing
+    # Supports: /api/v1/, /api/v2/, etc.
+    # Also supports: /api/ (routes to latest version)
+    path("api/", include("apps.api.urls")),
     # API docs
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     # Optional UI - you may wish to remove one of these depending on your preference

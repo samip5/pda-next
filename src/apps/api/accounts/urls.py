@@ -1,13 +1,16 @@
 """
 URL Configuration for PDA Account API
+
+Note: This file is kept for backwards compatibility, but viewsets
+are now registered in the centralized apps.api.urls module using PDARouter.
 """
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from ..routers import PDARouter
 
 from .views import AccountViewSet
 
-router = DefaultRouter()
-router.register(r'', AccountViewSet, basename='record')
+router = PDARouter()
+router.register(r'', AccountViewSet, basename='account')
 
 app_name = "pdaAccountApi"
 urlpatterns = [
