@@ -5,13 +5,14 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 import config
+from apps.globalSettings.utils import get_setting
 
 
 def home(request):
     if request.user.is_authenticated:
         return redirect('pdadns:domains')
     else:
-        if config.settings.DISABLE_LANDING_PAGE:
+        if get_setting('disable_landing_page'):
             return redirect('account_login')
         return render(request, 'web/landing_page.html')
 

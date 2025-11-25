@@ -7,14 +7,22 @@
     <div class="pg-columns">
         <div class="pg-column-one-third">
             <h2 class="pg-title">Settings 1</h2>
-            {% for key, value in settings.items %}
-            <p class="text-white">{{ key }} -- {{ value }}</p>
-
+            {% for setting in settings %}
+                <p class="text-white">{{ setting.name }}: {{ setting.value }}</p>
             {% endfor %}
         </div>
         <div class="pg-column-one-third">
-            <h2 class="pg-title">Settings 2</h2>
-
+            <h2 class="pg-title">LDAP</h2>
+            <form method="post" class="pda-form">
+                {% csrf_token %}
+                {% for setting in ldap_settings %}
+                    <div class="pda-input-group">
+                        <label for="{{ setting.name }}">{{ setting.name }}</label>
+                        <input type="text" class="form-control" name="{{ setting.name }}" id="{{ setting.name }}" value="{{ setting.value }}">
+                    </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-info">Save</button>
+            </form>
         </div>
         <div class="pg-column-one-third">
             <h2 class="pg-title">Settings 3</h2>
@@ -23,3 +31,4 @@
     </div>
 </section>
 {% endblock %}
+a

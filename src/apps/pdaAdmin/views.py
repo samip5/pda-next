@@ -17,7 +17,9 @@ from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
 
 from apps.api.templates.models import ZoneTemplate, RecordTemplate, zone_template
+from apps.globalSettings.utils import get_setting, set_setting
 from apps.pdaAdmin.forms import ZoneForm, AccountForm, ZoneTemplateForm, RecordTemplateForm, CreateZoneForm
+from config.settings import app_settings
 
 logger = logging.getLogger('pda')
 @login_required
@@ -46,14 +48,37 @@ def dashboard(request):
 @login_required
 @permission_required('pda.admin_settings', raise_exception=True)
 def settings(request):
-    view_settings = {setting: getattr(config.settings, setting) for setting in dir(config.settings) if setting.isupper()}
+    ldap_settings = []
+    ldap_settings.append({"name": "ldap_server_uri", "value": f"{get_setting('ldap_server_uri')}"})
+    ldap_settings.append({"name": "ldap_bind_on", "value": f"{get_setting('ldap_bind_on')}"})
+    ldap_settings.append({"name": "ldap_bind_password", "value": f"{get_setting('ldap_bind_password')}"})
+    ldap_settings.append({"name": "ldap_user_search_base", "value": f"{get_setting('ldap_user_search_base')}"})
+    ldap_settings.append({"name": "ldap_user_search_filter", "value": f"{get_setting('ldap_user_search_filter')}"})
+
+    if request.method == "POST":
+        for ldap_setting in ldap_settings:
+            logger.info(f'{ldap_setting["name"]} {request.POST.get(ldap_setting["name"])}')
+            set_setting(ldap_setting["name"], request.POST.get(ldap_setting["name"]))
+
+    ldap_settings.clear()
+    ldap_settings.append({"name": "ldap_server_uri", "value": f"{get_setting('ldap_server_uri')}"})
+    ldap_settings.append({"name": "ldap_bind_on", "value": f"{get_setting('ldap_bind_on')}"})
+    ldap_settings.append({"name": "ldap_bind_password", "value": f"{get_setting('ldap_bind_password')}"})
+    ldap_settings.append({"name": "ldap_user_search_base", "value": f"{get_setting('ldap_user_search_base')}"})
+    ldap_settings.append({"name": "ldap_user_search_filter", "value": f"{get_setting('ldap_user_search_filter')}"})
+
+    view_settings = []
+    view_settings.append({"name": "disable_landing_page", "value": f"{get_setting('disable_landing_page')}"})
+
+    logger.info(view_settings)
     return render(
         request,
         "admin/settings.html",
         {
             "active_tab": "pda_settings",
             "page_title": _("Settings"),
-            "settings": view_settings
+            "settings": view_settings,
+            "ldap_settings": ldap_settings
         },
     )
 
