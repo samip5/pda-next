@@ -307,7 +307,13 @@ AUTHENTICATION_BACKENDS = (
 )
 
 if app_settings.ldap_enable:
-    AUTHENTICATION_BACKENDS.insert(0, "django_auth_ldap.backend.LDAPBackend")
+    AUTHENTICATION_BACKENDS = (
+        "django_auth_ldap.backend.LDAPBackend"
+        # Needed to log in by username in Django admin, regardless of `allauth`
+        'django.contrib.auth.backends.ModelBackend',
+        # `allauth` specific authentication methods, such as login by e-mail
+        'allauth.account.auth_backends.AuthenticationBackend',
+    )
 
 # Email setup
 EMAIL_BACKEND = None

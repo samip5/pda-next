@@ -130,6 +130,20 @@ def get_zone(zone_name: str) -> Zone:
         logger.error(e)
         return Zone.objects.get(name=zone_name)
 
+def update_zone(updated_zone: Zone):
+    try:
+        cache_zone = Zone.objects.filter(name=updated_zone.name).first()
+        cache_zone.delete()
+
+        updated_zone.full_clean()
+        updated_zone.save()
+        return service.update_zone(zone_name=updated_zone.name, account=str(updated_zone.account.id),
+                            nameservers=updated_zone.nameservers,
+                            dnssec=updated_zone.dnssec)
+    except Exception as e:
+        logger.error(e)
+        return False
+
 def get_records(zone_name: str) -> QuerySet[Record, Record] | None:
     try:
         zone = get_zone(zone_name)
@@ -180,6 +194,61 @@ def get_records(zone_name: str) -> QuerySet[Record, Record] | None:
         zone = get_zone(zone_name)
         Record.objects.filter(zone=zone).all()
         logger.error(e)
+
+def get_record(zone_name: str, record_name: str, record_type: str, record_content: str = None) -> QuerySet[Record, Record] | None:
+    try:
+        zone = get_zone(zone_name)
+        records = service.get_records(zone_name, zone.server_id)
+        record_instances = []
+        for rrset in records:
+            rrset_name = rrset.get('name', '')
+            rrset_type = rrset.get('type', '')
+            rrset_ttl = rrset.get('ttl', 3600)
+
+            for record_data in rrset.get('records', []):
+                content = record_data.get('content', '')
+                disabled = record_data.get('disabled', False)
+
+                # Normalize name (remove zone suffix if present)
+                normalized_name = rrset_name
+                if normalized_name.endswith('.'):
+                    normalized_name = normalized_name.rstrip('.')
+                zone_name_clean = zone_name.rstrip('.')
+                if normalized_name == zone_name_clean:
+                    normalized_name = '@'
+                elif normalized_name.endswith(f".{zone_name_clean}"):
+                    normalized_name = normalized_name[:-len(f".{zone_name_clean}")]
+
+                record = Record(
+                    zone=zone,
+                    name=normalized_name,
+                    record_type=rrset_type,
+                    content=content,
+                    ttl=rrset_ttl,
+                    disabled=disabled,
+                )
+                cache_record = Record.objects.filter(name=normalized_name, zone=zone, content=content).first()
+                if not cache_record:
+                    record.full_clean()
+                    record.save()
+                elif cache_record:
+                    Record.objects.filter(name=normalized_name, zone=zone, content=content).update(content=record.content,
+                                                              ttl=record.ttl, disabled=record.disabled)
+                if record.record_type == Record.RECORD_TYPE_SOA and not cache_record:
+                    Record.objects.filter(name=normalized_name, zone=zone).delete()
+                    record.full_clean()
+                    record.save()
+
+                record_instances.append(record)
+        if record_content:
+            return Record.objects.filter(name=record_name, record_type=record_type, zone=zone, content=record_content).first()
+        return Record.objects.filter(name=record_name, record_type=record_type, zone=zone).first()
+    except PowerDNSError as e:
+        zone = get_zone(zone_name)
+        logger.error(e)
+        if record_content:
+            return Record.objects.filter(name=record_name, record_type=record_type, zone=zone, content=record_content).first()
+        return Record.objects.filter(name=record_name, record_type=record_type, zone=zone).first()
 
 def _is_valid_uuid(value):
     try:

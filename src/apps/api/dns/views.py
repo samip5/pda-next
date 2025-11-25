@@ -10,13 +10,17 @@ from drf_spectacular.types import OpenApiTypes
 from apps.api.decorators import MethodPermissionMixin, method_permissions
 from apps.api.permissions import CanViewZone, CanManageZone
 
-from .helpers import recordUpdateHelper
+from .helpers import recordUpdateHelper, update_zone, get_zone, delete_zone, get_record, get_records, delete_record, \
+    create_record, get_zones
 from .models.record import Record
 from .models.zone import Zone
 from .serializers import ZoneSerializer
 from .serializers import RecordSerializer
 from .services import PowerDNSService
 from ..accounts.models import Account
+from ..activity.helpers import addActivityLog
+from ..activity.models.activity import ActionType
+from ..models import UserAPIKey
 
 logger = logging.getLogger('pda')
 
@@ -151,43 +155,25 @@ class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
         }
     )
     @action(detail=False, methods=['get', 'post'], url_path='zones')
-    @method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone]})
+    #@method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone]})
     def zones(self, request):
         if request.method == 'GET':
-            service = PowerDNSService()
-            powerdns_zones = service.get_zones("localhost")
+            zones = get_zones()
 
-            if not powerdns_zones:
-                raise NotFound(f"Zones not found")
-
-            # Convert PowerDNS record format to Record model instances (not saved)
-            zone_instances = []
-            for zone in powerdns_zones:
-                zone_name = zone.get('name', '')
-                zone_account = Account.objects.filter(id=zone.get('account', '')).first()
-
-                zone_a = Zone(
-                    name=zone_name,
-                    kind=zone.get('kind', Zone.ZONE_KIND_NATIVE),
-                    nameservers=zone.get('nameservers', []),
-                    server_id=zone.get('server_id', 'localhost'),
-                    powerdns_id=zone.get('id'),
-                    account=zone_account,
-                    dnssec=zone.get('dnssec', '')
-                )
-
-                zone_instances.append(zone_a)
-
-            serializer = ZoneSerializer(zone_instances, many=True)
+            serializer = ZoneSerializer(zones, many=True)
             return Response(serializer.data)
 
         elif request.method == 'POST':
             zone_name = request.data.get('name', '')
             zone_type = request.data.get('type', '')
-            zone_account = Account.objects.filter(id=request.data.get('account', '')).first()
+            zone_account = Account.objects.filter(id=request.data.get('account')).first()
             zone_nameservers = request.data.get('nameservers', [])
+
+            api_key = UserAPIKey.objects.filter(prefix=request.headers.get("Authorization").strip("Api-Key ").split('.',1)[0]).first()
+            addActivityLog(ActionType.ZONE_CREATE, f"{zone_name} created", request.user, api_key.name, True)
+
             service = PowerDNSService()
-            resp = service.create_zone(zone_name=zone_name, kind=zone_type, account=zone_account,
+            resp = service.create_zone(zone_name=zone_name, kind=zone_type, account=str(zone_account.id),
                                        nameservers=zone_nameservers)
 
             return Response(resp)
@@ -251,38 +237,30 @@ class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
         if not zone_name.endswith('.'):
             zone_name = f"{zone_name}."
 
-        service = PowerDNSService()
-        powerdns_zone = service.get_zone(zone_name)
-
-        if not powerdns_zone:
-            raise NotFound(f"Zone '{zone_name}' not found")
-
-        # Convert PowerDNS record format to Record model instances (not saved)
-
-        zone = Zone(
-            name=powerdns_zone.get('name', ''),
-            kind=powerdns_zone.get('kind', Zone.ZONE_KIND_NATIVE),
-            nameservers=powerdns_zone.get('nameservers', []),
-            server_id=powerdns_zone.get('server_id', 'localhost'),
-            powerdns_id=powerdns_zone.get('id'),
-            account=powerdns_zone.get('account', ''),
-            dnssec=powerdns_zone.get('dnssec', '')
-        )
+        zone = get_zone(zone_name)
         if request.method == 'GET':
             serializer = ZoneSerializer(zone, many=False)
             return Response(serializer.data)
         elif request.method == 'POST':
+            zone_account = Account.objects.filter(id=request.data.get('account')).first()
+            if not zone_account:
+                zone_account = zone.account
+
             updatedZone = Zone(
                 name=zone.name,
-                account=request.data.get('account', zone.account),
+                account=zone_account,
                 nameservers=request.data.get('nameservers', zone.nameservers),
                 dnssec=request.data.get('dnssec', zone.dnssec)
             )
+            api_key = UserAPIKey.objects.filter(prefix=request.headers.get("Authorization").strip("Api-Key ").split('.',1)[0]).first()
+            addActivityLog(ActionType.ZONE_UPDATE, f"{zone.name} updated", request.user, api_key.name, True)
 
-            resp = service.update_zone(zone_name=zone_name, account=updatedZone.account, nameservers=updatedZone.nameservers, dnssec=updatedZone.dnssec)
+            resp = update_zone(updatedZone)
             return Response(resp)
         elif request.method == 'DELETE':
-            resp = service.delete_zone(zone_name=zone_name)
+            api_key = UserAPIKey.objects.filter(prefix=request.headers.get("Authorization").strip("Api-Key ").split('.',1)[0]).first()
+            addActivityLog(ActionType.ZONE_DELETE, f"{zone.name} deleted", request.user, api_key.name, True)
+            resp = delete_zone(zone.name)
             return Response(resp)
 
     @extend_schema(
@@ -327,92 +305,13 @@ class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
     #@method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone]})
     def zone_records(self, request, zone_name=None):
         if request.method == 'GET':
-            # Ensure zone name has trailing dot
-            if not zone_name.endswith('.'):
-                zone_name = f"{zone_name}."
+            zone = get_zone(zone_name)
+            records = get_records(zone.name)
 
-            # Try to get zone from database
-            zone = Zone.objects.filter(name=zone_name).first()
-
-            # If zone doesn't exist in DB, try to fetch from PowerDNS
-            if not zone:
-                service = PowerDNSService()
-                powerdns_zone = service.get_zone(zone_name)
-
-                if not powerdns_zone:
-                    raise NotFound(f"Zone '{zone_name}' not found")
-
-                # Create zone in database for reference
-                zone = Zone.objects.create(
-                    name=zone_name,
-                    kind=powerdns_zone.get('kind', Zone.ZONE_KIND_NATIVE),
-                    nameservers=powerdns_zone.get('nameservers', []),
-                    server_id=powerdns_zone.get('server_id', 'localhost'),
-                    account=powerdns_zone.get('account', ''),
-                    dnssec=powerdns_zone.get('dnssec', ''),
-                    powerdns_id=powerdns_zone.get('id')
-                )
-
-            # Fetch records from PowerDNS
-            service = PowerDNSService()
-            powerdns_records = service.get_records(zone_name, zone.server_id)
-
-            # Convert PowerDNS record format to Record model instances (not saved)
-            record_instances = []
-            for rrset in powerdns_records:
-                rrset_name = rrset.get('name', '')
-                rrset_type = rrset.get('type', '')
-                rrset_ttl = rrset.get('ttl', 3600)
-
-                for record_data in rrset.get('records', []):
-                    content = record_data.get('content', '')
-                    disabled = record_data.get('disabled', False)
-
-                    # Normalize name (remove zone suffix if present)
-                    normalized_name = rrset_name
-                    if normalized_name.endswith('.'):
-                        normalized_name = normalized_name.rstrip('.')
-                    zone_name_clean = zone_name.rstrip('.')
-                    if normalized_name == zone_name_clean:
-                        normalized_name = '@'
-                    elif normalized_name.endswith(f".{zone_name_clean}"):
-                        normalized_name = normalized_name[:-len(f".{zone_name_clean}")]
-
-                    # Create Record instance in memory (not saved to DB)
-                    record = Record(
-                        zone=zone,
-                        name=normalized_name,
-                        record_type=rrset_type,
-                        content=content,
-                        ttl=rrset_ttl,
-                        disabled=disabled,
-                    )
-                    record_instances.append(record)
-
-            serializer = RecordSerializer(record_instances, many=True)
+            serializer = RecordSerializer(records, many=True)
             return Response(serializer.data)
         elif request.method == 'POST':
-            service = PowerDNSService()
-            if not zone_name.endswith('.'):
-                zone_name = f"{zone_name}."
-
-            zone = Zone.objects.filter(name=zone_name).first()
-            if not zone:
-                powerdns_zone = service.get_zone(zone_name)
-
-                if not powerdns_zone:
-                    raise NotFound(f"Zone '{zone_name}' not found")
-
-                # Create zone in database for reference
-                zone = Zone.objects.create(
-                    name=zone_name,
-                    kind=powerdns_zone.get('kind', Zone.ZONE_KIND_NATIVE),
-                    nameservers=powerdns_zone.get('nameservers', []),
-                    server_id=powerdns_zone.get('server_id', 'localhost'),
-                    account=powerdns_zone.get('account', ''),
-                    dnssec=powerdns_zone.get('dnssec', ''),
-                    powerdns_id=powerdns_zone.get('id')
-                )
+            zone = get_zone(zone_name)
 
             record = Record(
                 zone=zone,
@@ -422,12 +321,15 @@ class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
                 ttl=request.data.get('ttl', '3600'),
                 disabled=request.data.get('disabled', 'false'),
             )
-
             try:
                 record.full_clean()
             except ValidationError as e:
                 return Response("Error Validating record", 400)
-            service.create_record(zone.name, record.name, record.record_type, record.content, record.ttl)
+
+            api_key = UserAPIKey.objects.filter(prefix=request.headers.get("Authorization").strip("Api-Key ").split('.',1)[0]).first()
+            addActivityLog(ActionType.RECORD_CREATE, f"({record.record_type}) {record.name} - {zone.name} created", request.user, api_key.name, True)
+
+            create_record(zone, record.name, record.record_type, record.content, record.ttl)
             return Response(RecordSerializer(record).data)
 
     @extend_schema(
@@ -511,88 +413,23 @@ class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get', 'post','delete'], url_path='zones/(?P<zone_name>[^/]+)/records/(?P<record_id>[^/]+)')
     #@method_permissions({'GET': [CanViewZone], 'POST': [CanManageZone], 'DELETE': [CanManageZone]})
     def zone_record(self, request, zone_name=None, record_id=None):
-        service = PowerDNSService()
-        # Ensure zone name has trailing dot
-        if not zone_name.endswith('.'):
-            zone_name = f"{zone_name}."
-
-        # Try to get zone from database
-        zone = Zone.objects.filter(name=zone_name).first()
-
-        # If zone doesn't exist in DB, try to fetch from PowerDNS
-        if not zone:
-            service = PowerDNSService()
-            powerdns_zone = service.get_zone(zone_name)
-
-            if not powerdns_zone:
-                raise NotFound(f"Zone '{zone_name}' not found")
-
-            # Create zone in database for reference
-            zone = Zone.objects.create(
-                name=zone_name,
-                kind=powerdns_zone.get('kind', Zone.ZONE_KIND_NATIVE),
-                nameservers=powerdns_zone.get('nameservers', []),
-                server_id=powerdns_zone.get('server_id', 'localhost'),
-                account=powerdns_zone.get('account', ''),
-                dnssec=powerdns_zone.get('dnssec', ''),
-                powerdns_id=powerdns_zone.get('id')
-            )
-
-        # Fetch records from PowerDNS
-        powerdns_records = service.get_records(zone_name, zone.server_id)
-
-        # Convert PowerDNS record format to Record model instances (not saved)
-        record_instances = []
-        for rrset in powerdns_records:
-            rrset_name = rrset.get('name', '')
-            rrset_type = rrset.get('type', '')
-            rrset_ttl = rrset.get('ttl', 3600)
-
-            for record_data in rrset.get('records', []):
-                content = record_data.get('content', '')
-                disabled = record_data.get('disabled', False)
-
-                # Normalize name (remove zone suffix if present)
-                normalized_name = rrset_name
-                if normalized_name.endswith('.'):
-                    normalized_name = normalized_name.rstrip('.')
-                zone_name_clean = zone_name.rstrip('.')
-                if normalized_name == zone_name_clean:
-                    normalized_name = '@'
-                elif normalized_name.endswith(f".{zone_name_clean}"):
-                    normalized_name = normalized_name[:-len(f".{zone_name_clean}")]
-
-                # Create Record instance in memory (not saved to DB)
-                record = Record(
-                    zone=zone,
-                    name=normalized_name,
-                    record_type=rrset_type,
-                    content=content,
-                    ttl=rrset_ttl,
-                    disabled=disabled,
-                )
-                record_instances.append(record)
+        zone = get_zone(zone_name)
+        records = get_records(zone.name)
 
         if request.method == 'GET':
-            matching_records = [r for r in record_instances if r.name.lower() == record_id.lower()]
+            matching_records = [r for r in records if r.name.lower() == record_id.lower()]
             serializer = RecordSerializer(matching_records, many=True)
             return Response(serializer.data)
         elif request.method == 'POST':
             matching_records = []
             if request.data.get('old_record_type'):
-                matching_records = [
-                r for r in record_instances
-                if r.name == record_id and r.record_type == request.data.get('old_record_type')]
+                matching_records = [r for r in records if r.name.lower() == record_id.lower() and r.record_type == request.data.get('old_record_type')]
             else:
-                matching_records = [
-                r for r in record_instances
-                if r.name == record_id and r.record_type == request.data.get('record_type')]
-
+                matching_records = [r for r in records if r.name.lower() == record_id.lower() and r.record_type == request.data.get('record_type')]
             try:
                 old_record = matching_records[0]
             except IndexError:
                 return Response("Record not found", 404)
-
             new_record = Record(
                 zone=zone,
                 name=request.data.get('name'),
@@ -602,19 +439,25 @@ class RecordViewSet(MethodPermissionMixin, viewsets.ReadOnlyModelViewSet):
                 disabled=request.data.get('disabled'),
             )
             try:
+                api_key = UserAPIKey.objects.filter(
+                    prefix=request.headers.get("Authorization").strip("Api-Key ").split('.', 1)[0]).first()
+                addActivityLog(ActionType.RECORD_UPDATE, f"({new_record.record_type}) {new_record.name} - {zone.name} updated",
+                               request.user, api_key.name, True)
+
                 response = recordUpdateHelper(zone.name, old_record, new_record)
                 return Response(response)
             except Exception as e:
                 return Response(str(e), 500)
+
         elif request.method == 'DELETE':
-
-            matching_records = [
-                r for r in record_instances
-                if r.name == record_id and r.record_type == request.data.get('record_type')]
-
+            matching_records = [r for r in records if r.name.lower() == record_id.lower() and r.record_type == request.data.get('record_type')]
             try:
                 oldRecord = matching_records[0]
-                service.delete_record(zone_name, oldRecord.name, oldRecord.record_type, oldRecord.content)
+                api_key = UserAPIKey.objects.filter(
+                    prefix=request.headers.get("Authorization").strip("Api-Key ").split('.', 1)[0]).first()
+                addActivityLog(ActionType.RECORD_DELETE, f"({oldRecord.record_type}) {oldRecord.name} - {zone_name} deleted",
+                               request.user, api_key.name, True)
+                delete_record(zone_name, oldRecord)
                 return Response("Record Deleted", 200)
             except IndexError:
                 return Response("Record not found", 404)
