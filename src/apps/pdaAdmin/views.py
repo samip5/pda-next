@@ -1,7 +1,7 @@
 import logging
 
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.utils.translation import gettext_lazy as _
@@ -22,7 +22,7 @@ from django.contrib import messages
 from apps.api.templates.models import ZoneTemplate, RecordTemplate, zone_template
 from apps.globalSettings.utils import get_setting, set_setting
 from apps.pdaAdmin.forms import ZoneForm, AccountForm, ZoneTemplateForm, RecordTemplateForm, CreateZoneForm, UserForm, \
-    UserPermissionsForm, UserGroupsForm
+    UserPermissionsForm, UserGroupsForm, GroupForm, GroupPermissionsForm
 from apps.users.models import CustomUser
 from config import load_db_settings_to_config, save_config
 from config.settings import app_settings
@@ -404,3 +404,59 @@ def user(request, id):
         },
     )
 
+@login_required
+@permission_required('pda.admin_accounts', raise_exception=True)
+def groups(request):
+    if request.method == "POST":
+        group_form = GroupForm(request.POST)
+        if group_form.is_valid():
+            group_form.save()  # creates and saves a new Account
+            addActivityLog(ActionType.GROUP_CREATE, f"{group_form.data['name']}", request.user)
+    else:
+        group_form = GroupForm()
+    _groups = Group.objects.all()
+
+    return render(
+        request,
+        "admin/groups.html",
+        {
+            "active_tab": "pda_groups",
+            "page_title": _("Accounts"),
+            "groups": _groups,
+            "group_form": group_form
+        },
+    )
+
+@login_required
+@permission_required('pda.admin_accounts', raise_exception=True)
+def group(request, id):
+    _group = Group.objects.get(id=id)
+    if request.method == "POST":
+        form_type = request.POST.get('form_type')
+        if form_type == 'group':
+            group_form = GroupForm(request.POST, instance=_group)
+            if group_form.is_valid():
+                group_form.save()
+                addActivityLog(ActionType.GROUP_UPDATE, f"{group_form.data['username']}", request.user)
+                return redirect("pdaAdmin:group", id)
+        if form_type == 'permissions':
+            group_permission_form = GroupPermissionsForm(request.POST, instance=_group)
+            if group_permission_form.is_valid():
+                group_permission_form.save()
+                addActivityLog(ActionType.USER_UPDATE, f"Permissions updated for {_group.name}", request.user)
+                return redirect("pdaAdmin:group", id)
+    else:
+        group_form = GroupForm(instance=_group)
+        group_permission_form = GroupPermissionsForm(instance=_group)
+
+    return render(
+        request,
+        "admin/group.html",
+        {
+            "active_tab": "pda_group",
+            "page_title": _("Account"),
+            "group": _group,
+            "group_form": group_form,
+            "group_permission_form":group_permission_form,
+        },
+    )

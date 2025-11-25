@@ -15,6 +15,6 @@ SECURE_SSL_REDIRECT = True
 SECURE_HSTS_SECONDS = int(os.getenv('PDA_SECURE_HSTS_SECONDS', globals().get('SECURE_HSTS_SECONDS', 2592000)))
 
 # Logging level
-LOGGING['loggers']['django']['level'] = os.getenv('PDA_LOG_LEVEL_DJANGO', settings.log_level_django)
-LOGGING['loggers']['pda']['level'] = os.getenv('PDA_LOG_LEVEL_APP', settings.log_level_app)
+LOGGING['loggers']['django']['level'] = os.getenv('PDA_LOG_LEVEL_DJANGO', app_settings.log_level_django)
+LOGGING['loggers']['pda']['level'] = os.getenv('PDA_LOG_LEVEL_APP', app_settings.log_level_app)
 

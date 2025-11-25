@@ -72,13 +72,19 @@
             </span>
         </a>
 
-        <div class="collapse {% if active_tab in 'pda_users pda_groups pda_permissions' %}show{% endif %}" id="accountsCollapse">
+        <div class="collapse {% if active_tab in 'pda_users pda_groups' %}show{% endif %}" id="accountsCollapse">
             <ul class="nav flex-column ms-3">
                 <li class="nav-item">
                     <a href="{% url 'pdaAdmin:users' %}" class="nav-link text-white {% if active_tab == 'pda_users' %}active{% endif %}">
                         <span class="pg-icon"><i class="fa fa-user-group"></i></span>
 
                         {% translate "Users" %}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'pdaAdmin:groups' %}" class="nav-link text-white {% if active_tab == 'pda_groups' %}active{% endif %}">
+                        <span class="pg-icon"><i class="fa fa-users"></i></span>
+                        {% translate "Groups" %}
                     </a>
                 </li>
             </ul>

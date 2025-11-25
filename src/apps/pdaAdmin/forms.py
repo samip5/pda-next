@@ -115,3 +115,22 @@ class UserGroupsForm(forms.ModelForm):
     class Meta:
         model = CustomUser
         fields = ['groups']
+
+class GroupForm(forms.ModelForm):
+    class Meta:
+        model = Group
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(),
+        }
+
+class GroupPermissionsForm(forms.ModelForm):
+    permissions = forms.ModelMultipleChoiceField(
+        queryset=Permission.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={'id': 'all-permissions', 'size': 10}),
+        label="Permissions"
+    )
+    class Meta:
+        model = Group
+        fields = ['permissions']

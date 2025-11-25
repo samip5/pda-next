@@ -16,5 +16,7 @@ urlpatterns = [
     path("clear_cache", views.clear_cache, name="clear_cache"),
     path('users/', views.users, name="users"),
     path('users/<str:id>', views.user, name="user"),
+    path('groups/', views.groups, name="groups"),
+    path('groups/<str:id>', views.group, name="group"),
 
 ]
