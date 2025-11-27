@@ -14,3 +14,4 @@ conf/config.yml
 docs/_build
 venv
 db_dev.sqlite3
+node_modules/
