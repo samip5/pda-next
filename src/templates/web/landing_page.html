@@ -1,13 +1,12 @@
 {% extends "web/base.html" %}
 {% load static %}
 {% block body %}
-  <header class="header-2">
-  <div class="page-header min-vh-50 relative" style="background-image: url('{% static 'images/bg.jpg' %}')">
-    <span class="mask bg-gray-900 opacity-4"></span>
+<header class="">
+  <div class="h-[75vh] bg-no-repeat bg-cover bg-fixed bg-bottom flex flex-col items-center justify-center" style="background-image: url('{% static 'images/bg.jpg' %}')">
     <div class="container">
       <div class="row">
         <div class="col-lg-7 text-center mx-auto">
-          <h1 class="text-white pt-3 mt-n5">{{project_meta.NAME}}</h1>
+          <h1 class="text-6xl font-bold">{{project_meta.NAME}}</h1>
         </div>
       </div>
     </div>

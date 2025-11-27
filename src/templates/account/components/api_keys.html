@@ -1,10 +1,10 @@
 {% load i18n %}
 <section>
-  <h2 class="pg-subtitle">{% translate "API Keys" %}</h2>
+  <h2 class="text-2xl font-semibold mb-2">{% translate "API Keys" %}</h2>
   {% for key in api_keys %}
     {% if forloop.first %}
-    <div class='table-responsive'>
-      <table class="table pg-table text-white">
+    <div class=''>
+      <table class="pda-table">
         <thead>
         <tr>
           <th>{% translate "Prefix" %}</th>
@@ -44,7 +44,7 @@
         <input id="name" name="name" class="form-control" type="text" required>
     </div>
     <div>
-      <input type="submit" class="btn btn-info" value="{% translate "New API Key" %}" />
+      <input type="submit" class="btn btn-primary" value="{% translate "New API Key" %}" />
     </div>
   </form>
 </section>

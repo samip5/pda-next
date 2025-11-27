@@ -12,7 +12,7 @@ def home(request):
     if request.user.is_authenticated:
         return redirect('pdadns:domains')
     else:
-        if get_setting('disable_landing_page'):
+        if get_setting('disable_landing_page') == True:
             return redirect('account_login')
         return render(request, 'web/landing_page.html')
 

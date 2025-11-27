@@ -12,14 +12,14 @@
         {{ form.non_field_errors }}
         {% render_text_input form.login %}
         {% render_text_input form.password %}
-        <input class="btn btn-primary w-100" type="submit" value="{% translate "Sign In" %}">
-        <a class="ml-4 text-sky-400 text-sm" href="{% url 'account_reset_password' %}">
+        <input class="btn btn-primary my-4" type="submit" value="{% translate "Sign In" %}">
+        <a class="ml-4 text-sky-600 text-sm" href="{% url 'account_reset_password' %}">
             {% translate "Forgot password?" %}
         </a>
         <hr>
         <p class="mt-4 text-sm text-center">
             {% translate "Don't have an account?" %}
-            <a href="{% url 'account_signup' %}" class="text-info text-gradient font-weight-bold">{% translate "Sign Up" %}</a>
+            <a href="{% url 'account_signup' %}" class="text-sky-600">{% translate "Sign Up" %}</a>
         </p>
     </form>
     </div>

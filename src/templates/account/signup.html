@@ -4,52 +4,33 @@
 {% load socialaccount %}
 {% load form_tags %}
 {% block body %}
-<main class="main-content  mt-0 bg-gray-900">
-  <section>
-    <div class="page-header min-vh-100 bg-gray-900">
-      <div class="container">
-        <div class="row">
-          <div class="col-6 d-lg-flex d-none h-100 my-auto pe-0 position-absolute top-0 start-0 text-center justify-content-center flex-column">
-            <div class="position-relative bg-gradient-primary h-100 m-3 px-7 border-radius-lg d-flex flex-column justify-content-center" style="background-image: url('{% static 'images/signup.jpg' %}'); background-size: cover;">
+<div class="h-screen bg-no-repeat bg-cover bg-fixed bg-bottom flex flex-col items-center justify-center gap-4" style="background-image: url('{% static 'images/signup.jpg' %}');" loading="lazy">
+    <div class="bg-neutral-800 rounded-lg p-4 m-16 w-2/3 md:w-1/3 ">
+        <h4 class="font-bold">{% translate "Sign Up" %}</h4>
+        <p class="mb-0">{% translate "Enter your email and password to register" %}</p>
+        <form method="post" role="form" class="pda-form w-full">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            {% render_text_input form.email %}
+            {% render_text_input form.password1 %}
+            {% if project_settings.ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE %}
+                {% render_text_input form.password2 %}
+            {% endif %}
+            <div class="">
+                <input class="rounded-lg" type="checkbox" value="" id="flexCheckDefault" checked>
+                <label class="" for="flexCheckDefault">
+                    I agree the <a href="{% url 'web:terms' %}" target="_blank" class="text-sky-600 font-semibold">{% translate "Terms and Conditions" %}</a>
+                </label>
             </div>
-          </div>
-          <div class="col-xl-4 col-lg-5 col-md-7 d-flex flex-column ms-auto me-auto ms-lg-auto me-lg-5">
-            <div class="card card-plain mt-6 bg-gray-800">
-              <div class="card-header bg-gray-800">
-                <h4 class="font-weight-bolder">{% translate "Sign Up" %}</h4>
-                <p class="mb-0">{% translate "Enter your email and password to register" %}</p>
-              </div>
-              <div class="card-body">
-                <form method="post" role="form" class="pda-form">
-                  {% csrf_token %}
-                  {{ form.non_field_errors }}
-                  {% render_text_input form.email %}
-                  {% render_text_input form.password1 %}
-                  {% if project_settings.ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE %}
-                    {% render_text_input form.password2 %}
-                  {% endif %}
-                  <div class="form-check form-check-info text-start ps-0">
-                    <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault" checked>
-                    <label class="form-check-label" for="flexCheckDefault">
-                      I agree the <a href="{% url 'web:terms' %}" target="_blank" class="text-info font-weight-bolder">{% translate "Terms and Conditions" %}</a>
-                    </label>
-                  </div>
-                  <input class="btn btn-info w-100" type="submit" value="{% translate "Sign Up" %}">
-                </form>
-              </div>
-              <hr>
-              <div class="card-footer text-center pt-0 px-lg-2 px-1">
-                <p class="mb-2 text-sm mx-auto">
-                  {% translate "Already have an account?" %}
-                  <a href="{% url 'account_login' %}" class="text-info text-gradient font-weight-bold">{% translate "Sign In" %}</a>
-                </p>
-              </div>
-            </div>
-          </div>
+            <input class="btn btn-primary my-4" type="submit" value="{% translate "Sign Up" %}">
+        </form>
+        <div class="text-center px-2">
+            <p class="mb-2 text-sm mx-auto">
+                {% translate "Already have an account?" %}
+                <a href="{% url 'account_login' %}" class="text-sky-600">{% translate "Sign In" %}</a>
+            </p>
         </div>
-      </div>
     </div>
-  </section>
-</main>
+</div>
 {% endblock %}
 {% block footer %}{% endblock %}
