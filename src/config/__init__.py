@@ -2,8 +2,10 @@ from pathlib import Path
 import os
 import yaml
 import logging
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 from typing import Any
+
+from typing_extensions import ClassVar
 
 # Compute root paths correctly. This file lives at src/config/__init__.py so two parents up is the repo root.
 ROOT_PATH: Path = Path(__file__).resolve().parents[2]
@@ -108,6 +110,7 @@ class AppSettings(BaseSettings):
     site_from_email: str = 'pda@yourdomain.com'
     site_logo: str | None = None
     site_title: str = 'PowerDNS Admin'
+    site_name: str = 'PowerDNS Admin'
     site_url: str = 'https://pda.yourdomain.com'
     src_path: str = str(SRC_PATH)
     syslog_host: str | None = None
@@ -132,7 +135,7 @@ class AppSettings(BaseSettings):
     auth_ldap_user_search_base: str = ''
     auth_ldap_user_search_filter: str = ''
     ldap_enable: bool = False
-    record_types = {
+    record_types: ClassVar[dict[str, bool]] = {
         'A': True,
         'AAAA': True,
         'AFSDB': True,
