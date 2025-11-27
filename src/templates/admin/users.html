@@ -2,65 +2,68 @@
 {% load static %}
 {% load i18n %}
 {% block app %}
-<section class="app-card">
-    <h1 class="pg-title">Users</h1>
-    <button class="btn btn-info p-2" data-bs-toggle="modal" data-bs-target="#accountCreateModal">
-        <span class="pg-icon"><i class="fa fa-plus"></i></span>
-    </button>
-    <div class="modal fade" id="accountCreateModal" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content bg-gray-800">
-
-          <div class="modal-header">
-            <h5 class="modal-title">Account Creation</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-
-          <div class="modal-body">
-            <form class="pda-form" method="post">
-                {% csrf_token %}
-                <div class="pda-input-group">
-                    {{ user_form.username.label_tag }}
-                    {{ user_form.username }}
-                    {{ user_form.username.errors }}
-                </div>
-                <div class="pda-input-group">
-                    {{ user_form.email.label_tag }}
-                    {{ user_form.email }}
-                    {{ user_form.email.errors }}
-                </div>
-                <div class="pda-input-group">
-                    {{ user_form.first_name.label_tag }}
-                    {{ user_form.first_name }}
-                    {{ user_form.first_name.errors }}
-                </div>
-                <div class="pda-input-group">
-                    {{ user_form.last_name.label_tag }}
-                    {{ user_form.last_name }}
-                    {{ user_form.last_name.errors }}
-                </div>
-                <div class="pda-input-group">
-                    {{ user_form.is_superuser.label_tag }}
-                    {{ user_form.is_superuser }}
-                    {{ user_form.is_superuser.errors }}
-                </div>
-                <div class="pda-input-group">
-                    {{ user_form.is_active.label_tag }}
-                    {{ user_form.is_active }}
-                    {{ user_form.is_active.errors }}
-                </div>
-                <input class="btn btn-info w-100" type="submit" value="{% translate 'Create' %}">
-            </form>
-          </div>
-
-          <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          </div>
-
+<section class="bg-neutral-800 m-2 p-2 rounded-lg shadow">
+    <h1 class="text-2xl font-semibold mb-5">Users</h1>
+    <div x-data="{ open: false }">
+        <!-- Button -->
+        <button @click="open = true" class="btn btn-primary mb-4">
+            <i class="fa fa-plus"></i>
+        </button>
+        <!-- Backdrop -->
+        <div x-show="open"
+             x-transition.opacity
+             @click="open = false"
+             class="fixed inset-0 bg-black/50">
         </div>
-      </div>
+        <!-- Modal -->
+        <div x-show="open"
+             x-transition
+             class="fixed inset-0 flex items-center justify-center p-4"
+             @keydown.escape.window="open = false">
+            <div class="bg-neutral-800 rounded-lg shadow p-6 w-full max-w-md"
+                 @click.stop>
+                <h2>Create User</h2>
+                <form class="pda-form" method="post">
+                    {% csrf_token %}
+                    <div class="pda-input-group">
+                        {{ user_form.username.label_tag }}
+                        {{ user_form.username }}
+                        {{ user_form.username.errors }}
+                    </div>
+                    <div class="pda-input-group">
+                        {{ user_form.email.label_tag }}
+                        {{ user_form.email }}
+                        {{ user_form.email.errors }}
+                    </div>
+                    <div class="pda-input-group">
+                        {{ user_form.first_name.label_tag }}
+                        {{ user_form.first_name }}
+                        {{ user_form.first_name.errors }}
+                    </div>
+                    <div class="pda-input-group">
+                        {{ user_form.last_name.label_tag }}
+                        {{ user_form.last_name }}
+                        {{ user_form.last_name.errors }}
+                    </div>
+                    <div class="pda-input-group">
+                        {{ user_form.is_superuser.label_tag }}
+                        {{ user_form.is_superuser }}
+                        {{ user_form.is_superuser.errors }}
+                    </div>
+                    <div class="pda-input-group">
+                        {{ user_form.is_active.label_tag }}
+                        {{ user_form.is_active }}
+                        {{ user_form.is_active.errors }}
+                    </div>
+                    <input class="btn btn-primary" type="submit" value="{% translate 'Create' %}">
+                </form>
+                <button @click="open = false" class="btn btn-secondary">
+                    Close
+                </button>
+            </div>
+        </div>
     </div>
-    <table class="pda-table w-100">
+    <table class="pda-table w-full">
       <thead>
         <tr>
             <th>Username</th>

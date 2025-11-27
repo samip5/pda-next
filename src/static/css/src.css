@@ -6,7 +6,7 @@ html {
   scroll-behavior: smooth;
 }
 .btn {
-  @apply px-4 py-2 w-fit shadow-xl rounded-xl ease-in-out duration-300 hover:shadow-md
+  @apply px-4 py-2 w-fit shadow-xl rounded-lg ease-in-out duration-300 hover:shadow-md
 }
 .btn-primary {
   @apply bg-sky-600 hover:bg-sky-500

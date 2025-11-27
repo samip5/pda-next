@@ -3,17 +3,17 @@
 {% load i18n %}
 {% load pda_tags %}
 {% block app %}
-<section class="app-card">
-    <h1 class="pg-title">Settings</h1>
-    <div class="pg-columns">
-        <div class="pg-column-one-third">
-            <h2 class="pg-title">Settings 1</h2>
+<section class="">
+    <h1 class="text-2xl font-semibold mb-5">Settings</h1>
+    <div class="flex flex-row">
+        <div class="bg-neutral-800 m-2 p-2 w-1/3 rounded-lg shadow">
+            <h2 class="text-2xl font-semibold">Settings 1</h2>
             {% for setting in settings %}
                 <p class="text-white">{{ setting.name }}: {{ setting.value }}</p>
             {% endfor %}
         </div>
-        <div class="pg-column-one-third">
-            <h2 class="pg-title">LDAP</h2>
+        <div class="bg-neutral-800 m-2 p-2 w-1/3 rounded-lg shadow">
+            <h2 class="text-2xl font-semibold">LDAP</h2>
             <form method="post" class="pda-form">
                 {% csrf_token %}
                     <div class="pda-input-group">
@@ -36,21 +36,21 @@
                         <label for="auth_ldap_user_search_filter">auth_ldap_user_search_filter</label>
                         <textarea class="form-control" name="auth_ldap_user_search_filter" id="auth_ldap_user_search_filter" rows="5">{{ ldap_settings.auth_ldap_user_search_filter }}</textarea>
                     </div>
-                <button type="submit" name="form_type" value="ldap" class="btn btn-info">Save</button>
+                <button type="submit" name="form_type" value="ldap" class="btn btn-primary">Save</button>
             </form>
         </div>
-        <div class="pg-column-one-third">
-            <h2 class="pg-title">Enable/Disable DNS Record types</h2>
-            <p class="text-white">This only affects the user side of pda</p>
-            <form class="pda-form d-flex flex-row flex-wrap" method="post">
+        <div class="bg-neutral-800 m-2 p-2 w-1/3 rounded-lg shadow">
+            <h2 class="text-2xl font-semibold">Enable/Disable DNS Record types</h2>
+            <p class="text-lg">This only affects the user side of pda</p>
+            <form class="pda-form flex flex-row flex-wrap" method="post">
                 {% csrf_token %}
             {% for record_type, val in record_types %}
-                <div class="pda-input-group w-30 d-flex flex-row gap-2 align-items-center">
-                    <input class="form-control" type="checkbox" name="{{ record_type }}" id="{{ record_type }}" {% if setting_record_types|dict_get:record_type %}checked{% endif %}>
+                <div class="pda-input-group w-1/3 flex !flex-row gap-2 items-center">
+                    <input class="rounded-md" type="checkbox" name="{{ record_type }}" id="{{ record_type }}" {% if setting_record_types|dict_get:record_type %}checked{% endif %}>
                     <label for="{{ record_type }}">{{ record_type }}</label>
                 </div>
             {% endfor %}
-                <button type="submit" name="form_type" value="record_types" class="btn btn-info">Save</button>
+                <button type="submit" name="form_type" value="record_types" class="btn btn-primary">Save</button>
 
             </form>
         </div>

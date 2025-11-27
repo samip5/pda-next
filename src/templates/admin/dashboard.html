@@ -3,123 +3,173 @@
 {% load i18n %}
 {% block app %}
 <section class="">
-    <h1 class="pg-title mb-5">Dashboard</h1>
-    <div class="d-flex flex-row gap-4 mb-4">
+    <h1 class="text-2xl font-semibold mb-5">Dashboard</h1>
+    <div class="flex flex-row gap-4 mb-4">
         {% if request.user.is_superuser %}
-            <button class="btn btn-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#clearCacheModal">
-                Clear Cache<span class="pg-icon"><i class="fa fa-trash-o"></i></span>
+        <div x-data="{ open: false }">
+            <!-- Button -->
+            <button
+                    @click="open = true"
+                    class="btn btn-danger">
+                Clear Cache <i class="fa fa-trash-o"></i>
             </button>
+            <!-- Backdrop -->
+            <div
+                    x-show="open"
+                    x-transition.opacity
+                    @click="open = false"
+                    class="fixed inset-0 bg-black/50">
+            </div>
+            <!-- Modal -->
+            <div
+                    x-show="open"
+                    x-transition
+                    class="fixed inset-0 flex items-center justify-center p-4"
+                    @keydown.escape.window="open = false">
+                <div class="bg-neutral-800 rounded-lg shadow p-6 w-full max-w-md"
+                     @click.stop>
+                    <h2>CLEAR CACHE</h2>
+                    <form class="pda-form" action="{% url 'pdaAdmin:clear_cache' %}" method="post">
+                        {% csrf_token %}
+                        <p class="text-white text-xl bg-danger p-2 rounded-3">You are about to clear the entire zone and record cache are you sure you want to do this?</p>
+                        <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                    </form>
+                    <button
+                            @click="open = false"
+                            class="px-4 py-2 bg-neutral-700 text-white rounded">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
         {% endif %}
+
         {% if request.user.is_staff %}
             <a href="/djadmin" class="btn btn-danger py-1 px-2">
                 Django Admin
             </a>
         {% endif %}
 
-    {% if perms.pda.admin_zones_create %}
-    <button class="btn btn-info p-2" data-bs-toggle="modal" data-bs-target="#zoneCreateModal">
-        Create Zone <span class="pg-icon"><i class="fa fa-plus"></i></span>
-    </button>
-    <div class="modal fade" id="zoneCreateModal" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content bg-gray-800">
+        <div x-data="{ open: false }">
+            <!-- Button -->
+            <button
+                    @click="open = true"
+                    class="btn btn-primary">
+                Create Zone <i class="fa fa-plus"></i>
+            </button>
+            <!-- Backdrop -->
+            <div
+                    x-show="open"
+                    x-transition.opacity
+                    @click="open = false"
+                    class="fixed inset-0 bg-black/50">
+            </div>
+            <!-- Modal -->
+            <div
+                    x-show="open"
+                    x-transition
+                    class="fixed inset-0 flex items-center justify-center p-4"
+                    @keydown.escape.window="open = false">
+                <div class="bg-neutral-800 rounded-lg shadow p-6 w-full max-w-md"
+                     @click.stop>
+                    <h2>Create Zone</h2>
+                    <form class="pda-form" action="{% url 'pdaAdmin:zones' %}" method="post">
+                        {% csrf_token %}
 
-          <div class="modal-header">
-            <h5 class="modal-title">Create Zone</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
+                        <div class="pda-input-group">
+                            <label class="text-white" for="{{ new_zone_form.name.id_for_label }}">Name</label>
+                            {{ new_zone_form.name }}
+                            {{ new_zone_form.name.errors }}
+                        </div>
 
-          <div class="modal-body">
-            <form class="pda-form" action="{% url 'pdaAdmin:zones' %}" method="post">
-                {% csrf_token %}
+                        <div class="pda-input-group">
+                            <label class="text-white" for="{{ new_zone_form.account.id_for_label }}">Account</label>
+                            {{ new_zone_form.account }}
+                            {{ new_zone_form.account.errors }}
+                        </div>
 
-                <div class="pda-input-group">
-                    <label class="text-white" for="{{ new_zone_form.name.id_for_label }}">Name</label>
-                    {{ new_zone_form.name }}
-                    {{ new_zone_form.name.errors }}
+                        <div class="pda-input-group">
+                            <label class="text-white" for="{{ new_zone_form.dnssec.id_for_label }}">DNSSEC</label>
+                            {{ new_zone_form.dnssec }}
+                        </div>
+
+                        <input class="btn btn-info w-100" type="submit" value="{% translate 'Save' %}">
+                    </form>
+                    <button
+                            @click="open = false"
+                            class="px-4 py-2 bg-neutral-700 text-white rounded">
+                        Close
+                    </button>
                 </div>
-
-                <div class="pda-input-group">
-                    <label class="text-white" for="{{ new_zone_form.account.id_for_label }}">Account</label>
-                    {{ new_zone_form.account }}
-                    {{ new_zone_form.account.errors }}
-                </div>
-
-                <div class="pda-input-group">
-                    <label class="text-white" for="{{ new_zone_form.dnssec.id_for_label }}">DNSSEC</label>
-                    {{ new_zone_form.dnssec }}
-                </div>
-
-                <input class="btn btn-info w-100" type="submit" value="{% translate 'Save' %}">
-            </form>
-          </div>
-
-          <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          </div>
-
+            </div>
         </div>
-      </div>
-    </div>
-    {% endif %}
     {% if perms.pda.admin_accounts_create %}
-    <button class="btn btn-info p-2" data-bs-toggle="modal" data-bs-target="#accountCreateModal">
-        Create Account <span class="pg-icon"><i class="fa fa-plus"></i></span>
-    </button>
-    <div class="modal fade" id="accountCreateModal" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content bg-gray-800">
+        <div x-data="{ open: false }">
+            <!-- Button -->
+            <button
+                    @click="open = true"
+                    class="btn btn-danger">
+                Create Account <i class="fa fa-plus"></i>
+            </button>
+            <!-- Backdrop -->
+            <div
+                    x-show="open"
+                    x-transition.opacity
+                    @click="open = false"
+                    class="fixed inset-0 bg-black/50">
+            </div>
+            <!-- Modal -->
+            <div
+                    x-show="open"
+                    x-transition
+                    class="fixed inset-0 flex items-center justify-center p-4"
+                    @keydown.escape.window="open = false">
+                <div class="bg-neutral-800 rounded-lg shadow p-6 w-full max-w-md"
+                     @click.stop>
+                    <h2>Account Creation</h2>
+                    <form class="pda-form" action="{% url 'pdaAdmin:accounts' %}" method="post">
+                        {% csrf_token %}
 
-          <div class="modal-header">
-            <h5 class="modal-title">Account Creation</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
+                        {% csrf_token %}
+                        <div class="pda-input-group">
+                            {{ account_create_form.name.label_tag }}
+                            {{ account_create_form.name }}
+                            {{ account_create_form.name.errors }}
+                        </div>
 
-          <div class="modal-body">
-            <form class="pda-form" action="{% url 'pdaAdmin:accounts' %}" method="post">
-                {% csrf_token %}
+                        <div class="pda-input-group">
+                            {{ account_create_form.mail.label_tag }}
+                            {{ account_create_form.mail }}
+                            {{ account_create_form.mail.errors }}
+                        </div>
 
-                {% csrf_token %}
-                <div class="pda-input-group">
-                    {{ account_create_form.name.label_tag }}
-                    {{ account_create_form.name }}
-                    {{ account_create_form.name.errors }}
+                        <div class="pda-input-group">
+                            {{ account_create_form.contact.label_tag }}
+                            {{ account_create_form.contact }}
+                            {{ account_create_form.contact.errors }}
+                        </div>
+
+                        <div class="pda-input-group">
+                            {{ account_create_form.description.label_tag }}
+                            {{ account_create_form.description }}
+                            {{ account_create_form.description.errors }}
+                        </div>
+                        <input class="btn btn-info w-100" type="submit" value="{% translate 'Create' %}">
+                    </form>
+                    <button
+                            @click="open = false"
+                            class="px-4 py-2 bg-neutral-700 text-white rounded">
+                        Close
+                    </button>
                 </div>
-
-                <div class="pda-input-group">
-                    {{ account_create_form.mail.label_tag }}
-                    {{ account_create_form.mail }}
-                    {{ account_create_form.mail.errors }}
-                </div>
-
-                <div class="pda-input-group">
-                    {{ account_create_form.contact.label_tag }}
-                    {{ account_create_form.contact }}
-                    {{ account_create_form.contact.errors }}
-                </div>
-
-                <div class="pda-input-group">
-                    {{ account_create_form.description.label_tag }}
-                    {{ account_create_form.description }}
-                    {{ account_create_form.description.errors }}
-                </div>
-                <input class="btn btn-info w-100" type="submit" value="{% translate 'Create' %}">
-            </form>
-          </div>
-
-          <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          </div>
-
+            </div>
         </div>
-      </div>
-    </div>
     {% endif %}
     </div>
-    <div class="pg-columns">
-        <div class="pg-column card bg-gray-800 m-2 p-2">
+    <div class="flex flex-row">
+        <div class="bg-neutral-800 m-2 p-2 w-4/6 rounded-lg shadow">
             <h2 class="pg-title">Activity</h2>
-            <table class="pda-table">
+            <table class="pda-table w-full">
                 <thead>
                     <tr>
                         <th>Timestamp</th>
@@ -142,59 +192,39 @@
                 </tbody>
             </table>
         <nav aria-label="Page navigation">
-    <ul class="pagination mt-3">
+    <ul class="flex flex-row mt-3 gap-2">
         {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link border-0 bg-gray-700 text-white shadow-none" href="?page={{ page_obj.previous_page_number }}"><span class="pg-icon"><i class="fa fa-chevron-left"></i></span></a>
+                <a class="py-1 px-2 rounded-full bg-neutral-700 text-white" href="?page={{ page_obj.previous_page_number }}"><span class="pg-icon"><i class="fa fa-chevron-left"></i></span></a>
             </li>
         {% else %}
-            <li class="page-item disabled"><span class="page-link border-0 bg-gray-700 text-white shadow-none"><span class="pg-icon"><i class="fa fa-chevron-left"></i></span></span></li>
+            <li class="page-item disabled"><span class="py-1 px-2 rounded-full bg-neutral-700 text-white"><span class="pg-icon"><i class="fa fa-chevron-left"></i></span></span></li>
         {% endif %}
 
         {% for num in page_obj.paginator.page_range %}
             {% if page_obj.number == num %}
-                <li class="page-item active"><span class="page-link border-0 border-info bg-info text-white shadow-none">{{ num }}</span></li>
+                <li class="page-item active"><span class="py-1 px-2 rounded-full bg-sky-700 text-white">{{ num }}</span></li>
             {% else %}
-                <li class="page-item"><a class="page-link border-0 bg-gray-700 text-white shadow-none" href="?page={{ num }}">{{ num }}</a></li>
+                <li class="page-item"><a class="py-1 px-2 rounded-full bg-neutral-700 text-white" href="?page={{ num }}">{{ num }}</a></li>
             {% endif %}
         {% endfor %}
 
         {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link border-0 bg-gray-700 text-white shadow-none" href="?page={{ page_obj.next_page_number }}"><span class="pg-icon"><i class="fa fa-chevron-right"></i></span></a>
+                <a class="py-1 px-2 rounded-full bg-neutral-700 text-white" href="?page={{ page_obj.next_page_number }}"><span class="pg-icon"><i class="fa fa-chevron-right"></i></span></a>
             </li>
         {% else %}
-            <li class="page-item disabled"><span class="page-link border-0 bg-gray-700 text-white shadow-none"><span class="pg-icon"><i class="fa fa-chevron-right"></i></span></span></li>
+            <li class="page-item disabled"><span class="py-1 px-2 rounded-full bg-neutral-700 text-white"><span class="pg-icon"><i class="fa fa-chevron-right"></i></span></span></li>
         {% endif %}
     </ul>
 </nav>
         </div>
 
-        <div class="pg-column-one-third card bg-gray-800 m-2 p-2">
+        <div class="pg-column-one-third card bg-neutral-800 m-2 p-2 w-2/6 rounded-lg shadow">
             <h2 class="pg-title">Statistics</h2>
 
         </div>
     </div>
-    {% if request.user.is_superuser %}
-    <div class="modal fade" id="clearCacheModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content bg-gray-800">
-                <div class="modal-header">
-                    <h5 class="modal-title">CLEAR CACHE</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form class="pda-form" action="{% url 'pdaAdmin:clear_cache' %}" method="post">
-                        {% csrf_token %}
-                        <p class="text-white text-xl bg-danger p-2 rounded-3">You are about to clear the entire zone and record cache are you sure you want to do this?</p>
-                        <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
-                    </form>
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </section>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.min.js" integrity="sha512-n/G+dROKbKL3GVngGWmWfwK0yPctjZQM752diVYnXZtD/48agpUKLIn0xDQL9ydZ91x6BiOmTIFwWjjFi2kEFg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 {% endblock %}

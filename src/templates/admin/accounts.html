@@ -2,70 +2,81 @@
 {% load static %}
 {% load i18n %}
 {% block app %}
-<section class="app-card">
-    <h1 class="pg-title">Accounts</h1>
-    <button class="btn btn-info p-2" data-bs-toggle="modal" data-bs-target="#accountCreateModal">
-        <span class="pg-icon"><i class="fa fa-plus"></i></span>
-    </button>
-    <div class="modal fade" id="accountCreateModal" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content bg-gray-800">
+<section class="bg-neutral-800 m-2 p-2 rounded-lg shadow">
+    <h1 class="text-2xl font-semibold mb-5">Accounts</h1>
 
-          <div class="modal-header">
-            <h5 class="modal-title">Account Creation</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
+        <div x-data="{ open: false }">
+            <!-- Button -->
+            <button
+                    @click="open = true"
+                    class="btn btn-primary my-3">
+                <i class="fa fa-plus"></i>
+            </button>
+            <!-- Backdrop -->
+            <div
+                    x-show="open"
+                    x-transition.opacity
+                    @click="open = false"
+                    class="fixed inset-0 bg-black/50">
+            </div>
+            <!-- Modal -->
+            <div
+                    x-show="open"
+                    x-transition
+                    class="fixed inset-0 flex items-center justify-center p-4"
+                    @keydown.escape.window="open = false">
+                <div class="bg-neutral-800 rounded-lg shadow p-6 w-full max-w-md"
+                     @click.stop>
+                    <h2>Account Creation</h2>
+                    <form class="pda-form" method="post">
+                        {% csrf_token %}
 
-          <div class="modal-body">
-            <form class="pda-form" method="post">
-                {% csrf_token %}
+                        {% csrf_token %}
+                        <div class="pda-input-group">
+                            {{ account_create_form.name.label_tag }}
+                            {{ account_create_form.name }}
+                            {{ account_create_form.name.errors }}
+                        </div>
 
-                {% csrf_token %}
-                <div class="pda-input-group">
-                    {{ account_create_form.name.label_tag }}
-                    {{ account_create_form.name }}
-                    {{ account_create_form.name.errors }}
+                        <div class="pda-input-group">
+                            {{ account_create_form.mail.label_tag }}
+                            {{ account_create_form.mail }}
+                            {{ account_create_form.mail.errors }}
+                        </div>
+
+                        <div class="pda-input-group">
+                            {{ account_create_form.contact.label_tag }}
+                            {{ account_create_form.contact }}
+                            {{ account_create_form.contact.errors }}
+                        </div>
+
+                        <div class="pda-input-group">
+                            {{ account_create_form.description.label_tag }}
+                            {{ account_create_form.description }}
+                            {{ account_create_form.description.errors }}
+                        </div>
+                        <div class="pda-input-group">
+                            {{ account_create_form.owner.label_tag }}
+                            {{ account_create_form.owner }}
+                            {{ account_create_form.owner.errors }}
+                        </div>
+                       <div class="pda-input-group">
+                            {{ account_create_form.members.label_tag }}
+                            {{ account_create_form.members }}
+                            {{ account_create_form.members.errors }}
+                        </div>
+                        <input class="btn btn-info w-100" type="submit" value="{% translate 'Create' %}">
+                    </form>
+                    <button
+                            @click="open = false"
+                            class="px-4 py-2 bg-neutral-700 text-white rounded">
+                        Close
+                    </button>
                 </div>
-
-                <div class="pda-input-group">
-                    {{ account_create_form.mail.label_tag }}
-                    {{ account_create_form.mail }}
-                    {{ account_create_form.mail.errors }}
-                </div>
-
-                <div class="pda-input-group">
-                    {{ account_create_form.contact.label_tag }}
-                    {{ account_create_form.contact }}
-                    {{ account_create_form.contact.errors }}
-                </div>
-
-                <div class="pda-input-group">
-                    {{ account_create_form.description.label_tag }}
-                    {{ account_create_form.description }}
-                    {{ account_create_form.description.errors }}
-                </div>
-                <div class="pda-input-group">
-                    {{ account_create_form.owner.label_tag }}
-                    {{ account_create_form.owner }}
-                    {{ account_create_form.owner.errors }}
-                </div>
-               <div class="pda-input-group">
-                    {{ account_create_form.members.label_tag }}
-                    {{ account_create_form.members }}
-                    {{ account_create_form.members.errors }}
-                </div>
-                <input class="btn btn-info w-100" type="submit" value="{% translate 'Create' %}">
-            </form>
-          </div>
-
-          <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          </div>
-
+            </div>
         </div>
-      </div>
-    </div>
-    <table class="pda-table w-100">
+
+    <table class="pda-table w-full">
       <thead>
         <tr>
             <th>Name</th>
@@ -98,9 +109,9 @@
                     {% endif %}
                 {% endfor %}
             </td>
-            <td>
-                <span class="pg-icon bg-danger p-3 rounded-3 text-white"><i class="fa fa-trash-o"></i></span>
-                <a href="/admin/accounts/{{ account.id }}"><span class="pg-icon bg-warning p-3 rounded-3 text-white"><i class="fa fa-pencil-square"></i></span></a>
+            <td class="flex flex-row items-center gap-2">
+                <span class="btn btn-danger"><i class="fa fa-trash-o"></i></span>
+                <a href="/admin/accounts/{{ account.id }}"><span class="btn btn-warning"><i class="fa fa-pencil-square"></i></span></a>
             </td>
         </tr>
 

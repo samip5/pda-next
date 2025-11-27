@@ -4,11 +4,11 @@
 
 {% block app %}
 <section class="">
-    <h1 class="pg-title">Group ({{ group.name }})</h1>
-    <a class="bg-info px-2 py-2 my-2 rounded-3 text-white" href="{% url 'pdaAdmin:groups' %}"><span class="pg-icon"><i class="fa fa-arrow-left"></i></span> Back </a>
-    <div class="d-flex flex-row gap-4 justify-content-center my-4">
+    <h1 class="text-2xl font-semibold mb-5">Group ({{ group.name }})</h1>
+    <a class="btn btn-secondary" href="{% url 'pdaAdmin:groups' %}"><span class="pg-icon"><i class="fa fa-arrow-left"></i></span> Back </a>
+    <div class="flex flex-row gap-4 justify-content-center my-4">
         {% if perms.pda.admin_accounts_edit %}
-        <div class="pg-column-one-third card bg-gray-800 p-4 m-2">
+        <div class="bg-neutral-800 m-2 p-2 w-1/3 rounded-lg shadow">
             <form class="pda-form" method="post">
                 {% csrf_token %}
                 <div class="pda-input-group">
@@ -16,19 +16,19 @@
                     {{ group_form.name }}
                     {{ group_form.name.errors }}
                 </div>
-                <button type="submit" class="btn btn-info mt-4" name="form_type" value="group">Save</button>
+                <button type="submit" class="btn btn-primary mt-4" name="form_type" value="group">Save</button>
             </form>
         </div>
         {% endif %}
-        <div class="pg-column card bg-gray-800 p-4 m-2 d-flex flex-column align-items-center">
+        <div class="bg-neutral-800 m-2 p-2 w-full rounded-lg shadow f-flex flex-col items-center">
             <h3 class="pg-title">Permissions</h3>
             <div class="mt-4">
                 <form method="post">
                     {% csrf_token %}
-                    <div class="dual-listbox d-flex flex-row" data-dual-list>
-                        <div class="dual-left d-flex flex-column">
+                    <div class="dual-listbox flex flex-row" data-dual-list>
+                        <div class="dual-left flex flex-col">
                             <input type="text" class="dual-search dual-search-available pda-input mb-2" placeholder="Search…">
-                            <select multiple size="10" class="dual-available pda-dual-list-select bg-gray-700 text-white p-2 rounded-3 border-0">
+                            <select multiple size="10" class="dual-available pda-dual-list-select bg-neutral-700 text-white p-2 rounded-lg border-none">
                                 {% for perm in group_permission_form.permissions.field.queryset %}
                                     {% if perm not in group_permission_form.instance.permissions.all %}
                                         <option class="pda-dual-list-option" value="{{ perm.id }}">{{ perm.name }}</option>
@@ -37,23 +37,23 @@
                             </select>
                         </div>
 
-                        <div class="dual-controls d-flex flex-column mx-2 justify-content-center">
+                        <div class="dual-controls flex flex-col mx-2 items-center content-center">
                             <button type="button" class="dual-add btn btn-success">&gt;</button>
                             <button type="button" class="dual-add-all btn btn-success">&gt;&gt;</button>
                             <button type="button" class="dual-remove-all btn btn-warning">&lt;&lt;</button>
                             <button type="button" class="dual-remove btn btn-warning">&lt;</button>
                         </div>
 
-                        <div class="dual-right d-flex flex-column">
+                        <div class="dual-right flex flex-col">
                             <input type="text" class="dual-search dual-search-selected pda-input mb-2" placeholder="Search…">
-                            <select multiple size="10" class="dual-selected pda-dual-list-select bg-gray-700 text-white p-2 rounded-3 border-0" name="permissions">
+                            <select multiple size="10" class="dual-selected pda-dual-list-select bg-neutral-700 text-white p-2 rounded-lg border-none" name="groups">
                                 {% for perm in group_permission_form.instance.permissions.all %}
                                     <option value="{{ perm.id }}">{{ perm.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-info mt-4 w-100" name="form_type" value="permissions">Save</button>
+                    <button type="submit" class="btn btn-primary" name="form_type" value="permissions">Save</button>
                 </form>
             </div>
       </div>
