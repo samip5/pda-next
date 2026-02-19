@@ -103,7 +103,7 @@ def accounts(request):
         account_create_form = AccountForm(request.POST)
         if account_create_form.is_valid():
             account_create_form.save()  # creates and saves a new Account
-            addActivityLog(ActionType.ACCOUNT_CREATE, f"{account_create_form.name}", request.user)
+            addActivityLog(ActionType.ACCOUNT_CREATE, f"{account_create_form.data['name']}", request.user)
     else:
         account_create_form = AccountForm()
     accountList = Account.objects.all()

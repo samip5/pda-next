@@ -1,7 +1,10 @@
+{
+  auto_https off
+}
 http://localhost:8080 {
 
   handle_path /static/* {
-		root * /home/cappe/repos/kapsi/pda-next/src/static_root
+		root * /home/cappe/repos/kapsi/test/pda-next/src/static
 		file_server
   }
 

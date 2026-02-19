@@ -18,7 +18,7 @@
                     <label class="text-white" for="account">Account</label>
                     <select id="account" name="account" class="form-control">
                         {% for account in accounts %}
-                            <option value="{{ account.id }}" {% if account.id_str == zone.account %}selected{% endif %}>{{ account.name }}</option>
+                            <option value="{{ account.id }}" {% if account.id == zone.account.id %}selected{% endif %}>{{ account.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -26,7 +26,7 @@
                     <label class="text-white" for="name">DNSSEC</label>
                     <input disabled id="name" name="name" class="form-control" type="text" value="{{ zone.dnssec }}" >
                 </div>
-                <button class="btn btn-info w-100" type="submit" name="form_type" value="zone">{% translate "Save" %}</button>
+                <button class="btn btn-primary w-100" type="submit" name="form_type" value="zone">{% translate "Save" %}</button>
             </form>
         </div>
         {% endif %}
