@@ -1,6 +1,7 @@
 {% extends "web/app/app_base.html" %}
 {% load static %}
 {% load i18n %}
+{% load pda_tags %}
 {% block app %}
 <section class="bg-neutral-800 m-2 p-2 rounded-lg shadow">
   <h1 class="text-2xl font-semibold mb-5">Zones</h1>
@@ -112,6 +113,7 @@
                 </thead>
                 <tbody>
                     {% for record in records %}
+                    {% if setting_record_types|dict_get:record.record_type %}
                       <tr id="show-{{ forloop.counter }}">
                           <td>{{ record.name }}</td>
                           <td>{{ record.record_type }}</td>
@@ -187,7 +189,9 @@
                               <input id="old_record_type" name="old_record_type" type="hidden" value="{{ record.record_type }}">
                               <select id="record_type" name="record_type" class="border-1 rounded-lg bg-neutral-700 text-white py-1 px-2 text-center w-4/8">
                                 {% for record_type, enabled in setting_record_types.items %}
+                                  {% if enabled %}
                                     <option value="{{ record_type }}" {% if record.record_type == record_type %}selected{% endif %}>{{ record_type }}</option>
+                                  {% endif %}
                                 {% endfor %}
                               </select>
                           </td>
@@ -213,6 +217,7 @@
                           </td>
                           </form>
                       </tr>
+                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
@@ -220,7 +225,6 @@
     </div>
 </section>
 <script>
-    let currentlyOpen;
     function openEdit(id) {
         let editElement = document.getElementById(`edit-${id}`)
         let showElement = document.getElementById(`show-${id}`)

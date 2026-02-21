@@ -4,7 +4,7 @@
 http://localhost:8080 {
 
   handle_path /static/* {
-		root * /home/cappe/repos/kapsi/test/pda-next/src/static
+		root * /home/cappe/repos/kapsi/test/pda-next/src/static_root
 		file_server
   }
 

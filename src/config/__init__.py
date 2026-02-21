@@ -173,6 +173,44 @@ class AppSettings(BaseSettings):
         'TXT': True,
         'URI': True
     }
+    reverse_record_types: ClassVar[dict[str, bool]] = {
+        'A': True,
+        'AAAA': True,
+        'AFSDB': True,
+        'ALIAS': True,
+        'CAA': True,
+        'CERT': True,
+        'CDNSKEY': True,
+        'CDS': True,
+        'CNAME': True,
+        'DNSKEY': True,
+        'DNAME': True,
+        'DS': True,
+        'HINFO': True,
+        'KEY': True,
+        'LOC': True,
+        'LUA': True,
+        'MX': True,
+        'NAPTR': True,
+        'NS': True,
+        'NSEC': True,
+        'NSEC3': True,
+        'NSEC3PARAM': True,
+        'OPENPGPKEY': True,
+        'PTR': True,
+        'RP': True,
+        'RRSIG': True,
+        'SOA': True,
+        'SPF': True,
+        'SSHFP': True,
+        'SRV': True,
+        'TKEY': True,
+        'TSIG': True,
+        'TLSA': True,
+        'SMIMEA': True,
+        'TXT': True,
+        'URI': True
+    }
 
 
     """ The following settings are automatically loaded at application startup. """
