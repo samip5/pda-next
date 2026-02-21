@@ -23,15 +23,20 @@
        class="nav-item {% if active_tab == 'pda_settings' %}bg-neutral-700{% endif %}">
         <i class="fa fa-cog mr-2"></i> {% translate "Settings" %}
     </a>
-
+    {% if perms.pdadns.accounts_view %}
     <a href="{% url 'pdaAdmin:accounts' %}"
        class="nav-item {% if active_tab == 'pda_accounts' %}bg-neutral-700{% endif %}">
         <i class="fa fa-user mr-2"></i> {% translate "Accounts" %}
     </a>
+    {% endif %}
+
+    {% if perms.pdadns.zones_view %}
     <a href="{% url 'pdaAdmin:zones' %}"
        class="nav-item {% if active_tab == 'admin_zones' %}bg-neutral-700{% endif %}">
         <i class="fa fa-globe mr-2"></i> {% translate "Zones" %}
     </a>
+    {% endif %}
+
     <a href="{% url 'pdaAdmin:templates' %}"
        class="nav-item {% if active_tab == 'templates' %}bg-neutral-700{% endif %}">
         <i class="fa fa-file-code mr-2"></i> {% translate "Templates" %}

@@ -137,6 +137,8 @@ PROJECT_APPS = [
     "apps.api.activity.apps.ActivityConfig",
     "apps.api.templates.apps.ActivityConfig",
     "apps.globalSettings.apps.GlobalSettingsConfig",
+    "apps.pdaAdmin",
+    "apps.pdadns"
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + PROJECT_APPS

@@ -8,7 +8,8 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 from django_auth_ldap.config import LDAPSearch
 from rest_framework.exceptions import ValidationError
-
+from django.contrib.auth.models import Permission
+from django.db.models import Q
 import config
 from apps.api.accounts.models import Account
 from apps.api.activity.helpers import addActivityLog
@@ -160,7 +161,7 @@ def account(request, id):
     )
 
 @login_required
-@permission_required('api_dns.view_zone', raise_exception=True)
+@permission_required('pdadns.zones_view', raise_exception=True)
 def zones(request):
     accountList = Account.objects.all()
 
@@ -199,7 +200,7 @@ def delete_zone_view(request, id):
     return redirect('pdaAdmin:zones')
 
 @login_required
-@permission_required('api_dns.view_zone', raise_exception=True)
+@permission_required('pdadns.zones_view', raise_exception=True)
 def zone(request, id):
     zone_name = id
     setting_record_types = get_setting('record_types')
@@ -419,6 +420,24 @@ def user(request, id):
         user_permission_form = UserPermissionsForm(instance=_user)
         user_groups_form = UserGroupsForm(instance=_user)
 
+    allowed_permissions = Permission.objects.filter(
+        Q(content_type__app_label='pdadns') |
+        Q(content_type__app_label='pdaAdmin')
+    ).exclude(
+        # exclude the auto-generated crud ones from permission model
+        codename__in=['add_adminpermissions', 'change_adminpermissions',
+                      'delete_adminpermissions', 'view_adminpermissions',
+                      'add_pdapermissions', 'change_pdapermissions', 'delete_pdapermissions', 'view_pdapermissions']
+    )
+
+    user_allowed_permissions = user_permission_form.instance.user_permissions.filter(
+        Q(content_type__app_label='pdadns') |
+        Q(content_type__app_label='pdaAdmin')
+    ).exclude(
+        codename__in=['add_adminpermissions', 'change_adminpermissions',
+                      'delete_adminpermissions', 'view_adminpermissions',
+                      'add_pdapermissions', 'change_pdapermissions', 'delete_pdapermissions', 'view_pdapermissions']
+    )
     return render(
         request,
         "admin/user.html",
@@ -428,7 +447,9 @@ def user(request, id):
             "user": _user,
             "user_form": user_form,
             "user_permission_form":user_permission_form,
-            "user_groups_form":user_groups_form
+            "user_groups_form":user_groups_form,
+            "allowed_permissions":allowed_permissions,
+            "user_current_permissions":user_allowed_permissions
         },
     )
 
