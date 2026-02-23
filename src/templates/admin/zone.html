@@ -6,7 +6,7 @@
 <section class="bg-neutral-800 m-2 p-2 rounded-lg shadow">
   <h1 class="text-2xl font-semibold mb-5">Zones</h1>
     <div class="flex flex-row gap-4">
-        {% if perms.pda.admin_zones_edit %}
+        {% if perms.pdaAdmin.zones_edit %}
         <div class="w-1/3">
             <form class="pda-form" method="post">
                 {% csrf_token %}
@@ -31,6 +31,7 @@
             </form>
         </div>
         {% endif %}
+        {% if perms.pdaAdmin.records_create %}
         <div x-data="{ open: false }">
             <!-- Button -->
             <button
@@ -98,6 +99,8 @@
                 </div>
             </div>
         </div>
+        {% endif %}
+        {% if perms.pdaAdmin.records_view %}
         <div class="w-full">
             <table class="pda-table w-full">
                 <thead>
@@ -121,10 +124,12 @@
                           <td>{{ record.ttl }}</td>
                           <td class="max-width-500 long-content">{{ record.content }}</td>
                           <td>{{ record.comments }}</td>
+                          {% if perms.pdaAdmin.records_edit %}
                           <td class="flex flex-row gap-2">
                               <button class="btn btn-warning py-1 px-2" onclick="openEdit('{{ forloop.counter }}')">
                                   <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
                               </button>
+                              {% if perms.pdaAdmin.records_delete %}
                                 <div x-data="{ open: false }">
                                     <!-- Button -->
                                     <button
@@ -175,8 +180,11 @@
                                         </div>
                                     </div>
                                 </div>
+                                {% endif %}
                           </td>
+                          {% endif %}
                       </tr>
+                      {% if perms.pdaAdmin.records_edit %}
                       <tr id="edit-{{ forloop.counter }}" class="record-edit">
                           <form method="post">
                               {% csrf_token %}
@@ -217,11 +225,13 @@
                           </td>
                           </form>
                       </tr>
+                      {% endif %}
                     {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        {% endif %}
     </div>
 </section>
 <script>

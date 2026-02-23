@@ -36,4 +36,6 @@ class AdminPermissions(models.Model):
             ("activity_log_details", "View more details in activity log"),
             # Cache
             ("cache_flush", "Flush cache"),
+            ("settings", "Settings for PDA"),
+            ("dashboard", "PDA Admin Dashboard"),
         ]

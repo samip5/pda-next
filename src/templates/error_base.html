@@ -1,13 +1,11 @@
 {% extends "web/base.html" %}
 {% load static %}
 {% block body %}
-<section class="section mt-7">
+<section class="mt-32">
   <div class="container">
-    <div class="pg-columns pg-columns-reversed pg-align-items-center">
-      <div class="pg-column">
-        <img class="img-fluid" src="{% static 'images/undraw/undraw_alert.svg' %}" alt="Uh-Oh">
-      </div>
-      <div class="pg-column">
+    <div class="flex flex-col items-center min-w-screen">
+        <img class="max-w-xl" src="{% static 'images/undraw/undraw_alert.svg' %}" alt="Uh-Oh">
+      <div class="mt-4">
         {% block error_details %}
         {% endblock %}
       </div>

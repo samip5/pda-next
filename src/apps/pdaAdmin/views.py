@@ -31,7 +31,7 @@ from config.settings import app_settings
 
 logger = logging.getLogger('pda')
 @login_required
-@permission_required('pda.admin_dashboard', raise_exception=True)
+@permission_required('pdaAdmin.dashboard', raise_exception=True)
 def dashboard(request):
     activity_logs = Activity.objects.all()
     new_zone_form = ZoneForm()
@@ -54,7 +54,7 @@ def dashboard(request):
         },
     )
 @login_required
-@permission_required('pda.admin_settings', raise_exception=True)
+@permission_required('pdaAdmin.settings', raise_exception=True)
 def settings(request):
     ldap_settings = {
         "auth_ldap_start_tls": f"{get_setting('auth_ldap_start_tls')}",
@@ -98,7 +98,7 @@ def settings(request):
     )
 
 @login_required
-@permission_required('pda.admin_accounts', raise_exception=True)
+@permission_required('pdaAdmin.accounts_view', raise_exception=True)
 def accounts(request):
     if request.method == "POST":
         account_create_form = AccountForm(request.POST)
@@ -134,7 +134,7 @@ def accounts(request):
     )
 
 @login_required
-@permission_required('pda.admin_accounts', raise_exception=True)
+@permission_required('pdaAdmin.accounts_view', raise_exception=True)
 def account(request, id):
     account_instance = Account.objects.filter(id=id).first()
     if request.method == "POST":
@@ -161,7 +161,7 @@ def account(request, id):
     )
 
 @login_required
-@permission_required('pdadns.zones_view', raise_exception=True)
+@permission_required('pdaAdmin.zones_view', raise_exception=True)
 def zones(request):
     accountList = Account.objects.all()
 
@@ -200,7 +200,7 @@ def delete_zone_view(request, id):
     return redirect('pdaAdmin:zones')
 
 @login_required
-@permission_required('pdadns.zones_view', raise_exception=True)
+@permission_required('pdaAdmin.zones_view', raise_exception=True)
 def zone(request, id):
     zone_name = id
     setting_record_types = get_setting('record_types')
@@ -297,7 +297,7 @@ def zone(request, id):
 
 
 @login_required
-@permission_required('api_templates.view_zonetemplate', raise_exception=True)
+@permission_required('pdaAdmin.dashboard', raise_exception=True)
 def templates(request):
     if request.method == "POST":
         zone_template_form = ZoneTemplateForm(request.POST)
@@ -319,7 +319,7 @@ def templates(request):
     )
 
 @login_required
-@permission_required('api_templates.add_zonetemplate', raise_exception=True)
+@permission_required('pdaAdmin.dashboard', raise_exception=True)
 def edit_template(request, id):
     setting_record_types = get_setting('record_types')
     template = ZoneTemplate.objects.get(id=id)
@@ -368,7 +368,7 @@ def clear_cache(request):
     return redirect('pdaAdmin:dashboard')
 
 @login_required
-@permission_required('pda.admin_accounts', raise_exception=True)
+@permission_required('pdaAdmin.users_view', raise_exception=True)
 def users(request):
     if request.method == "POST":
         user_form = UserForm(request.POST)
@@ -391,7 +391,7 @@ def users(request):
     )
 
 @login_required
-@permission_required('pda.admin_accounts', raise_exception=True)
+@permission_required('pdaAdmin.users_view', raise_exception=True)
 def user(request, id):
     _user = CustomUser.objects.get(id=id)
     if request.method == "POST":
@@ -454,7 +454,7 @@ def user(request, id):
     )
 
 @login_required
-@permission_required('pda.admin_accounts', raise_exception=True)
+@permission_required('pdaAdmin.groups_view', raise_exception=True)
 def groups(request):
     if request.method == "POST":
         group_form = GroupForm(request.POST)
@@ -477,7 +477,7 @@ def groups(request):
     )
 
 @login_required
-@permission_required('pda.admin_accounts', raise_exception=True)
+@permission_required('pdaAdmin.groups_view', raise_exception=True)
 def group(request, id):
     _group = Group.objects.get(id=id)
     if request.method == "POST":
@@ -492,12 +492,29 @@ def group(request, id):
             group_permission_form = GroupPermissionsForm(request.POST, instance=_group)
             if group_permission_form.is_valid():
                 group_permission_form.save()
-                addActivityLog(ActionType.USER_UPDATE, f"Permissions updated for {_group.name}", request.user)
+                addActivityLog(ActionType.GROUP_UPDATE, f"Permissions updated for {_group.name}", request.user)
                 return redirect("pdaAdmin:group", id)
     else:
         group_form = GroupForm(instance=_group)
         group_permission_form = GroupPermissionsForm(instance=_group)
 
+    allowed_permissions = Permission.objects.filter(
+        Q(content_type__app_label='pdadns') |
+        Q(content_type__app_label='pdaAdmin')
+    ).exclude(
+        codename__in=['add_adminpermissions', 'change_adminpermissions',
+                      'delete_adminpermissions', 'view_adminpermissions',
+                      'add_pdapermissions', 'change_pdapermissions', 'delete_pdapermissions', 'view_pdapermissions']
+    )
+
+    group_allowed_permissions = group_permission_form.instance.permissions.filter(
+        Q(content_type__app_label='pdadns') |
+        Q(content_type__app_label='pdaAdmin')
+    ).exclude(
+        codename__in=['add_adminpermissions', 'change_adminpermissions',
+                      'delete_adminpermissions', 'view_adminpermissions',
+                      'add_pdapermissions', 'change_pdapermissions', 'delete_pdapermissions', 'view_pdapermissions']
+    )
     return render(
         request,
         "admin/group.html",
@@ -507,5 +524,7 @@ def group(request, id):
             "group": _group,
             "group_form": group_form,
             "group_permission_form":group_permission_form,
+            "allowed_permissions": allowed_permissions,
+            "group_current_permissions": group_allowed_permissions
         },
     )

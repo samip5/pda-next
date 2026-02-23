@@ -15,13 +15,13 @@ html {
   @apply bg-neutral-600 hover:bg-neutral-500
 }
 .btn-danger {
-  @apply bg-red-600
+  @apply bg-red-600 hover:bg-red-500
 }
 .btn-success {
-  @apply bg-green-600
+  @apply bg-green-600 hover:bg-green-500
 }
 .btn-warning {
-  @apply bg-yellow-600
+  @apply bg-yellow-600 hover:bg-yellow-500
 }
 .nav-item {
     @apply mx-4 flex items-center px-4 py-2 rounded hover:bg-neutral-700

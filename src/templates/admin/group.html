@@ -29,9 +29,9 @@
                         <div class="dual-left flex flex-col">
                             <input type="text" class="dual-search dual-search-available pda-input mb-2" placeholder="Search…">
                             <select multiple size="10" class="dual-available pda-dual-list-select bg-neutral-700 text-white p-2 rounded-lg border-none">
-                                {% for perm in group_permission_form.permissions.field.queryset %}
+                                {% for perm in allowed_permissions %}
                                     {% if perm not in group_permission_form.instance.permissions.all %}
-                                        <option class="pda-dual-list-option" value="{{ perm.id }}">{{ perm.name }}</option>
+                                        <option class="pda-dual-list-option" value="{{ perm.id }}">{{ perm.content_type.name }} - - {{ perm.name }}</option>
                                     {% endif %}
                                 {% endfor %}
                             </select>
@@ -46,9 +46,9 @@
 
                         <div class="dual-right flex flex-col">
                             <input type="text" class="dual-search dual-search-selected pda-input mb-2" placeholder="Search…">
-                            <select multiple size="10" class="dual-selected pda-dual-list-select bg-neutral-700 text-white p-2 rounded-lg border-none" name="groups">
-                                {% for perm in group_permission_form.instance.permissions.all %}
-                                    <option value="{{ perm.id }}">{{ perm.name }}</option>
+                            <select multiple size="10" class="dual-selected pda-dual-list-select bg-neutral-700 text-white p-2 rounded-lg border-none" name="permissions">
+                                {% for perm in group_current_permissions %}
+                                    <option value="{{ perm.id }}">{{ perm.content_type.name }} - - {{ perm.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>

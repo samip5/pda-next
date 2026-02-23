@@ -141,7 +141,6 @@ gray-900 #212529
 .pda-form select:focus, .pda-input:focus {
     border: #ddd 1px solid;
     color: #FFFFFF;
-    background-color: #495057;
 }
 .pda-form .pda-input-group {
     display: flex;

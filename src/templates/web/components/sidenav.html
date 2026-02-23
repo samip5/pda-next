@@ -13,35 +13,46 @@
         <i class="fa fa-globe mr-2"></i> {% translate "Domains" %}
     </a>
 
+    {% if perms.pdaAdmin %}
     <h6 class="nav-title">{% translate "Admin area" %}</h6>
     <div class="nav-seperator"></div>
+
+    {% if perms.pdaAdmin.dashboard %}
     <a href="{% url 'pdaAdmin:dashboard' %}"
        class="nav-item {% if active_tab == 'admin_dash' %}bg-neutral-700{% endif %}">
         <i class="fa fa-shield mr-2"></i> {% translate "Dashboard" %}
     </a>
+    {% endif %}
+
+    {% if perms.pdaAdmin.settings %}
     <a href="{% url 'pdaAdmin:settings' %}"
        class="nav-item {% if active_tab == 'pda_settings' %}bg-neutral-700{% endif %}">
         <i class="fa fa-cog mr-2"></i> {% translate "Settings" %}
     </a>
-    {% if perms.pdadns.accounts_view %}
+    {% endif %}
+
+    {% if perms.pdaAdmin.accounts_view %}
     <a href="{% url 'pdaAdmin:accounts' %}"
        class="nav-item {% if active_tab == 'pda_accounts' %}bg-neutral-700{% endif %}">
         <i class="fa fa-user mr-2"></i> {% translate "Accounts" %}
     </a>
     {% endif %}
 
-    {% if perms.pdadns.zones_view %}
+    {% if perms.pdaAdmin.zones_view %}
     <a href="{% url 'pdaAdmin:zones' %}"
        class="nav-item {% if active_tab == 'admin_zones' %}bg-neutral-700{% endif %}">
         <i class="fa fa-globe mr-2"></i> {% translate "Zones" %}
     </a>
     {% endif %}
 
+    {% if perms.pdaAdmin.templates_view %}
     <a href="{% url 'pdaAdmin:templates' %}"
        class="nav-item {% if active_tab == 'templates' %}bg-neutral-700{% endif %}">
         <i class="fa fa-file-code mr-2"></i> {% translate "Templates" %}
     </a>
+    {% endif %}
 
+    {% if perms.pdaAdmin.users_view or perms.pdaAdmin.groups_view %}
     <div x-data="{ open: false }" class="flex flex-col">
         <button
             @click="open = !open"
@@ -53,19 +64,22 @@
             </svg>
         </button>
         <div x-show="open" x-transition class="ml-4 mt-1 space-y-1">
-
+            {% if perms.pdaAdmin.users_view %}
             <a href="{% url 'pdaAdmin:users' %}"
                class="nav-item {% if active_tab == 'pda_users' %}bg-neutral-700{% endif %}">
                 <i class="fa fa-user-group mr-2"></i> {% translate "Users" %}
             </a>
-
+            {% endif %}
+            {% if perms.pdaAdmin.groups_view %}
             <a href="{% url 'pdaAdmin:groups' %}"
                class="nav-item {% if active_tab == 'pda_groups' %}bg-neutral-700{% endif %}">
                 <i class="fa fa-users mr-2"></i> {% translate "Groups" %}
             </a>
+            {% endif %}
         </div>
     </div>
-
+    {% endif %}
+    {% endif %}
     <h6 class="nav-title">{% translate "Account pages" %}</h6>
     <div class="nav-seperator"></div>
     <a href="{% url 'users:user_profile' %}"
