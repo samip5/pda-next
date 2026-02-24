@@ -306,7 +306,6 @@ AUTHENTICATION_BACKENDS = (
     # `allauth` specific authentication methods, such as login by e-mail
     'allauth.account.auth_backends.AuthenticationBackend',
 )
-
 if app_settings.ldap_enable:
     AUTHENTICATION_BACKENDS = (
         "django_auth_ldap.backend.LDAPBackend"
