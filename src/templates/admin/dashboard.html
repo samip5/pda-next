@@ -36,7 +36,7 @@
                     </form>
                     <button
                             @click="open = false"
-                            class="px-4 py-2 bg-neutral-700 text-white rounded">
+                            class="btn btn-secondary">
                         Close
                     </button>
                 </div>
@@ -93,11 +93,11 @@
                             {{ new_zone_form.dnssec }}
                         </div>
 
-                        <input class="btn btn-info w-100" type="submit" value="{% translate 'Save' %}">
+                        <input class="btn btn-primary w-100" type="submit" value="{% translate 'Save' %}">
                     </form>
                     <button
                             @click="open = false"
-                            class="px-4 py-2 bg-neutral-700 text-white rounded">
+                            class="btn btn-secondary">
                         Close
                     </button>
                 </div>
@@ -154,11 +154,11 @@
                             {{ account_create_form.description }}
                             {{ account_create_form.description.errors }}
                         </div>
-                        <input class="btn btn-info w-100" type="submit" value="{% translate 'Create' %}">
+                        <input class="btn btn-primary w-100" type="submit" value="{% translate 'Create' %}">
                     </form>
                     <button
                             @click="open = false"
-                            class="px-4 py-2 bg-neutral-700 text-white rounded">
+                            class="btn btn-secondary">
                         Close
                     </button>
                 </div>
