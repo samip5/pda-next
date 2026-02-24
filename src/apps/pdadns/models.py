@@ -6,6 +6,5 @@ class PDAPermissions(models.Model):
         verbose_name = "PDA"
         verbose_name_plural = "PDA"
         permissions = [
-            # Zones
-            ("zones_view", "View zones"),
+            ("api_keys", "Allow's user to create and revoke their own API keys"),
         ]
