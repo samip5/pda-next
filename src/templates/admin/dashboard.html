@@ -174,50 +174,69 @@
                     <tr>
                         <th>Timestamp</th>
                         <th>Action</th>
-                        <th>Details</th>
+                        <th>Info</th>
                         <th>user</th>
                         <th>Api Key Used</th>
+                        <th></th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for activity in page_obj %}
+                {% for activity in page_obj %}
+                <tbody x-data="{ detailsOpen: false }">
                     <tr>
                         <td>{{ activity.timestamp }}</td>
                         <td>{{ activity.action }}</td>
-                        <td>{{ activity.details }}</td>
+                        <td>{{ activity.info }}</td>
                         <td>{{ activity.user }}</td>
                         <td>{% if activity.apikey != '' %}{{ activity.apikey }}{% else %}None{% endif %}</td>
+                            {% if perms.pdaAdmin.activity_log_details %}
+                                <td>
+                                    <button class="btn btn-warning" @click="detailsOpen= !detailsOpen">
+                                        <span class="flex flex-row items-center gap-2">
+                                            Details
+                                            <i x-show="!detailsOpen" class="fa fa-chevron-right"></i>
+                                            <i x-show="detailsOpen" class="fa fa-chevron-down"></i>
+                                        </span>
+                                    </button>
+                                </td>
+                            {% endif %}
                     </tr>
-                    {% endfor %}
+                    <tr x-show="detailsOpen" x-transition>
+                        <td colspan="6">
+                            <div class="text-left p-4 bg-neutral-900 shadow-md rounded-lg">
+                                {{ activity.details|linebreaksbr }}
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
+                {% endfor %}
             </table>
-        <nav aria-label="Page navigation">
-    <ul class="flex flex-row mt-3 gap-2">
-        {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="py-1 px-2 rounded-full bg-neutral-700 text-white" href="?page={{ page_obj.previous_page_number }}"><span class="pg-icon"><i class="fa fa-chevron-left"></i></span></a>
-            </li>
-        {% else %}
-            <li class="page-item disabled"><span class="py-1 px-2 rounded-full bg-neutral-700 text-white"><span class="pg-icon"><i class="fa fa-chevron-left"></i></span></span></li>
-        {% endif %}
+            <nav aria-label="Page navigation">
+                <ul class="flex flex-row mt-3 gap-2">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="py-1 px-2 rounded-full bg-neutral-700 text-white" href="?page={{ page_obj.previous_page_number }}"><span class="pg-icon"><i class="fa fa-chevron-left"></i></span></a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="py-1 px-2 rounded-full bg-neutral-700 text-white"><span class="pg-icon"><i class="fa fa-chevron-left"></i></span></span></li>
+                    {% endif %}
 
-        {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-                <li class="page-item active"><span class="py-1 px-2 rounded-full bg-sky-700 text-white">{{ num }}</span></li>
-            {% else %}
-                <li class="page-item"><a class="py-1 px-2 rounded-full bg-neutral-700 text-white" href="?page={{ num }}">{{ num }}</a></li>
-            {% endif %}
-        {% endfor %}
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="py-1 px-2 rounded-full bg-sky-700 text-white">{{ num }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="py-1 px-2 rounded-full bg-neutral-700 text-white" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
 
-        {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="py-1 px-2 rounded-full bg-neutral-700 text-white" href="?page={{ page_obj.next_page_number }}"><span class="pg-icon"><i class="fa fa-chevron-right"></i></span></a>
-            </li>
-        {% else %}
-            <li class="page-item disabled"><span class="py-1 px-2 rounded-full bg-neutral-700 text-white"><span class="pg-icon"><i class="fa fa-chevron-right"></i></span></span></li>
-        {% endif %}
-    </ul>
-</nav>
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="py-1 px-2 rounded-full bg-neutral-700 text-white" href="?page={{ page_obj.next_page_number }}"><span class="pg-icon"><i class="fa fa-chevron-right"></i></span></a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="py-1 px-2 rounded-full bg-neutral-700 text-white"><span class="pg-icon"><i class="fa fa-chevron-right"></i></span></span></li>
+                    {% endif %}
+                </ul>
+            </nav>
         </div>
 
         <div class="pg-column-one-third card bg-neutral-800 m-2 p-2 w-2/6 rounded-lg shadow">

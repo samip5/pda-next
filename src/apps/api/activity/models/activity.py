@@ -59,6 +59,13 @@ class Activity(models.Model):
         help_text='Action taken'
     )
 
+    info = models.CharField(
+        max_length=255,
+        unique=False,
+        default='',
+        help_text='Info about activity'
+    )
+
     details = models.CharField(
         max_length=255,
         unique=False,

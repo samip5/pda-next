@@ -12,7 +12,8 @@ from django.contrib.auth.models import Permission
 from django.db.models import Q
 import config
 from apps.api.accounts.models import Account
-from apps.api.activity.helpers import addActivityLog
+from apps.api.activity.helpers import addActivityLog, mergeActivityDetails, getSingleUserDetails, getFieldDetails, \
+    getMemberDetails
 from apps.api.activity.models import Activity
 from apps.api.activity.models.activity import ActionType
 from apps.api.dns.helpers import get_zones, get_zone, get_records, create_zone_from_template, delete_zone, \
@@ -103,8 +104,22 @@ def accounts(request):
     if request.method == "POST":
         account_create_form = AccountForm(request.POST)
         if account_create_form.is_valid():
-            account_create_form.save()  # creates and saves a new Account
-            addActivityLog(ActionType.ACCOUNT_CREATE, f"{account_create_form.data['name']}", request.user)
+            account_instance = account_create_form.save()  # creates and saves a new Account
+            new_members = set(account_instance.members.values_list("id", flat=True))
+            new_fields = {
+                "name": account_instance.name,
+                "mail": account_instance.mail,
+                "contact": account_instance.contact,
+                "description": account_instance.description
+            }
+            new_owner = account_instance.owner
+            print(f"new_owner: {new_owner}")
+            details = mergeActivityDetails(
+                getFieldDetails(new_fields),
+                getSingleUserDetails("Owner", new_owner.id),
+                getMemberDetails(new_members)
+            )
+            addActivityLog(ActionType.ACCOUNT_CREATE, f"{account_create_form.data['name']}", details, request.user)
     else:
         account_create_form = AccountForm()
     accountList = Account.objects.all()
@@ -139,9 +154,30 @@ def account(request, id):
     account_instance = Account.objects.filter(id=id).first()
     if request.method == "POST":
         account_edit_form = AccountForm(request.POST, instance=account_instance)
+        old_members = set(account_instance.members.values_list("id", flat=True))
+        old_fields = {
+            "name": account_instance.name,
+            "mail": account_instance.mail,
+            "contact": account_instance.contact,
+            "description": account_instance.description
+        }
+        old_owner = account_instance.owner
         if account_edit_form.is_valid():
-            account_edit_form.save()  # creates and saves a new Account
-            addActivityLog(ActionType.ACCOUNT_UPDATE, f"{id}", request.user)
+            account_edit_form.save()
+            new_members = set(account_instance.members.values_list("id", flat=True))
+            new_fields = {
+                "name": account_instance.name,
+                "mail": account_instance.mail,
+                "contact": account_instance.contact,
+                "description": account_instance.description
+            }
+            new_owner = account_instance.owner
+
+            details = mergeActivityDetails(
+                getFieldDetails(new_fields, old_fields),
+                getSingleUserDetails("Owner", new_owner.id, old_owner.id),
+                getMemberDetails(new_members, old_members))
+            addActivityLog(ActionType.ACCOUNT_UPDATE, f"{id}", details, request.user)
     else:
         account_edit_form = AccountForm(instance=account_instance)
     zone_instances = get_zones()
