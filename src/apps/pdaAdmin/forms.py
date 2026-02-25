@@ -45,7 +45,7 @@ class AccountForm(forms.ModelForm):
             'contact': forms.TextInput(),
             'description': forms.Textarea(),
             'owner': forms.Select(),
-            'members': forms.CheckboxSelectMultiple(),
+            'members': forms.SelectMultiple(attrs={'id': 'id_members', 'hidden': True}),
         }
 
 

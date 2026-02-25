@@ -39,11 +39,65 @@
                     {{ account_edit_form.owner }}
                     {{ account_edit_form.owner.errors }}
                 </div>
-               <div class="pda-input-group">
-                    {{ account_edit_form.members.label_tag }}
-                    {{ account_edit_form.members }}
-                    {{ account_edit_form.members.errors }}
+                {{ account_edit_form.members }}
+               <div
+                 class="pda-input-group"
+                 x-data="{
+                    open: false,
+                    search: '',
+                    options: [...document.getElementById('id_members').options].map(o => ({ value: o.value, label: o.text, selected: o.selected })),
+                    toggle(opt) {
+                      opt.selected = !opt.selected;
+                      document.getElementById('id_members').querySelector(`option[value='${opt.value}']`).selected = opt.selected;
+                    },
+                    get filtered() {
+                      return this.options.filter(o => o.label.toLowerCase().includes(this.search.toLowerCase()));
+                    },
+                    get selectedOptions() {
+                      return this.options.filter(o => o.selected);
+                    }
+                 }">
+               <label>Members</label>
+                <div class="flex flex-wrap gap-2 mb-2" x-show="selectedOptions.length > 0">
+                    <template x-for="opt in selectedOptions" :key="opt.value">
+                        <button type="button" @click="toggle(opt)" class="flex items-center gap-2 bg-neutral-600 text-white px-2 py-1 rounded-lg">
+                            <span x-text="opt.label"></span>
+                        </button>
+                    </template>
                 </div>
+
+                <div
+                    class="pda-input flex items-center cursor-text"
+                    @click="open = true; $nextTick(() => $refs.search.focus())"
+                >
+                    <input
+                        x-ref="search"
+                        type="text"
+                        x-model="search"
+                        @focus="open = true"
+                        @keydown.escape="open = false"
+                        placeholder="Search members..."
+                        autocomplete="off"
+                        class="bg-transparent w-full focus:outline-none placeholder-neutral-500 p-0 border-none"
+                    />
+                </div>
+
+                <div x-show="open" x-transition @click.outside="open = false" class="relative">
+                    <div class="absolute z-50 w-full mt-1 rounded-lg overflow-y-auto max-h-48" style="background-color: #404040; border: 1px solid #555;">
+                        <template x-for="opt in filtered" :key="opt.value">
+                            <div
+                                @click="toggle(opt)"
+                                class="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-neutral-600"
+                                :class="opt.selected ? 'text-white' : 'text-[#cccccc]'"
+                            >
+                                <span x-text="opt.label"></span>
+                                <span x-show="opt.selected" class="text-blue-400">&#10003;</span>
+                            </div>
+                        </template>
+                        <div x-show="filtered.length === 0" class="px-3 py-2 text-neutral-500">No results</div>
+                    </div>
+                </div>
+            </div>
                 <input class="btn btn-primary w-100" type="submit" value="{% translate "Save" %}">
             </form>
         </div>
