@@ -213,11 +213,20 @@ def zones(request):
         if new_zone_form.is_valid():
             new_zone = new_zone_form.save(commit=False)
             zone.dnssec = False
+            logger.info(f"Creating new zone: {new_zone.name}")
             try:
+                new_fields = {
+                    "name": new_zone.name,
+                    "account": new_zone.account,
+                    "dnssec": new_zone.dnssec,
+                    "template": new_zone_form.data["template"]
+                }
+                details = mergeActivityDetails(getFieldDetails(new_fields))
+                addActivityLog(ActionType.ZONE_CREATE, f"{new_zone.name} - {new_zone.account}", details, request.user)
                 create_zone_from_template(new_zone, template=new_zone_form.data["template"])
-                addActivityLog(ActionType.ZONE_CREATE, f"{new_zone.name} - {new_zone.account}", request.user)
                 messages.add_message(request, messages.SUCCESS, f"Zone {new_zone.name} created")
             except Exception as e:
+                logger.error(e)
                 messages.add_message(request, messages.WARNING, f"{e}")
     new_zone_form = CreateZoneForm()
     zone_instances = get_zones()
@@ -406,7 +415,7 @@ def clear_cache(request):
     if request.user.is_superuser:
         Zone.objects.all().delete()
         Record.objects.all().delete()
-        addActivityLog(ActionType.CLEAR_CACHE, f"Clearing Zone and Record Cache's", request.user)
+        addActivityLog(ActionType.CLEAR_CACHE, f"Clearing Zone and Record Cache's", "Cache Cleared", request.user)
         return redirect('pdaAdmin:dashboard')
     return redirect('pdaAdmin:dashboard')
 
