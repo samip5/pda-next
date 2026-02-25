@@ -38,6 +38,12 @@ def dashboard(request):
     new_zone_form = ZoneForm()
     account_create_form = AccountForm()
 
+    stats = {
+        "accounts": Account.objects.count(),
+        "users": CustomUser.objects.count(),
+        "zones": Zone.objects.count(),
+    }
+
     paginator = Paginator(activity_logs, 25)
     page_number = request.GET.get('page')  # get the page number from query params
     page_obj = paginator.get_page(page_number)  # returns a Page object
@@ -51,7 +57,8 @@ def dashboard(request):
             "activity_logs": activity_logs,
             "page_obj": page_obj,
             "new_zone_form": new_zone_form,
-            "account_create_form": account_create_form
+            "account_create_form": account_create_form,
+            "stats": stats
         },
     )
 @login_required

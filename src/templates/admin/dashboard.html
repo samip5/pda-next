@@ -240,8 +240,21 @@
         </div>
 
         <div class="pg-column-one-third card bg-neutral-800 m-2 p-2 w-2/6 rounded-lg shadow">
-            <h2 class="pg-title">Statistics</h2>
-
+            <h2 class="text-4xl text-center">Statistics</h2>
+            <div class="flex flex-row">
+                <div class="w-1/3 flex flex-col items-center p-4">
+                    <p class="text-4xl">{{ stats.accounts }}</p>
+                    <p class="text-xl font-bold">Accounts</p>
+                </div>
+                <div class="w-1/3 flex flex-col items-center p-4">
+                    <p class="text-4xl">{{ stats.users }}</p>
+                    <p class="text-xl font-bold">Users</p>
+                </div>
+                <div class="w-1/3 flex flex-col items-center p-4">
+                    <p class="text-4xl">{{ stats.zones }}</p>
+                    <p class="text-xl font-bold">Zones</p>
+                </div>
+            </div>
         </div>
     </div>
 </section>
