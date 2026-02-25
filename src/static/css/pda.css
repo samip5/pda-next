@@ -130,7 +130,7 @@ gray-900 #212529
 .pda-form input:disabled,
 .pda-form textarea:disabled,
 .pda-form select:disabled, .pda-input:disabled {
-    background-color: #212529;
+    background-color: #171717;
     color: #999999;
     cursor: not-allowed;
 }
