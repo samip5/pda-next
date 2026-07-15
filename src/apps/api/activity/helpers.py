@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Permission, Group
 from jsonschema import ValidationError
 
 from apps.api.activity.models import Activity
@@ -37,6 +38,40 @@ def getMemberDetails(new_members: set, old_members: set = None,) -> str:
         if removed:
             removed_users = CustomUser.objects.filter(id__in=removed).values_list("username", flat=True)
             parts.append("Removed members:\n" + ", ".join(removed_users))
+    return "\n".join(parts)
+
+def getPermissionDetails(new_perms: set, old_perms: set = None) -> str:
+    parts = []
+    if old_perms is None:
+        if new_perms:
+            perms = Permission.objects.filter(id__in=new_perms).values_list("codename", flat=True)
+            parts.append("Permissions:\n" + ", ".join(perms))
+    else:
+        added = new_perms - old_perms
+        removed = old_perms - new_perms
+        if added:
+            added_perms = Permission.objects.filter(id__in=added).values_list("codename", flat=True)
+            parts.append("Added permissions:\n" + ", ".join(added_perms))
+        if removed:
+            removed_perms = Permission.objects.filter(id__in=removed).values_list("codename", flat=True)
+            parts.append("Removed permissions:\n" + ", ".join(removed_perms))
+    return "\n".join(parts)
+
+def getGroupDetails(new_groups: set, old_groups: set = None) -> str:
+    parts = []
+    if old_groups is None:
+        if new_groups:
+            groups = Group.objects.filter(id__in=new_groups).values_list("name", flat=True)
+            parts.append("Groups:\n" + ", ".join(groups))
+    else:
+        added = new_groups - old_groups
+        removed = old_groups - new_groups
+        if added:
+            added_groups = Group.objects.filter(id__in=added).values_list("name", flat=True)
+            parts.append("Added groups:\n" + ", ".join(added_groups))
+        if removed:
+            removed_groups = Group.objects.filter(id__in=removed).values_list("name", flat=True)
+            parts.append("Removed groups:\n" + ", ".join(removed_groups))
     return "\n".join(parts)
 
 def getFieldDetails(new_fields: dict, old_fields: dict = None) -> str:

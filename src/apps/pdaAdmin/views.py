@@ -13,7 +13,7 @@ from django.db.models import Q
 import config
 from apps.api.accounts.models import Account
 from apps.api.activity.helpers import addActivityLog, mergeActivityDetails, getSingleUserDetails, getFieldDetails, \
-    getMemberDetails
+    getMemberDetails, getPermissionDetails, getGroupDetails
 from apps.api.activity.models import Activity
 from apps.api.activity.models.activity import ActionType
 from apps.api.dns.helpers import get_zones, get_zone, get_records, create_zone_from_template, delete_zone, \
@@ -30,7 +30,6 @@ from apps.users.models import CustomUser
 from config import load_db_settings_to_config, save_config
 from config.settings import app_settings
 
-logger = logging.getLogger('pda')
 @login_required
 @permission_required('pdaAdmin.dashboard', raise_exception=True)
 def dashboard(request):
@@ -80,7 +79,6 @@ def settings(request):
         form_type = request.POST.get('form_type')
         if form_type == "ldap":
             for key in ldap_settings:
-                logger.info(f'{key} {request.POST.get(key)}')
                 set_setting(key, request.POST.get(key))
                 ldap_settings[key] = request.POST.get(key)
             load_db_settings_to_config(app_settings)
@@ -88,7 +86,6 @@ def settings(request):
             for record_type, i in record_types:
                 is_active = record_type in request.POST
                 setting_record_types[record_type] = is_active
-                logger.info(f'{record_type} {setting_record_types[record_type]}')
             set_setting('record_types', setting_record_types, 'json')
     view_settings = []
     view_settings.append({"name": "disable_landing_page", "value": f"{get_setting('disable_landing_page')}"})
@@ -213,7 +210,6 @@ def zones(request):
         if new_zone_form.is_valid():
             new_zone = new_zone_form.save(commit=False)
             zone.dnssec = False
-            logger.info(f"Creating new zone: {new_zone.name}")
             try:
                 new_fields = {
                     "name": new_zone.name,
@@ -226,7 +222,6 @@ def zones(request):
                 create_zone_from_template(new_zone, template=new_zone_form.data["template"])
                 messages.add_message(request, messages.SUCCESS, f"Zone {new_zone.name} created")
             except Exception as e:
-                logger.error(e)
                 messages.add_message(request, messages.WARNING, f"{e}")
     new_zone_form = CreateZoneForm()
     zone_instances = get_zones()
@@ -248,7 +243,12 @@ def zones(request):
 def delete_zone_view(request, id):
     zone = get_zone(id)
     delete_zone(zone_name=zone.name)
-    addActivityLog(ActionType.ZONE_DELETE, f"{zone.name} - {zone.account}", request.user)
+    details_fields = {
+        "name": zone.name,
+        "account": zone.account
+    }
+    details = mergeActivityDetails(getFieldDetails(details_fields))
+    addActivityLog(ActionType.ZONE_DELETE, f"{zone.name} - {zone.account}", details, request.user)
     return redirect('pdaAdmin:zones')
 
 @login_required
@@ -281,7 +281,16 @@ def zone(request, id):
                 service.update_zone(zone_name=zone_name, account=str(updated_zone.account.id),
                                     nameservers=updated_zone.nameservers,
                                     dnssec=updated_zone.dnssec)
-                addActivityLog(ActionType.ZONE_UPDATE, f"{zone_name} - {updated_zone.account}", request.user)
+                details_fields = {
+                    "name": zone.name,
+                    "updated_name": updated_zone.name,
+                    "account": zone.account,
+                    "updated_account": updated_zone.account,
+                    "dnssec": zone.dnssec,
+                    "updated_dnssec": updated_zone.dnssec
+                }
+                details = mergeActivityDetails(getFieldDetails(details_fields))
+                addActivityLog(ActionType.ZONE_UPDATE, f"{zone_name} - {updated_zone.account}", details, request.user)
                 zzone = updated_zone
             except Exception as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
@@ -304,13 +313,25 @@ def zone(request, id):
             )
             try:
                 updated = recordUpdateHelper(zzone.name, oldRecord, newRecord)
-                addActivityLog(ActionType.RECORD_UPDATE, f"({newRecord.record_type}) {newRecord.name} - {zzone.name} updated", request.user)
+                details_fields = {
+                    "zone": zzone.name,
+                    "old_name": oldRecord.name,
+                    "new_name": newRecord.name,
+                    "old_type": oldRecord.record_type,
+                    "new_type": newRecord.record_type,
+                    "old_content": oldRecord.content,
+                    "new_content": newRecord.content,
+                    "old_ttl": oldRecord.ttl,
+                    "new_ttl": newRecord.ttl,
+                }
+                details = mergeActivityDetails(getFieldDetails(details_fields))
+                addActivityLog(ActionType.RECORD_UPDATE, f"({newRecord.record_type}) {newRecord.name} - {zzone.name} updated", details, request.user)
                 messages.add_message(request, messages.SUCCESS, f"{updated}")
             except Exception as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
         if form_type == "recordCreate":
             recordCreate = Record(
-                zone=zone,
+                zone=zzone,
                 name=request.POST.get('name'),
                 record_type=request.POST.get('record_type'),
                 content=request.POST.get('content'),
@@ -319,15 +340,22 @@ def zone(request, id):
             )
             new_record_name = recordCreate.name
             if recordCreate.name == "@":
-                new_record_name = zone.name
+                new_record_name = zzone.name
             try:
                 recordCreate.full_clean()
             except ValidationError as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
-
             try:
-                addActivityLog(ActionType.RECORD_CREATE, f"({recordCreate.record_type}) {recordCreate.name} - {zzone.name} created", request.user)
-                create_record(zone, new_record_name, recordCreate.record_type, recordCreate.content, recordCreate.ttl)
+                details_fields = {
+                    "zone": zzone.name,
+                    "name": recordCreate.name,
+                    "type": recordCreate.record_type,
+                    "content": recordCreate.content,
+                    "ttl": recordCreate.ttl,
+                }
+                details = mergeActivityDetails(getFieldDetails(details_fields))
+                addActivityLog(ActionType.RECORD_CREATE, f"({recordCreate.record_type}) {recordCreate.name} - {zzone.name} created", details, request.user)
+                create_record(zzone, new_record_name, recordCreate.record_type, recordCreate.content, recordCreate.ttl)
             except Exception as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
 
@@ -354,8 +382,16 @@ def templates(request):
     if request.method == "POST":
         zone_template_form = ZoneTemplateForm(request.POST)
         if zone_template_form.is_valid():
-            zone_template_form.save()
-            addActivityLog(ActionType.TEMPLATE_CREATE, f"{zone_template_form.data['name']}", request.user)
+            new_template = zone_template_form.save()
+
+            details_fields = {
+                "name": new_template.name,
+                "kind": new_template.kind,
+                "nameservers": new_template.nameservers,
+            }
+            details = mergeActivityDetails(getFieldDetails(details_fields))
+            addActivityLog(ActionType.TEMPLATE_CREATE, f"{zone_template_form.data['name']}", details, request.user)
+
     else:
         zone_template_form = ZoneTemplateForm()
     zone_templates = ZoneTemplate.objects.all()
@@ -384,11 +420,30 @@ def edit_template(request, id):
             record_template = record_template_form.save(commit=False)
             record_template.zone_template = template
             record_template.save()
-            addActivityLog(ActionType.TEMPLATE_RECORD_CREATE, f"{record_template_form.data['name']}", request.user)
+
+            details_fields = {
+                "template": template.name,
+                "name": record_template.name,
+                "type": record_template.type,
+                "content": record_template.content,
+                "ttl": record_template.ttl,
+            }
+            details = mergeActivityDetails(getFieldDetails(details_fields))
+            addActivityLog(ActionType.TEMPLATE_RECORD_CREATE, f"({record_template.record_type}) {record_template.name} - {template.name} created", details, request.user)
+
             return redirect("pdaAdmin:edit_template", id)
         if zone_template_form.is_valid():
-            zone_template_form.save()
-            addActivityLog(ActionType.TEMPLATE_UPDATE, f"{zone_template_form.data['name']}", request.user)
+            new_template = zone_template_form.save()
+            details_fields = {
+                "old_name": template.name,
+                "new_name": new_template.name,
+                "old_kind": template.kind,
+                "new_kind": new_template.kind,
+                "old_nameservers": template.nameservers,
+                "new_nameservers": new_template.nameservers,
+            }
+            details = mergeActivityDetails(getFieldDetails(details_fields))
+            addActivityLog(ActionType.TEMPLATE_UPDATE, f"{zone_template_form.data['name']}", details, request.user)
             return redirect("pdaAdmin:edit_template", id)
 
     else:
@@ -425,8 +480,17 @@ def users(request):
     if request.method == "POST":
         user_form = UserForm(request.POST)
         if user_form.is_valid():
-            user_form.save()  # creates and saves a new Account
-            addActivityLog(ActionType.USER_CREATE, f"{user_form.data['username']}", request.user)
+            new_user = user_form.save()  # creates and saves a new Account
+            details_fields = {
+                "username": new_user.username,
+                "email": new_user.email,
+                "first_name": new_user.first_name,
+                "last_name": new_user.last_name,
+                "is_superuser": new_user.is_superuser,
+                "is_active": new_user.is_active,
+            }
+            details = mergeActivityDetails(getFieldDetails(details_fields))
+            addActivityLog(ActionType.USER_CREATE, f"{new_user.username} ({new_user.email})", details, request.user)
     else:
         user_form = UserForm()
     users = CustomUser.objects.all()
@@ -452,20 +516,57 @@ def user(request, id):
         if form_type == 'user':
             user_form = UserForm(request.POST, instance=_user)
             if user_form.is_valid():
-                user_form.save()  # creates and saves a new Account
-                addActivityLog(ActionType.USER_CREATE, f"{user_form.data['username']}", request.user)
+                updated_user = user_form.save()  # creates and saves a new Account
+                details_fields = {
+                    "username": updated_user.username,
+                    "email": updated_user.email,
+                    "first_name": updated_user.first_name,
+                    "last_name": updated_user.last_name,
+                    "is_superuser": updated_user.is_superuser,
+                    "is_active": updated_user.is_active,
+                }
+                details = mergeActivityDetails(getFieldDetails(details_fields))
+                addActivityLog(ActionType.USER_CREATE, f"{updated_user.username} ({updated_user.email})", details, request.user)
                 return redirect("pdaAdmin:user", id)
         if form_type == 'permissions':
             user_permission_form = UserPermissionsForm(request.POST, instance=_user)
             if user_permission_form.is_valid():
-                user_permission_form.save()  # creates and saves a new Account
-                addActivityLog(ActionType.USER_UPDATE, f"Permissions updated for {_user.username}", request.user)
+                old_perms_raw = user_permission_form.initial.get('user_permissions', [])
+                old_perms = {p.id if hasattr(p, 'id') else p for p in old_perms_raw}
+
+                new_perms_qs = user_permission_form.cleaned_data.get('user_permissions', [])
+                new_perms = {p.id for p in new_perms_qs}
+
+                updated_user = user_permission_form.save()
+
+                permission_details = getPermissionDetails(new_perms, old_perms)
+                details_fields_new = {
+                    "is_superuser": updated_user.is_superuser,
+                    "is_active": updated_user.is_active,
+                }
+                details_fields_old = {
+                    "is_superuser": user_permission_form.initial.get("is_superuser"),
+                    "is_active": user_permission_form.initial.get("is_active"),
+                }
+                field_details = getFieldDetails(details_fields_new, details_fields_old)
+                details = mergeActivityDetails(field_details, permission_details)
+
+                addActivityLog(ActionType.USER_UPDATE, f"Permissions updated for {updated_user.username}", details, request.user)
                 return redirect("pdaAdmin:user", id)
         if form_type == 'groups':
             user_groups_form = UserGroupsForm(request.POST, instance=_user)
             if user_groups_form.is_valid():
-                user_groups_form.save()  # creates and saves a new Account
-                addActivityLog(ActionType.USER_UPDATE, f"Groups updated for {_user.username}", request.user)
+                old_groups_raw = user_groups_form.initial.get('groups', [])
+                old_groups = {g.id if hasattr(g, 'id') else g for g in old_groups_raw}
+
+                new_groups_qs = user_groups_form.cleaned_data.get('groups', [])
+                new_groups = {g.id for g in new_groups_qs}
+
+                updated_user = user_groups_form.save()
+
+                group_details = getGroupDetails(new_groups, old_groups)
+                details = mergeActivityDetails(group_details)
+                addActivityLog(ActionType.USER_UPDATE, f"Groups updated for {updated_user.username}", details, request.user)
                 return redirect("pdaAdmin:user", id)
     else:
         user_form = UserForm(instance=_user)
@@ -511,8 +612,13 @@ def groups(request):
     if request.method == "POST":
         group_form = GroupForm(request.POST)
         if group_form.is_valid():
-            group_form.save()  # creates and saves a new Account
-            addActivityLog(ActionType.GROUP_CREATE, f"{group_form.data['name']}", request.user)
+            new_group = group_form.save()  # creates and saves a new Account
+            details_fields = {
+                "name": new_group.name,
+            }
+            details = mergeActivityDetails(getFieldDetails(details_fields))
+
+            addActivityLog(ActionType.GROUP_CREATE, f"{group_form.data['name']}", details, request.user)
     else:
         group_form = GroupForm()
     _groups = Group.objects.all()
@@ -537,14 +643,29 @@ def group(request, id):
         if form_type == 'group':
             group_form = GroupForm(request.POST, instance=_group)
             if group_form.is_valid():
-                group_form.save()
-                addActivityLog(ActionType.GROUP_UPDATE, f"{group_form.data['username']}", request.user)
+                new_group = group_form.save()
+                details_fields = {
+                    "old_name": _group.name,
+                    "new_name": new_group.name,
+                }
+                details = mergeActivityDetails(getFieldDetails(details_fields))
+                addActivityLog(ActionType.GROUP_UPDATE, f"{_group.name}", details, request.user)
                 return redirect("pdaAdmin:group", id)
         if form_type == 'permissions':
             group_permission_form = GroupPermissionsForm(request.POST, instance=_group)
             if group_permission_form.is_valid():
+                old_perms_raw = group_permission_form.initial.get('permissions', [])
+                old_perms = {p.id if hasattr(p, 'id') else p for p in old_perms_raw}
+
+                new_perms_qs = group_permission_form.cleaned_data.get('permissions', [])
+                new_perms = {p.id for p in new_perms_qs}
+
                 group_permission_form.save()
-                addActivityLog(ActionType.GROUP_UPDATE, f"Permissions updated for {_group.name}", request.user)
+
+                permission_details = getPermissionDetails(new_perms, old_perms)
+                details = mergeActivityDetails(permission_details)
+
+                addActivityLog(ActionType.GROUP_UPDATE, f"Permissions updated for {_group.name}", details, request.user)
                 return redirect("pdaAdmin:group", id)
     else:
         group_form = GroupForm(instance=_group)

@@ -7,7 +7,7 @@ from django.views.decorators.http import require_POST
 from rest_framework.exceptions import ValidationError
 from django.db.models import Q
 from apps.api.accounts.models import Account
-from apps.api.activity.helpers import addActivityLog
+from apps.api.activity.helpers import addActivityLog, mergeActivityDetails, getFieldDetails
 from apps.api.activity.models.activity import ActionType
 from apps.api.dns.helpers import recordUpdateHelper, get_zones, get_zone, get_records, delete_record
 from apps.api.dns.models import Zone, Record
@@ -119,5 +119,13 @@ def delete_record_view(request, id):
     records = get_records(zone_name)
     record = records.filter(record_type=request.POST.get('record_type'), name=request.POST.get('name'), content=request.POST.get('content')).first()
     delete_record(zone_name=zone.name, record=record)
-    addActivityLog(ActionType.RECORD_DELETE, f"{zone.name} - {record.name}", request.user)
+    details_fields = {
+        "zone": zone.name,
+        "name": record.name,
+        "type": record.record_type,
+        "content": record.content,
+        "ttl": record.ttl,
+    }
+    details = mergeActivityDetails(getFieldDetails(details_fields))
+    addActivityLog(ActionType.RECORD_DELETE, f"({record.record_type}) {record.name} - {zone.name} deleted", details, request.user)
     return redirect('pdadns:domain', id)
