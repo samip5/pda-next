@@ -9,7 +9,7 @@ from django.db.models import Q
 from apps.api.accounts.models import Account
 from apps.api.activity.helpers import addActivityLog, mergeActivityDetails, getFieldDetails
 from apps.api.activity.models.activity import ActionType
-from apps.api.dns.helpers import recordUpdateHelper, get_zones, get_zone, get_records, delete_record
+from apps.api.dns.helpers import recordUpdateHelper, get_zones, get_zone, get_records, delete_record, create_record
 from apps.api.dns.models import Zone, Record
 from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
@@ -48,6 +48,7 @@ def domain(request, id):
     zone = get_zone(zone_name)
 
     if request.method == "POST":
+
         if request.POST.get('formName') == "createForm":
             recordCreate = Record(
                 zone=zone,
@@ -66,8 +67,17 @@ def domain(request, id):
                 messages.add_message(request, messages.WARNING, f"{e}")
 
             try:
-                addActivityLog(ActionType.RECORD_CREATE, f"{zone.name} - {recordCreate.name}", request.user)
-                service.create_record(zone.name, new_record_name, recordCreate.record_type, recordCreate.content, recordCreate.ttl)
+                details_fields = {
+                    "zone": zone.name,
+                    "name": recordCreate.name,
+                    "type": recordCreate.record_type,
+                    "content": recordCreate.content,
+                    "ttl": recordCreate.ttl,
+                }
+                details = mergeActivityDetails(getFieldDetails(details_fields))
+
+                addActivityLog(ActionType.RECORD_CREATE, f"({recordCreate.record_type}) {recordCreate.name} - {zone.name} created", details, request.user)
+                create_record(zone, new_record_name, recordCreate.record_type, recordCreate.content, recordCreate.ttl)
             except Exception as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
         elif request.POST.get('formName') == "editForm":
@@ -89,7 +99,20 @@ def domain(request, id):
             )
             try:
                 updated = recordUpdateHelper(zone.name, oldRecord, newRecord)
-                addActivityLog(ActionType.RECORD_UPDATE, f"{zone.name} - {newRecord.name}", request.user)
+                details_fields = {
+                    "zone": zone.name,
+                    "old_name": oldRecord.name,
+                    "new_name": newRecord.name,
+                    "old_type": oldRecord.record_type,
+                    "new_type": newRecord.record_type,
+                    "old_content": oldRecord.content,
+                    "new_content": newRecord.content,
+                    "old_ttl": oldRecord.ttl,
+                    "new_ttl": newRecord.ttl,
+                }
+                details = mergeActivityDetails(getFieldDetails(details_fields))
+
+                addActivityLog(ActionType.RECORD_UPDATE, f"({newRecord.record_type}) {newRecord.name} - {zone.name} updated", details, request.user)
                 messages.add_message(request, messages.SUCCESS, f"{updated}")
             except Exception as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
