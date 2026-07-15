@@ -32,3 +32,22 @@ html {
 .nav-seperator {
     @apply border-b-4 border-neutral-600
 }
+.alert {
+  @apply p-4 my-2 rounded-lg border flex items-center shadow-md transition-all ease-in-out duration-300 w-full;
+}
+
+.alert-success {
+  @apply bg-green-800/70 border-green-700;
+}
+
+.alert-error, .alert-danger {
+  @apply bg-red-800/70 border-red-700;
+}
+
+.alert-warning {
+  @apply bg-yellow-800/70 border-yellow-700;
+}
+
+.alert-info {
+  @apply bg-sky-800/70 border-sky-700;
+}
