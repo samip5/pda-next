@@ -50,8 +50,55 @@
         {% for group in groups %}
         <tr>
             <td><a class="text-white" href="/admin/groups/{{ group.id }}">{{ group.name }}</a></td>
-            <td>
-                <span class="btn btn-danger"><i class="fa fa-trash-o"></i></span>
+            <td class="flex flex-row items-center gap-2">
+                {% if perms.pdaAdmin.group_delete %}
+                <div x-data="{ open: false }">
+                    <!-- Button -->
+                    <button
+                        @click="open = true"
+                        class="btn btn-danger">
+                        <i class="fa fa-trash-o"></i>
+                    </button>
+
+                    <!-- Backdrop -->
+                    <div
+                        x-show="open"
+                        x-transition.opacity
+                        @click="open = false"
+                        class="fixed inset-0 bg-black/50">
+                    </div>
+
+                    <!-- Modal -->
+                    <div
+                        x-show="open"
+                        x-transition
+                        class="fixed inset-0 flex items-center justify-center p-4"
+                        @keydown.escape.window="open = false">
+
+                        <div class="bg-neutral-800 rounded-lg shadow p-6 w-full max-w-md"
+                             @click.stop>
+
+                            <h2>Delete Group</h2>
+                            <form class="pda-form" action="{% url 'pdaAdmin:delete_group' group.id %}" method="post">
+                                {% csrf_token %}
+                                <input id="name" name="name" type="hidden" value="{{ group.name }}">
+                                <p class="text-white text-xl">You are about to delete the group
+                                    <br/><span class="text-xl text-danger bg-neutral-900 p-2 rounded-lg">
+                                    {{ group.name }}</span>
+                                    are you sure you want to delete the group?</p>
+                                <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                            </form>
+
+                            <button
+                                @click="open = false"
+                                class="btn btn-secondary">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 <a class="btn btn-warning" href="/admin/groups/{{ group.id }}"><i class="fa fa-pencil-square"></i></a>
             </td>
         </tr>

@@ -116,6 +116,7 @@ THIRD_PARTY_APPS = [
     "allauth",  # allauth account/registration management
     "allauth.account",
     "allauth.socialaccount",
+    "allauth.socialaccount.providers.openid_connect",
     "django_otp",
     "django_otp.plugins.otp_totp",
     "django_otp.plugins.otp_static",

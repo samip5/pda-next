@@ -166,7 +166,53 @@
                 {% endfor %}
             </td>
             <td class="flex flex-row items-center gap-2">
-                <span class="btn btn-danger"><i class="fa fa-trash-o"></i></span>
+                {% if perms.pdaAdmin.accounts_delete %}
+                <div x-data="{ open: false }">
+                    <!-- Button -->
+                    <button
+                        @click="open = true"
+                        class="btn btn-danger">
+                        <i class="fa fa-trash-o"></i>
+                    </button>
+
+                    <!-- Backdrop -->
+                    <div
+                        x-show="open"
+                        x-transition.opacity
+                        @click="open = false"
+                        class="fixed inset-0 bg-black/50">
+                    </div>
+
+                    <!-- Modal -->
+                    <div
+                        x-show="open"
+                        x-transition
+                        class="fixed inset-0 flex items-center justify-center p-4"
+                        @keydown.escape.window="open = false">
+
+                        <div class="bg-neutral-800 rounded-lg shadow p-6 w-full max-w-md"
+                             @click.stop>
+
+                            <h2>Delete Account</h2>
+                            <form class="pda-form" action="{% url 'pdaAdmin:delete_account' account.id %}" method="post">
+                                {% csrf_token %}
+                                <input id="name" name="name" type="hidden" value="{{ account.name }}">
+                                <p class="text-white text-xl">You are about to delete the account
+                                    <br/><span class="text-xl text-danger bg-neutral-900 p-2 rounded-lg">
+                                    {{ account.name }}</span>
+                                    are you sure you want to delete the account?</p>
+                                <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                            </form>
+
+                            <button
+                                @click="open = false"
+                                class="btn btn-secondary">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
                 <a href="/admin/accounts/{{ account.id }}"><span class="btn btn-warning"><i class="fa fa-pencil-square"></i></span></a>
             </td>
         </tr>

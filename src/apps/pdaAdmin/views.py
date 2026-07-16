@@ -103,6 +103,22 @@ def settings(request):
     )
 
 @login_required
+@permission_required('pdaAdmin.accounts_delete', raise_exception=True)
+@require_POST
+def delete_account_view(request, id):
+    account_instance = Account.objects.filter(id=id).first()
+    account_instance.delete()
+    details_fields = {
+        "name": account_instance.name,
+        "mail": account_instance.mail,
+        "owner": account_instance.owner
+    }
+    details = mergeActivityDetails(getFieldDetails(details_fields))
+    addActivityLog(ActionType.ACCOUNT_DELETE, f"{account_instance.name}", details, request.user)
+
+    return redirect('pdaAdmin:accounts')
+
+@login_required
 @permission_required('pdaAdmin.accounts_view', raise_exception=True)
 def accounts(request):
     if request.method == "POST":
@@ -239,6 +255,7 @@ def zones(request):
     )
 
 @login_required
+@permission_required('pdaAdmin.zones_delete', raise_exception=True)
 @require_POST
 def delete_zone_view(request, id):
     zone = get_zone(id)
@@ -375,9 +392,22 @@ def zone(request, id):
         },
     )
 
+@login_required
+@permission_required('pdaAdmin.templates_delete', raise_exception=True)
+@require_POST
+def delete_template_view(request, id):
+    template_instance = ZoneTemplate.objects.filter(id=id).first()
+    template_instance.delete()
+    details_fields = {
+        "name": template_instance.name,
+    }
+    details = mergeActivityDetails(getFieldDetails(details_fields))
+    addActivityLog(ActionType.TEMPLATE_DELETE, f"{template_instance.name}", details, request.user)
+
+    return redirect('pdaAdmin:templates')
 
 @login_required
-@permission_required('pdaAdmin.dashboard', raise_exception=True)
+@permission_required('pdaAdmin.templates_view', raise_exception=True)
 def templates(request):
     if request.method == "POST":
         zone_template_form = ZoneTemplateForm(request.POST)
@@ -473,6 +503,30 @@ def clear_cache(request):
         addActivityLog(ActionType.CLEAR_CACHE, f"Clearing Zone and Record Cache's", "Cache Cleared", request.user)
         return redirect('pdaAdmin:dashboard')
     return redirect('pdaAdmin:dashboard')
+
+@login_required
+@permission_required('pdaAdmin.users_delete', raise_exception=True)
+@require_POST
+def delete_user_view(request, id):
+    user_instance = CustomUser.objects.filter(id=id).first()
+
+    if user_instance.id == 1:
+        messages.add_message(request, messages.ERROR, f"Cannot Delete system user")
+    elif user_instance.id == request.user.id:
+        messages.add_message(request, messages.ERROR, f"Cannot Delete yourself")
+    else:
+        user_instance = CustomUser.objects.filter(id=id).first()
+        user_instance.delete()
+        details_fields = {
+            "username": user_instance.username,
+            "email": user_instance.email,
+            "first_name": user_instance.first_name,
+            "last_name": user_instance.last_name,
+            "is_superuser": user_instance.is_superuser,
+        }
+        details = mergeActivityDetails(getFieldDetails(details_fields))
+        addActivityLog(ActionType.USER_DELETE, f"{user_instance.username} ({user_instance.email})", details, request.user)
+    return redirect('pdaAdmin:users')
 
 @login_required
 @permission_required('pdaAdmin.users_view', raise_exception=True)
@@ -605,6 +659,20 @@ def user(request, id):
             "user_current_permissions":user_allowed_permissions
         },
     )
+
+@login_required
+@permission_required('pdaAdmin.groups_delete', raise_exception=True)
+@require_POST
+def delete_group_view(request, id):
+    group_instance = Group.objects.filter(id=id).first()
+    group_instance.delete()
+    details_fields = {
+        "name": group_instance.name,
+    }
+    details = mergeActivityDetails(getFieldDetails(details_fields))
+    addActivityLog(ActionType.GROUP_DELETE, f"{group_instance.name}", details, request.user)
+
+    return redirect('pdaAdmin:groups')
 
 @login_required
 @permission_required('pdaAdmin.groups_view', raise_exception=True)

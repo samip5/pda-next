@@ -22,6 +22,17 @@
             <a href="{% url 'account_signup' %}" class="text-sky-600">{% translate "Sign Up" %}</a>
         </p>
     </form>
+    {% get_providers as socialaccount_providers %}
+    {% if socialaccount_providers %}
+    <hr>
+    <div class="flex flex-col gap-2 my-2">
+        {% for provider in socialaccount_providers %}
+            <a class="btn btn-secondary" href="{% provider_login_url provider.id process="login" %}">
+                {% translate "Continue with" %} {{ provider.name }}
+            </a>
+        {% endfor %}
+    </div>
+    {% endif %}
     </div>
 </div>
 {% endblock %}

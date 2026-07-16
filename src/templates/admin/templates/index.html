@@ -4,7 +4,7 @@
 {% block app %}
 <section class="bg-neutral-800 m-2 p-2 rounded-lg shadow">
     <h1 class="text-2xl font-semibold mb-5">Templates</h1>
-    {% if perms.api_dns.add_zone %}
+    {% if perms.pdaAdmin.templates_create %}
         <div x-data="{ open: false }">
             <!-- Button -->
             <button
@@ -74,16 +74,60 @@
             <td><a class="text-white" href="/admin/templates/{{ template.id }}">{{ template.name }}</a></td>
             <td>{{ template.kind }}</td>
             <td class="flex flex-row gap-2">
-                {% if perms.api_dns.change_zone %}
+                {% if perms.pdaAdmin.templates_edit %}
                 <a href="/admin/templates/{{ template.id }}" class="btn btn-warning py-1 px-2">
                     <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
                 </a>
                 {% endif %}
-                {% if perms.api_dns.delete_zone %}
-                <button class="btn btn-danger py-1 px-2">
-                    <span class="pg-icon"><i class="fa fa-trash-o"></i></span>
-                </button>
+
+                {% if perms.pdaAdmin.templates_delete %}
+                <div x-data="{ open: false }">
+                    <!-- Button -->
+                    <button
+                        @click="open = true"
+                        class="btn btn-danger">
+                        <i class="fa fa-trash-o"></i>
+                    </button>
+
+                    <!-- Backdrop -->
+                    <div
+                        x-show="open"
+                        x-transition.opacity
+                        @click="open = false"
+                        class="fixed inset-0 bg-black/50">
+                    </div>
+
+                    <!-- Modal -->
+                    <div
+                        x-show="open"
+                        x-transition
+                        class="fixed inset-0 flex items-center justify-center p-4"
+                        @keydown.escape.window="open = false">
+
+                        <div class="bg-neutral-800 rounded-lg shadow p-6 w-full max-w-md"
+                             @click.stop>
+
+                            <h2>Delete Template</h2>
+                            <form class="pda-form" action="{% url 'pdaAdmin:delete_template' template.id %}" method="post">
+                                {% csrf_token %}
+                                <input id="name" name="name" type="hidden" value="{{ template.name }}">
+                                <p class="text-white text-xl">You are about to delete the template
+                                    <br/><span class="text-xl text-danger bg-neutral-900 p-2 rounded-lg">
+                                    {{ template.name }}</span>
+                                    are you sure you want to delete the template?</p>
+                                <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                            </form>
+
+                            <button
+                                @click="open = false"
+                                class="btn btn-secondary">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 {% endif %}
+
             </td>
         </tr>
         {% endfor %}

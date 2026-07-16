@@ -8,11 +8,11 @@
     <p class="mb-3">{% translate "Please enter a valid authentication token to disable two-factor authentication:" %}</p>
     <div class="">
       <div class="w-1/3">
-        <form method="post">
+        <form class="pda-form" method="post">
           {% csrf_token %}
-          {% render_text_input form.token %}
+          {% render_text_input form.otp_token %}
           <div class="mt-2">
-            <input class="btn btn-info" type="submit" value="{% translate "Disable Two-Factor" %}">
+            <input class="btn btn-primary" type="submit" value="{% translate "Disable Two-Factor" %}">
           </div>
         </form>
       </div>
