@@ -5,8 +5,8 @@
 import os
 
 env = os.getenv('PDA_ENV', os.getenv('PDA_ENV_TYPE', 'production')).lower()
-if os.getenv('PDA_DEBUG', 'False').lower() in ('1', 'true', 'yes'):
-    env = 'development'
+#if os.getenv('PDA_DEBUG', 'False').lower() in ('1', 'true', 'yes'):
+#    env = 'development'
 
 if env in ('dev', 'development'):
     from config.settings.dev import *  # noqa: F401,F403

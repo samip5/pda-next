@@ -89,6 +89,8 @@ def settings(request):
             set_setting('record_types', setting_record_types, 'json')
     view_settings = []
     view_settings.append({"name": "disable_landing_page", "value": f"{get_setting('disable_landing_page')}"})
+    view_settings.append({"name": "db_path", "value": f"{get_setting('db_path')}"})
+
     return render(
         request,
         "admin/settings.html",
