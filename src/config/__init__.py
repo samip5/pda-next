@@ -135,7 +135,7 @@ class AppSettings(BaseSettings):
     auth_ldap_user_search_base: str = ''
     auth_ldap_user_search_filter: str = ''
     ldap_enable: bool = False
-    record_types: ClassVar[dict[str, bool]] = {
+    record_types: dict[str, bool] = {
         'A': True,
         'AAAA': True,
         'AFSDB': False,
@@ -173,7 +173,7 @@ class AppSettings(BaseSettings):
         'TXT': True,
         'URI': False
     }
-    reverse_record_types: ClassVar[dict[str, bool]] = {
+    reverse_record_types: dict[str, bool] = {
         'A': False,
         'AAAA': False,
         'AFSDB': False,

@@ -58,18 +58,17 @@ def recordUpdateHelper(zone_name: str, oldRecord: Record, newRecord: Record):
     return Exception("Unable to update record(s)")
 
 
-zone_account = None
 
 def get_zones() -> list[Any] | QuerySet[Zone, Zone]:
     try:
         powerdns_zones = service.get_zones("localhost")
         for zone in powerdns_zones:
-            zone_account = None
             zone['nameservers'] = ["ns1.fuckmylife.fi"]
 
             if zone.get('nameservers') == '':
                 zone['nameservers'] = ["ns1.kapsi.fi"]
 
+            zone_account = None
             if _is_valid_uuid(zone.get('account', '')):
                 zone_account = Account.objects.filter(id=zone.get('account')).first()
 
@@ -103,7 +102,7 @@ def get_zone(zone_name: str) -> Zone:
 
     try:
         zone = service.get_zone(zone_name)
-
+        zone_account = None
         if _is_valid_uuid(zone.get('account', '')):
            zone_account = Account.objects.filter(id=zone.get('account')).first()
 

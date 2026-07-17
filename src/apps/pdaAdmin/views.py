@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import User, Group
@@ -289,7 +290,12 @@ def zone(request, id):
     if request.method == "POST":
         form_type = request.POST.get('form_type')
         if form_type == 'zone':
-            zone_account = Account.objects.filter(id=request.POST.get('account', '')).first()
+            zone_account = None
+            zone_account_id = None
+            if _is_valid_uuid(request.POST.get('account', '')):
+                zone_account = Account.objects.filter(id=request.POST.get('account', '')).first()
+                zone_account_id = str(zone_account.id)
+
             updated_zone = Zone(
                 name=zzone.name,
                 account=zone_account,
@@ -297,15 +303,15 @@ def zone(request, id):
                 dnssec=zzone.dnssec
             )
             try:
-                service.update_zone(zone_name=zone_name, account=str(updated_zone.account.id),
+                service.update_zone(zone_name=zone_name, account=zone_account_id,
                                     nameservers=updated_zone.nameservers,
                                     dnssec=updated_zone.dnssec)
                 details_fields = {
-                    "name": zone.name,
+                    "name": zzone.name,
                     "updated_name": updated_zone.name,
-                    "account": zone.account,
+                    "account": zzone.account,
                     "updated_account": updated_zone.account,
-                    "dnssec": zone.dnssec,
+                    "dnssec": zzone.dnssec,
                     "updated_dnssec": updated_zone.dnssec
                 }
                 details = mergeActivityDetails(getFieldDetails(details_fields))
@@ -771,3 +777,10 @@ def group(request, id):
             "group_current_permissions": group_allowed_permissions
         },
     )
+
+def _is_valid_uuid(value):
+    try:
+        uuid_obj = uuid.UUID(str(value))
+        return True
+    except ValueError:
+        return False
