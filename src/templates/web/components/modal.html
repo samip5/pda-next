@@ -1,0 +1,44 @@
+{# Shared modal shell. Rendered by the {% modal %} template tag — don't include directly. #}
+<div x-data="{ open: false }" id="{{ modal_id }}-wrapper">
+
+    {# Trigger: whatever was passed via {% modaltrigger %}, or the default button #}
+    {{ trigger_html }}
+
+    {# Backdrop #}
+    <div
+        x-show="open"
+        x-transition.opacity
+        @click="open = false"
+        x-cloak
+        class="fixed inset-0 bg-black/50 z-60">
+    </div>
+
+    {# Modal #}
+    <div
+        x-show="open"
+        x-transition
+        x-cloak
+        class="fixed inset-0 flex items-center justify-center p-4 z-90"
+        @keydown.escape.window="open = false"
+        @modal-open-{{ modal_id }}.window="open = true"
+        @modal-close-{{ modal_id }}.window="open = false">
+
+        <div class="bg-neutral-800 rounded-lg shadow w-full {{ size_class }} max-h-[90vh] flex flex-col" @click.stop>
+
+            {% if title %}
+                <div class="p-6 pb-0 shrink-0">
+                    <h2>{{ title }}</h2>
+                </div>
+            {% endif %}
+
+            <div class="p-6 overflow-y-auto grow">
+                {{ body_html }}
+            </div>
+
+            <div class="modal-footer p-6 pt-4 shrink-0 border-t border-white/10">
+                {{ footer_html }}
+            </div>
+
+        </div>
+    </div>
+</div>

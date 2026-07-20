@@ -28,7 +28,7 @@ def domains(request):
 
     return render(
         request,
-        "dns/domains.html",
+        "web/app/home.html",
         {
             "active_tab": "domains",
             "page_title": _("Domains"),
@@ -121,7 +121,7 @@ def domain(request, id):
 
     return render(
         request,
-        "dns/domain.html",
+        "web/app/zone_records.html",
         {
             "active_tab": "domain",
             "page_title": _("Domain"),

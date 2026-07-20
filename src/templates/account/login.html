@@ -1,0 +1,38 @@
+{% extends "web/base.html" %}
+{% load i18n %}
+{% load static %}
+{% load socialaccount %}
+{% load form_tags %}
+{% block body %}
+<div class="h-screen bg-no-repeat bg-cover bg-fixed bg-bottom flex flex-col items-center justify-center gap-4" style="background-image: url('{% static 'images/login.jpg' %}');" loading="lazy">
+    <div class="bg-neutral-800 md:rounded-lg p-4 m-16 w-full md:w-2/6 xl:w-1/6 border-1 border-neutral-700">
+    <h4 class="text-white text-center">{% translate "Sign In" %}</h4>
+    <form method="post" role="form" class="pda-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% render_text_input form.login %}
+        {% render_text_input form.password %}
+        <input class="btn btn-primary my-4" type="submit" value="{% translate "Sign In" %}">
+        <a class="ml-4 text-sky-600 text-sm" href="{% url 'account_reset_password' %}">
+            {% translate "Forgot password?" %}
+        </a>
+        <hr>
+        <p class="mt-4 text-sm text-center">
+            {% translate "Don't have an account?" %}
+            <a href="{% url 'account_signup' %}" class="text-sky-600">{% translate "Sign Up" %}</a>
+        </p>
+    </form>
+    {% get_providers as socialaccount_providers %}
+    {% if socialaccount_providers %}
+    <div class="flex flex-col gap-2 mt-4 mb-2">
+        {% for provider in socialaccount_providers %}
+            <a class="btn btn-secondary" href="{% provider_login_url provider.id process="login" %}">
+                {% translate "Continue with" %} {{ provider.name }}
+            </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}
+{% block footer %}{% endblock %}

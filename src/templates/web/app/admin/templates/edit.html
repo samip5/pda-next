@@ -1,0 +1,123 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% load modal_tags %}
+{% block app %}
+<section class="bg-neutral-800 border-1 border-neutral-700 m-2 p-4 rounded-lg shadow">
+  <a class="btn btn-secondary" href="/admin/templates/"><span class="pg-icon"><i class="fa fa-arrow-left"></i></span> Back </a>
+
+  <h1 class="text-2xl font-semibold mt-4 mb-5">Template Edit</h1>
+    <div class="flex flex-row">
+        {% if perms.pda.admin_zones_edit %}
+        <div class="w-1/3">
+            <form method="post" class="pda-form">
+                {% csrf_token %}
+
+                <div class="pda-input-group">
+                    {{ zone_template_form.name.label_tag }}
+                    {{ zone_template_form.name }}
+                    {{ zone_template_form.name.errors }}
+                </div>
+                <div class="pda-input-group">
+                    {{ zone_template_form.kind.label_tag }}
+                    {{ zone_template_form.kind }}
+                    {{ zone_template_form.kind.errors }}
+                </div>
+
+                <div class="pda-input-group">
+                    {{ zone_template_form.nameservers.label_tag }}
+                    {{ zone_template_form.nameservers }}
+                    {{ zone_template_form.nameservers.errors }}
+                </div>
+
+                <input class="btn btn-primary w-full" type="submit" value="{% translate 'Save' %}">
+            </form>
+            <h4 class="text-2xl font-semibold my-5">Add Record</h4>
+            <form method="post" class="pda-form">
+                {% csrf_token %}
+
+                <div class="pda-input-group">
+                    {{ record_template_form.name.label_tag }}
+                    {{ record_template_form.name }}
+                    {{ record_template_form.name.errors }}
+                </div>
+
+                <div class="pda-input-group">
+                    {{ record_template_form.record_type.label_tag }}
+                    {{ record_template_form.record_type }}
+                    {{ record_template_form.record_type.errors }}
+                </div>
+
+                <div class="pda-input-group">
+                    {{ record_template_form.ttl.label_tag }}
+                    {{ record_template_form.ttl }}
+                    {{ record_template_form.ttl.errors }}
+                </div>
+
+                <div class="pda-input-group">
+                    {{ record_template_form.content.label_tag }}
+                    {{ record_template_form.content }}
+                    {{ record_template_form.content.errors }}
+                </div>
+
+                <input class="btn btn-primary w-full" type="submit" value="{% translate 'Save' %}">
+            </form>
+        </div>
+        {% endif %}
+        <div class="w-full px-4">
+            <h4 class="text-2xl font-semibold mb-5">Records</h4>
+            <table class="pda-table w-full">
+                <thead>
+                  <tr>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>TTL</th>
+                      <th>Data</th>
+                      <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% for record in template_records %}
+                    <tr id="show-{{ record.name }}-{{ record.record_type }}">
+                        <td>{{ record.name }}</td>
+                        <td>{{ record.record_type }}</td>
+                        <td>{{ record.ttl }}</td>
+                        <td class="max-width-500 long-content">{{ record.content }}</td>
+                        <td>
+                            <button class="btn btn-warning py-1 px-2" onclick="openEdit('{{ record.name }}-{{ record.record_type }}')">
+                                <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
+                            </button>
+                            {% modal id="delete-template-record" title="Delete Template record" size="md" %}
+                                {% modaltrigger %}
+                                    <button @click="open = true" class="btn btn-danger my-3">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                {% endmodaltrigger %}
+                                        <form class="d-flex flex-row" method="post">
+                                            {% csrf_token %}
+                                            <input name="formName" type="hidden" value="deleteForm">
+                                            <input id="name" name="name" type="hidden" value="{{ record.name }}">
+                                            <input id="record_type" name="record_type" type="hidden" value="{{ record.record_type }}">
+                                            <input id="content" name="content" type="hidden" value="{{ record.content }}">
+                                            <p class="text-white text-xl">You are about to delete template record<br>
+                                                <span class="text-xl text-danger bg-neutral-900 p-2 rounded-lg">
+                                                {{ record.name }}</span>
+                                                <span class="text-xl text-danger bg-neutral-900 p-2 rounded-lg">
+                                                {{ record.record_type }}</span>
+                                                are you sure you want to delete the template record?</p>
+
+                                            <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                                        </form>
+                                {% modalfooter %}
+                                    <button @click="open = false" class="btn btn-secondary">Close</button>
+                                {% endmodalfooter %}
+                            {% endmodal %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

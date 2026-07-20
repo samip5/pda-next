@@ -1,0 +1,158 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% load modal_tags %}
+{% block app %}
+<section class="bg-neutral-800 border-1 border-neutral-700 m-2 p-2 rounded-lg shadow">
+    <h1 class="text-2xl font-semibold mb-5">Zones</h1>
+    {% if perms.pdaAdmin.zones_create %}
+        {% modal id="create-zone" title="Create Zone" size="md" %}
+            {% modaltrigger %}
+                <button @click="open = true" class="btn btn-primary mb-4">
+                    <i class="fa fa-plus"></i>
+                </button>
+            {% endmodaltrigger %}
+                <form class="pda-form" method="post">
+                    {% csrf_token %}
+
+                    <div class="pda-input-group">
+                        <label class="text-white" for="{{ new_zone_form.name.id_for_label }}">Name</label>
+                        {{ new_zone_form.name }}
+                        {{ new_zone_form.name.errors }}
+                    </div>
+
+                    <div class="pda-input-group">
+                        <label class="text-white" for="{{ new_zone_form.account.id_for_label }}">Account</label>
+                        {{ new_zone_form.account }}
+                        {{ new_zone_form.account.errors }}
+                    </div>
+
+                    <div class="pda-input-group">
+                        <label class="text-white" for="{{ new_zone_form.dnssec.id_for_label }}">DNSSEC</label>
+                        {{ new_zone_form.dnssec }}
+                    </div>
+                    <div class="pda-input-group">
+                        {{ new_zone_form.template.label_tag }}
+                        {{ new_zone_form.template }}
+                        {{ new_zone_form.template.errors }}
+                    </div>
+                    <input class="btn btn-primary w-100" type="submit" value="{% translate 'Save' %}">
+                </form>
+            {% modalfooter %}
+                <button @click="open = false" class="btn btn-secondary">Close</button>
+            {% endmodalfooter %}
+        {% endmodal %}
+    {% endif %}
+
+  <table class="pda-table w-full md:table hidden">
+      <thead>
+        <tr>
+            <th>Name</th>
+            <th>DNSSEC</th>
+            <th>Type</th>
+            <th>Primary</th>
+            <th>Account</th>
+            <th>Serial</th>
+            <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for zone in zones %}
+        <tr>
+            <td><a class="text-white" href="/admin/zones/{{ zone.name }}">{{ zone.name }}</a></td>
+            <td>
+                  {% if zone.dnssec %}
+                    <span><i class="fa fa-lock bg-green-600 p-2 rounded-lg"></i></span>
+                  {% else %}
+                    <span><i class="fa fa-lock bg-red-600 p-2 rounded-lg"></i></span>
+                  {% endif %}
+            </td>
+            <td>{{ zone.kind }}</td>
+            <td></td>
+            <td>{{ zone.account }}</td>
+            <td></td>
+            <td class="buttons">
+                {% if perms.pdaAdmin.zones_edit %}
+                <a href="/admin/zones/{{ zone.name }}" class="btn btn-warning py-1 px-2">
+                    <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
+                </a>
+                {% endif %}
+                {% if perms.pdaAdmin.zones_delete %}
+                    {% modal id="delete-zone" title="Delete Zone" size="md" %}
+                        {% modaltrigger %}
+                            <button @click="open = true" class="btn btn-danger">
+                                <i class="fa fa-trash-o"></i>
+                            </button>
+                        {% endmodaltrigger %}
+                            <form class="pda-form" action="{% url 'pdaAdmin:delete_zone' zone.name %}" method="post">
+                                {% csrf_token %}
+                                <input id="name" name="name" type="hidden" value="{{ zone.name }}">
+                                <p class="text-white text-xl">You are about to delete the zone
+                                    <br/><span class="text-xl text-danger bg-neutral-900 p-2 rounded-lg">
+                                    {{ zone.name }}</span>
+                                    are you sure you want to delete the zone?</p>
+                                <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                            </form>
+
+                        {% modalfooter %}
+                            <button @click="open = false" class="btn btn-secondary">Close</button>
+                        {% endmodalfooter %}
+                    {% endmodal %}
+
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+  </table>
+  <div class="flex md:hidden gap-4 flex-row flex-wrap w-full">
+      {% for zone in zones %}
+      <div class="bg-neutral-900 border-1 border-neutral-700 p-4 rounded-md flex flex-col w-full md:w-1/4">
+          <div class="flex flex-row justify-between items-center">
+             <a class="text-white" href="/dns/domain/{{ zone.name }}">{{ zone.name }}</a>
+              <div>
+                  {% if zone.dnssec %}
+                    <span><i class="fa fa-lock bg-green-600 p-2 rounded-lg"></i></span>
+                  {% else %}
+                    <span><i class="fa fa-lock bg-red-600 p-2 rounded-lg"></i></span>
+                  {% endif %}
+              </div>
+          </div>
+          <p class="mt-2">Type: {{ zone.kind }}</p>
+          <p class="mt-2">Account: <br> {{ zone.account }}</p>
+
+          <div class="flex flex-row gab-2 items-center justify-end mt-2 gap-2">
+                {% if perms.pdaAdmin.zones_edit %}
+                <a href="/admin/zones/{{ zone.name }}" class="btn btn-warning py-1 px-2">
+                    <span class="pg-icon"><i class="fa fa-pencil-square"></i></span>
+                </a>
+                {% endif %}
+                {% if perms.pdaAdmin.zones_delete %}
+                    {% modal id="delete-zone" title="Delete Zone" size="md" %}
+                        {% modaltrigger %}
+                            <button @click="open = true" class="btn btn-danger">
+                                <i class="fa fa-trash-o"></i>
+                            </button>
+                        {% endmodaltrigger %}
+                            <form class="pda-form" action="{% url 'pdaAdmin:delete_zone' zone.name %}" method="post">
+                                {% csrf_token %}
+                                <input id="name" name="name" type="hidden" value="{{ zone.name }}">
+                                <p class="text-white text-xl">You are about to delete the zone
+                                    <br/><span class="text-xl text-danger bg-neutral-900 p-2 rounded-lg">
+                                    {{ zone.name }}</span>
+                                    are you sure you want to delete the zone?</p>
+                                <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                            </form>
+
+                        {% modalfooter %}
+                            <button @click="open = false" class="btn btn-secondary">Close</button>
+                        {% endmodalfooter %}
+                    {% endmodal %}
+
+                {% endif %}
+          </div>
+      </div>
+      {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% block app %}
+<section class="bg-neutral-800 border-1 border-neutral-700 rounded-xl shadow p-6">
+  <h1 class="text-xl mb-4">Domains</h1>
+  {% if perms.pdadns.zones_view %}
+  <table class="pda-table hidden md:table md:w-full">
+      <thead>
+        <tr>
+            <th>Name</th>
+            <th>DNSSEC</th>
+            <th>Type</th>
+            <th>Primary</th>
+            <th>Account</th>
+            <th>Serial</th>
+            <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for zone in zones %}
+        <tr>
+            <td><a class="text-white" href="/dns/domain/{{ zone.name }}">{{ zone.name }}</a></td>
+            <td>{% if zone.dnssec %}
+                <span><i class="fa fa-lock bg-green-600 p-2 rounded-lg"></i></span>
+                {% else %}
+                <span><i class="fa fa-lock bg-red-600 p-2 rounded-lg"></i></span>
+                {% endif %}
+            </td>
+            <td>{{ zone.kind }}</td>
+            <td></td>
+            <td>{{ zone.account }}</td>
+            <td></td>
+            <td></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+  </table>
+  <div class="flex md:hidden gap-4 flex-row flex-wrap w-full">
+      {% for zone in zones %}
+      <div class="bg-neutral-900 border-1 border-neutral-700 p-4 rounded-md flex flex-col w-full md:w-1/4">
+          <div class="flex flex-row justify-between items-center">
+             <a class="text-white" href="/dns/domain/{{ zone.name }}">{{ zone.name }}</a>
+              <div>
+                  {% if zone.dnssec %}
+                    <span><i class="fa fa-lock bg-green-600 p-2 rounded-lg"></i></span>
+                  {% else %}
+                    <span><i class="fa fa-lock bg-red-600 p-2 rounded-lg"></i></span>
+                  {% endif %}
+              </div>
+          </div>
+          <p class="mt-2">Type: {{ zone.kind }}</p>
+
+          <p class="mt-2">Account: <br> {{ zone.account }}</p>
+
+          <div class="flex flex-row gab-2 items-center justify-end mt-2">
+            <a class="text-white btn btn-primary" href="/dns/domain/{{ zone.name }}"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+
+          </div>
+      </div>
+      {% endfor %}
+  </div>
+  {% else %}
+    <p>No Permission</p>
+  {% endif %}
+</section>
+{% endblock %}

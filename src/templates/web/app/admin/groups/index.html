@@ -1,0 +1,104 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% load modal_tags %}
+{% block app %}
+<section class="bg-neutral-800 border-1 border-neutral-700 m-2 p-2 rounded-lg shadow">
+    <h1 class="text-2xl font-semibold mb-5">Groups</h1>
+    {% modal id="create-group" title="Create Group" size="md" %}
+        {% modaltrigger %}
+            <button @click="open = true" class="btn btn-primary mb-4">
+                <i class="fa fa-plus"></i>
+            </button>
+        {% endmodaltrigger %}
+            <form class="pda-form" method="post">
+                {% csrf_token %}
+                <div class="pda-input-group">
+                    {{ group_form.name.label_tag }}
+                    {{ group_form.name }}
+                    {{ group_form.name.errors }}
+                </div>
+
+                <input class="btn btn-primary" type="submit" value="{% translate 'Create' %}">
+            </form>
+
+        {% modalfooter %}
+            <button @click="open = false" class="btn btn-secondary">Close</button>
+        {% endmodalfooter %}
+    {% endmodal %}
+
+    <table class="pda-table w-1/3 hidden md:table">
+      <thead>
+        <tr>
+            <th>Name</th>
+            <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for group in groups %}
+        <tr>
+            <td><a class="text-white" href="/admin/groups/{{ group.id }}">{{ group.name }}</a></td>
+            <td class="flex flex-row items-center gap-2">
+                {% if perms.pdaAdmin.group_delete %}
+                    {% modal id="delete-group" title="Delete Group" size="md" %}
+                        {% modaltrigger %}
+                            <button @click="open = true" class="btn btn-danger">
+                                <i class="fa fa-trash-o"></i>
+                            </button>
+                        {% endmodaltrigger %}
+                            <form class="pda-form" action="{% url 'pdaAdmin:delete_group' group.id %}" method="post">
+                                {% csrf_token %}
+                                <input id="name" name="name" type="hidden" value="{{ group.name }}">
+                                <p class="text-white text-xl">You are about to delete the group
+                                    <br/><span class="text-xl text-danger bg-neutral-900 p-2 rounded-lg">
+                                    {{ group.name }}</span>
+                                    are you sure you want to delete the group?</p>
+                                <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                            </form>
+                        {% modalfooter %}
+                            <button @click="open = false" class="btn btn-secondary">Close</button>
+                        {% endmodalfooter %}
+                    {% endmodal %}
+                {% endif %}
+
+                <a class="btn btn-warning" href="/admin/groups/{{ group.id }}"><i class="fa fa-pencil-square"></i></a>
+            </td>
+        </tr>
+
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="flex md:hidden gap-4 flex-row flex-wrap w-full">
+      {% for group in groups %}
+      <div class="bg-neutral-900 border-1 border-neutral-700 p-4 rounded-md flex flex-col w-full md:w-1/4">
+            <a class="text-white" href="/admin/groups/{{ group.id }}">Name: {{ group.name }}</a>
+            <div class="flex flex-row-reverse items-center gap-2 mt-4">
+                {% if perms.pdaAdmin.group_delete %}
+                    {% modal id="delete-group" title="Delete Group" size="md" %}
+                        {% modaltrigger %}
+                            <button @click="open = true" class="btn btn-danger">
+                                <i class="fa fa-trash-o"></i>
+                            </button>
+                        {% endmodaltrigger %}
+                            <form class="pda-form" action="{% url 'pdaAdmin:delete_group' group.id %}" method="post">
+                                {% csrf_token %}
+                                <input id="name" name="name" type="hidden" value="{{ group.name }}">
+                                <p class="text-white text-xl">You are about to delete the group
+                                    <br/><span class="text-xl text-danger bg-neutral-900 p-2 rounded-lg">
+                                    {{ group.name }}</span>
+                                    are you sure you want to delete the group?</p>
+                                <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                            </form>
+                        {% modalfooter %}
+                            <button @click="open = false" class="btn btn-secondary">Close</button>
+                        {% endmodalfooter %}
+                    {% endmodal %}
+                {% endif %}
+
+                <a class="btn btn-warning" href="/admin/groups/{{ group.id }}"><i class="fa fa-pencil-square"></i></a>
+          </div>
+      </div>
+      {% endfor %}
+  </div>
+</section>
+{% endblock %}

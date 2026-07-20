@@ -1,0 +1,134 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% load modal_tags %}
+{% block app %}
+<section class="bg-neutral-800 border-1 border-neutral-700 m-2 p-2 rounded-lg shadow">
+    <h1 class="text-2xl font-semibold mb-5">Users</h1>
+    {% modal id="create-user" title="Create User" size="md" %}
+        {% modaltrigger %}
+            <button @click="open = true" class="btn btn-primary mb-4">
+                <i class="fa fa-plus"></i>
+            </button>
+        {% endmodaltrigger %}
+            <form class="pda-form" method="post">
+                {% csrf_token %}
+                <div class="pda-input-group">
+                    {{ user_form.username.label_tag }}
+                    {{ user_form.username }}
+                    {{ user_form.username.errors }}
+                </div>
+                <div class="pda-input-group">
+                    {{ user_form.email.label_tag }}
+                    {{ user_form.email }}
+                    {{ user_form.email.errors }}
+                </div>
+                <div class="pda-input-group">
+                    {{ user_form.first_name.label_tag }}
+                    {{ user_form.first_name }}
+                    {{ user_form.first_name.errors }}
+                </div>
+                <div class="pda-input-group">
+                    {{ user_form.last_name.label_tag }}
+                    {{ user_form.last_name }}
+                    {{ user_form.last_name.errors }}
+                </div>
+                <div class="pda-input-group">
+                    {{ user_form.is_superuser.label_tag }}
+                    {{ user_form.is_superuser }}
+                    {{ user_form.is_superuser.errors }}
+                </div>
+                <div class="pda-input-group">
+                    {{ user_form.is_active.label_tag }}
+                    {{ user_form.is_active }}
+                    {{ user_form.is_active.errors }}
+                </div>
+                <input class="btn btn-primary" type="submit" value="{% translate 'Create' %}">
+            </form>
+        {% modalfooter %}
+            <button @click="open = false" class="btn btn-secondary">Close</button>
+        {% endmodalfooter %}
+    {% endmodal %}
+
+
+    <table class="pda-table w-full hidden md:table">
+      <thead>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Full Name</th>
+            <th>Superuser Status</th>
+            <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+            <td><a class="text-white" href="/admin/users/{{ user.id }}">{{ user.username }}</a></td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.first_name }} {{ user.last_name }}</td>
+            <td>{{ user.is_superuser }}</td>
+            <td class="flex flex-row items-center gap-2">
+                {% if perms.pdaAdmin.users_delete %}
+                    {% modal id="delete-user" title="Delete User" size="md" %}
+                        {% modaltrigger %}
+                            <button @click="open = true" class="btn btn-danger">
+                                <i class="fa fa-trash-o"></i>
+                            </button>
+                        {% endmodaltrigger %}
+                            <form class="pda-form" action="{% url 'pdaAdmin:delete_user' user.id %}" method="post">
+                                {% csrf_token %}
+                                <input id="name" name="name" type="hidden" value="{{ user.username }}">
+                                <p class="text-white text-xl">You are about to delete the user
+                                    <br/><span class="text-xl text-danger bg-neutral-900 p-2 rounded-lg">
+                                    {{ user.username }}</span>
+                                    are you sure you want to delete the user?</p>
+                                <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                            </form>
+                        {% modalfooter %}
+                            <button @click="open = false" class="btn btn-secondary">Close</button>
+                        {% endmodalfooter %}
+                    {% endmodal %}
+                {% endif %}
+
+                <a class="btn btn-warning" href="/admin/users/{{ user.id }}"><i class="fa fa-pencil-square"></i></a>
+            </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="flex md:hidden gap-4 flex-row flex-wrap w-full">
+      {% for user in users %}
+      <div class="bg-neutral-900 border-1 border-neutral-700 p-4 rounded-md flex flex-col w-full md:w-1/4">
+            <a class="text-white" href="/admin/users/{{ user.id }}">Username: {{ user.username }}</a>
+            <p class="mt-2">Email: {{ user.email }}</p>
+            <div class="flex flex-row-reverse items-center gap-2 mt-4">
+                {% if perms.pdaAdmin.users_delete %}
+                    {% modal id="delete-user" title="Delete User" size="md" %}
+                        {% modaltrigger %}
+                            <button @click="open = true" class="btn btn-danger">
+                                <i class="fa fa-trash-o"></i>
+                            </button>
+                        {% endmodaltrigger %}
+                            <form class="pda-form" action="{% url 'pdaAdmin:delete_user' user.id %}" method="post">
+                                {% csrf_token %}
+                                <input id="name" name="name" type="hidden" value="{{ user.username }}">
+                                <p class="text-white text-xl">You are about to delete the user
+                                    <br/><span class="text-xl text-danger bg-neutral-900 p-2 rounded-lg">
+                                    {{ user.username }}</span>
+                                    are you sure you want to delete the user?</p>
+                                <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                            </form>
+                        {% modalfooter %}
+                            <button @click="open = false" class="btn btn-secondary">Close</button>
+                        {% endmodalfooter %}
+                    {% endmodal %}
+                {% endif %}
+
+                <a class="btn btn-warning" href="/admin/users/{{ user.id }}"><i class="fa fa-pencil-square"></i></a>
+          </div>
+      </div>
+      {% endfor %}
+  </div>
+</section>
+{% endblock %}

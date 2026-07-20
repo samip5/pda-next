@@ -50,7 +50,7 @@ def dashboard(request):
 
     return render(
         request,
-        "admin/dashboard.html",
+        "web/app/admin/dashboard.html",
         {
             "active_tab": "admin_dash",
             "page_title": _("Admin"),
@@ -94,7 +94,7 @@ def settings(request):
 
     return render(
         request,
-        "admin/settings.html",
+        "web/app/admin/settings.html",
         {
             "active_tab": "pda_settings",
             "page_title": _("Settings"),
@@ -160,7 +160,7 @@ def accounts(request):
         })
     return render(
         request,
-        "admin/accounts.html",
+        "web/app/admin/accounts/index.html",
         {
             "active_tab": "pda_accounts",
             "page_title": _("Accounts"),
@@ -208,7 +208,7 @@ def account(request, id):
     members = account_instance.members.all()
     return render(
         request,
-        "admin/account.html",
+        "web/app/admin/accounts/edit.html",
         {
             "active_tab": "pda_account",
             "page_title": _("Account"),
@@ -247,7 +247,7 @@ def zones(request):
 
     return render(
         request,
-        "admin/zones.html",
+        "web/app/admin/zones/index.html",
         {
             "active_tab": "admin_zones",
             "page_title": _("Zones"),
@@ -389,7 +389,7 @@ def zone(request, id):
 
     return render(
         request,
-        "admin/zone.html",
+        "web/app/admin/zones/edit.html",
         {
             "active_tab": "admin_zone",
             "page_title": _("Zone"),
@@ -435,7 +435,7 @@ def templates(request):
     zone_templates = ZoneTemplate.objects.all()
     return render(
         request,
-        "admin/templates/index.html",
+        "web/app/admin/templates/index.html",
         {
             "active_tab": "templates",
             "page_title": _("Templates"),
@@ -490,7 +490,7 @@ def edit_template(request, id):
 
     return render(
         request,
-        "admin/templates/edit.html",
+        "web/app/admin/templates/edit.html",
         {
             "active_tab": "templates_create",
             "page_title": _("Zone"),
@@ -559,7 +559,7 @@ def users(request):
 
     return render(
         request,
-        "admin/users.html",
+        "web/app/admin/users/index.html",
         {
             "active_tab": "pda_users",
             "page_title": _("Accounts"),
@@ -655,7 +655,7 @@ def user(request, id):
     )
     return render(
         request,
-        "admin/user.html",
+        "web/app/admin/users/edit.html",
         {
             "active_tab": "pda_user",
             "page_title": _("Account"),
@@ -701,7 +701,7 @@ def groups(request):
 
     return render(
         request,
-        "admin/groups.html",
+        "web/app/admin/groups/index.html",
         {
             "active_tab": "pda_groups",
             "page_title": _("Accounts"),
@@ -766,7 +766,7 @@ def group(request, id):
     )
     return render(
         request,
-        "admin/group.html",
+        "web/app/admin/groups/edit.html",
         {
             "active_tab": "pda_group",
             "page_title": _("Account"),

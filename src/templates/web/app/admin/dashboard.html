@@ -1,0 +1,225 @@
+{% extends "web/app/app_base.html" %}
+{% load static %}
+{% load i18n %}
+{% load modal_tags %}
+{% block app %}
+<section class="">
+    <h1 class="text-2xl font-semibold mb-5">Dashboard</h1>
+    <div class="flex flex-row flex-wrap gap-4 mb-4">
+        {% if request.user.is_superuser %}
+            {% modal id="clear-cache" title="CLEAR CACHE" size="md" %}
+                {% modaltrigger %}
+                    <button @click="open = true" class="btn btn-danger">
+                        Clear Cache <i class="fa fa-trash-o"></i>
+                    </button>
+                {% endmodaltrigger %}
+                    <form class="pda-form" action="{% url 'pdaAdmin:clear_cache' %}" method="post">
+                        {% csrf_token %}
+                        <p class="text-white text-xl bg-danger p-2 rounded-3">You are about to clear the entire zone and record cache are you sure you want to do this?</p>
+                        <input class="btn btn-danger" type="submit" value="{% translate "Delete" %}">
+                    </form>
+                {% modalfooter %}
+                    <button @click="open = false" class="btn btn-secondary">Close</button>
+                {% endmodalfooter %}
+            {% endmodal %}
+        {% endif %}
+
+        {% if request.user.is_staff %}
+            <a href="/djadmin" class="btn btn-danger py-1 px-2">
+                Django Admin
+            </a>
+        {% endif %}
+
+        {% modal id="create-zone" title="Create Zone" size="md" %}
+            {% modaltrigger %}
+                <button @click="open = true" class="btn btn-primary">
+                    Create Zone <i class="fa fa-plus"></i>
+                </button>
+            {% endmodaltrigger %}
+                    <form class="pda-form" action="{% url 'pdaAdmin:zones' %}" method="post">
+                        {% csrf_token %}
+
+                        <div class="pda-input-group">
+                            <label class="text-white" for="{{ new_zone_form.name.id_for_label }}">Name</label>
+                            {{ new_zone_form.name }}
+                            {{ new_zone_form.name.errors }}
+                        </div>
+
+                        <div class="pda-input-group">
+                            <label class="text-white" for="{{ new_zone_form.account.id_for_label }}">Account</label>
+                            {{ new_zone_form.account }}
+                            {{ new_zone_form.account.errors }}
+                        </div>
+
+                        <div class="pda-input-group">
+                            <label class="text-white" for="{{ new_zone_form.dnssec.id_for_label }}">DNSSEC</label>
+                            {{ new_zone_form.dnssec }}
+                        </div>
+
+                        <input class="btn btn-primary w-100" type="submit" value="{% translate 'Save' %}">
+                    </form>
+
+            {% modalfooter %}
+                <button @click="open = false" class="btn btn-secondary">Close</button>
+            {% endmodalfooter %}
+        {% endmodal %}
+
+    {% if perms.pda.admin_accounts_create %}
+        {% modal id="create-account" title="Account Creation" size="md" %}
+            {% modaltrigger %}
+                <button @click="open = true" class="btn btn-danger">
+                    Create Account <i class="fa fa-plus"></i>
+                </button>
+            {% endmodaltrigger %}
+                <form class="pda-form" action="{% url 'pdaAdmin:accounts' %}" method="post">
+                    {% csrf_token %}
+                    <div class="pda-input-group">
+                        {{ account_create_form.name.label_tag }}
+                        {{ account_create_form.name }}
+                        {{ account_create_form.name.errors }}
+                    </div>
+
+                    <div class="pda-input-group">
+                        {{ account_create_form.mail.label_tag }}
+                        {{ account_create_form.mail }}
+                        {{ account_create_form.mail.errors }}
+                    </div>
+
+                    <div class="pda-input-group">
+                        {{ account_create_form.contact.label_tag }}
+                        {{ account_create_form.contact }}
+                        {{ account_create_form.contact.errors }}
+                    </div>
+
+                    <div class="pda-input-group">
+                        {{ account_create_form.description.label_tag }}
+                        {{ account_create_form.description }}
+                        {{ account_create_form.description.errors }}
+                    </div>
+                    <input class="btn btn-primary w-100" type="submit" value="{% translate 'Create' %}">
+                </form>
+            {% modalfooter %}
+                <button @click="open = false" class="btn btn-secondary">Close</button>
+            {% endmodalfooter %}
+        {% endmodal %}
+
+    {% endif %}
+    </div>
+    <div class="flex md:flex-row flex-col-reverse">
+        <div class="bg-neutral-800 border-1 border-neutral-700 m-2 p-2 w-full md:w-4/6 rounded-lg shadow">
+            <h2 class="pg-title">Activity</h2>
+            <table class="pda-table w-full hidden md:table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Action</th>
+                        <th>Info</th>
+                        <th>user</th>
+                        <th>Api Key Used</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                {% for activity in page_obj %}
+                <tbody x-data="{ detailsOpen: false }">
+                    <tr>
+                        <td>{{ activity.timestamp }}</td>
+                        <td>{{ activity.action }}</td>
+                        <td>{{ activity.info }}</td>
+                        <td>{{ activity.user }}</td>
+                        <td>{% if activity.apikey != '' %}{{ activity.apikey }}{% else %}None{% endif %}</td>
+                            {% if perms.pdaAdmin.activity_log_details %}
+                                <td>
+                                    <button class="btn btn-warning" @click="detailsOpen= !detailsOpen">
+                                        <span class="flex flex-row items-center gap-2">
+                                            Details
+                                            <i x-show="!detailsOpen" class="fa fa-chevron-right"></i>
+                                            <i x-show="detailsOpen" class="fa fa-chevron-down"></i>
+                                        </span>
+                                    </button>
+                                </td>
+                            {% endif %}
+                    </tr>
+                    <tr x-show="detailsOpen" x-transition>
+                        <td colspan="6">
+                            <div class="text-left p-4 bg-neutral-900 shadow-md rounded-lg">
+                                {{ activity.details|linebreaksbr }}
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+                {% endfor %}
+            </table>
+            <div class="md:hidden flex flex-row flex-wrap gap-4">
+                {% for activity in page_obj %}
+                <div  x-data="{ detailsOpen: false }" class="bg-neutral-900 border-1 border-neutral-700 p-4 rounded-md flex flex-col w-full md:w-1/4">
+                    <p>User: {{ activity.user }}</p>
+                    <p>Action: {{ activity.action }}</p>
+                    <p>Info:<br>{{ activity.info }}</p>
+
+                    <button class="btn btn-warning mt-2" @click="detailsOpen= !detailsOpen">
+                    <span class="flex flex-row items-center gap-2">
+                            Details
+                            <i x-show="!detailsOpen" class="fa fa-chevron-right"></i>
+                            <i x-show="detailsOpen" class="fa fa-chevron-down"></i>
+                        </span>
+                    </button>
+                    <div x-show="detailsOpen" x-transition>
+                            <div class="text-left p-4 bg-neutral-800 shadow-md rounded-lg">
+                                {{ activity.details|linebreaksbr }}
+                            </div>
+                    </div>
+                    <p class="text-sm text-neutral-400 mt-2 w-full text-center border-t-1 border-neutral-600">{{ activity.timestamp }}</p>
+                </div>
+                {% endfor %}
+
+            </div>
+            <nav aria-label="Page navigation">
+                <ul class="flex flex-row mt-3 gap-2">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="py-1 px-2 rounded-full bg-neutral-700 text-white" href="?page={{ page_obj.previous_page_number }}"><span class="pg-icon"><i class="fa fa-chevron-left"></i></span></a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="py-1 px-2 rounded-full bg-neutral-700 text-white"><span class="pg-icon"><i class="fa fa-chevron-left"></i></span></span></li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="py-1 px-2 rounded-full bg-sky-700 text-white">{{ num }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="py-1 px-2 rounded-full bg-neutral-700 text-white" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="py-1 px-2 rounded-full bg-neutral-700 text-white" href="?page={{ page_obj.next_page_number }}"><span class="pg-icon"><i class="fa fa-chevron-right"></i></span></a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="py-1 px-2 rounded-full bg-neutral-700 text-white"><span class="pg-icon"><i class="fa fa-chevron-right"></i></span></span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+
+        <div class="bg-neutral-800 border-1 border-neutral-700 m-2 p-2 w-full md:w-2/6 rounded-lg shadow">
+            <h2 class="text-4xl text-center">Statistics</h2>
+            <div class="flex flex-row">
+                <div class="w-1/3 flex flex-col items-center p-4">
+                    <p class="text-4xl">{{ stats.accounts }}</p>
+                    <p class="text-xl font-bold">Accounts</p>
+                </div>
+                <div class="w-1/3 flex flex-col items-center p-4">
+                    <p class="text-4xl">{{ stats.users }}</p>
+                    <p class="text-xl font-bold">Users</p>
+                </div>
+                <div class="w-1/3 flex flex-col items-center p-4">
+                    <p class="text-4xl">{{ stats.zones }}</p>
+                    <p class="text-xl font-bold">Zones</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.min.js" integrity="sha512-n/G+dROKbKL3GVngGWmWfwK0yPctjZQM752diVYnXZtD/48agpUKLIn0xDQL9ydZ91x6BiOmTIFwWjjFi2kEFg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% endblock %}

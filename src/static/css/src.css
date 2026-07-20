@@ -37,17 +37,136 @@ html {
 }
 
 .alert-success {
-  @apply bg-green-800/70 border-green-700;
+  @apply bg-green-800/50 backdrop-blur-md border-green-700;
 }
 
 .alert-error, .alert-danger {
-  @apply bg-red-800/70 border-red-700;
+  @apply bg-red-800/50 backdrop-blur-md border-red-700;
 }
 
 .alert-warning {
-  @apply bg-yellow-800/70 border-yellow-700;
+  @apply bg-yellow-800/50 backdrop-blur-md border-yellow-700;
 }
 
 .alert-info {
-  @apply bg-sky-800/70 border-sky-700;
+  @apply bg-sky-800/50 backdrop-blur-md border-sky-700;
+}
+
+/* Forms */
+/* Main form wrapper */
+.pda-form {
+    @apply text-white
+}
+
+/* All text-like inputs */
+.pda-form input[type="text"],
+.pda-form input[type="email"],
+.pda-form input[type="password"],
+.pda-form input[type="number"],
+.pda-form input[type="url"],
+.pda-form input[type="search"],
+.pda-form input[type="tel"],
+.pda-form input[type="date"],
+.pda-form input[type="datetime-local"],
+.pda-form input[type="time"],
+.pda-form textarea, .pda-input {
+    @apply bg-neutral-700 p-4 rounded-md text-neutral-400
+}
+
+.pda-form select {
+    @apply bg-neutral-700 rounded-md p-4
+}
+
+/* Checkboxes */
+.pda-form input[type="checkbox"] {
+    @apply bg-neutral-700 cursor-pointer mr-3 w-[1.5rem] h-[1.5rem];
+    appearance: none;
+    -webkit-appearance: none;
+    vertical-align: middle;
+}
+.pda-form input[type="checkbox"]:checked {
+    background-color: #29a1f4;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='white'><path d='M7.629 13.314l-4.243-4.243 1.414-1.414 2.829 2.828 5.657-5.657 1.414 1.414-7.071 7.072z'/></svg>");
+    background-position: center;
+    background-size: 1.2rem 1.2rem;
+}
+/* Radios */
+.pda-form input[type="radio"] {
+}
+
+/* Labels */
+.pda-form label {
+    @apply text-white font-bold my-2 p-0
+}
+
+/* Disabled fields */
+.pda-form input:disabled,
+.pda-form textarea:disabled,
+.pda-form select:disabled, .pda-input:disabled {
+    @apply bg-neutral-900 text-neutral-400 cursor-not-allowed
+}
+
+/* Focus state */
+.pda-form input:focus,
+.pda-form textarea:focus,
+.pda-form select:focus, .pda-input:focus {
+    @apply border-1 border-neutral-600 text-white
+}
+
+.pda-form .pda-input-group {
+    @apply flex flex-col mb-4
+}
+
+.pda-dual-list-select {
+    width: 300px;
+    height: 200px;
+
+}
+.pda-dual-list-select > option {
+    @apply bg-neutral-900;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    padding: 4px;
+    color: #FFFFFF;
+}
+.pda-dual-list-select > option:checked {
+    background-color: #343a40;
+}
+.pda-dual-list-select > option:checked:focus {
+    background-color: #343a40;
+}
+
+/* Table */
+.pda-table th,
+.pda-table td {
+    @apply text-white p-2 text-center
+}
+
+/* Header */
+.pda-table thead th {
+    @apply bg-neutral-700
+}
+.pda-table .buttons {
+    @apply flex flex-row gap-4
+}
+
+.pda-table .long-content {
+    text-align: left !important;
+    text-wrap: wrap !important;
+    overflow-wrap: break-word;
+}
+/* Body rows */
+.pda-table tbody tr {
+    @apply border-t-2 border-neutral-500
+}
+
+/* MISC */
+.record-edit {
+    display: none;
+}
+.record-edit-show {
+    display: table-row;
+}
+.record-hide {
+    display: none;
 }
