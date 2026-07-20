@@ -1,5 +1,7 @@
 import logging
 import uuid
+import ipaddress
+import re
 from typing import Any
 
 from django.db.models import QuerySet
@@ -7,10 +9,10 @@ from pydantic import ValidationError
 
 from apps.api.accounts.models import Account
 from apps.api.dns.client import PowerDNSError
-from apps.api.dns.models import Record, Zone
+from apps.api.dns.models import Record, Zone, record
 from apps.api.dns.services import PowerDNSService
 from apps.api.templates.models import ZoneTemplate, RecordTemplate
-
+from django.core.exceptions import ValidationError
 logger = logging.getLogger('pda')
 
 service = PowerDNSService()
@@ -285,13 +287,15 @@ def create_zone_from_template(zone: Zone, template: ZoneTemplate = None):
     template = ZoneTemplate.objects.filter(id=template).first()
     if not zone.name.endswith('.'):
         zone.name = f"{zone.name}."
-
+    zone_account_id = ""
+    if zone_account_id is not None:
+        zone_account_id = str(zone.account.id)
     try:
         if template is not None:
-            resp = service.create_zone(zone_name=zone.name, kind=template.kind, account=str(zone.account.id),
+            resp = service.create_zone(zone_name=zone.name, kind=template.kind, account=zone_account_id,
                             nameservers=['ns1.fuckmylife.fi.'])
         else:
-            resp = service.create_zone(zone_name=zone.name, kind=zone.kind, account=str(zone.account.id),
+            resp = service.create_zone(zone_name=zone.name, kind=zone.kind, account=zone_account_id,
                             nameservers=['ns1.example.com.'])
 
         if resp is not PowerDNSError and template is not None:
@@ -312,7 +316,7 @@ def create_zone_from_template(zone: Zone, template: ZoneTemplate = None):
 
 
 def create_record(zone: Zone, name: str, record_type: str, content: str, ttl: int=3600, disabled: bool=False):
-    record = Record(
+    _record = Record(
         zone=zone,
         name=name,
         record_type=record_type,
@@ -321,10 +325,58 @@ def create_record(zone: Zone, name: str, record_type: str, content: str, ttl: in
         disabled=disabled
     )
     logger.info(content)
+    parsed_content = content
+    if record_type in ["CNAME", "NS"]:
+        if not content.endswith('.'):
+            parsed_content = f"{content}."
+            _record.content = parsed_content
 
     try:
-        record.full_clean()
-        record.save()
-        service.create_record(zone.name, name, record_type, content, ttl)
+        _record.full_clean()
+        _record.save()
+        service.create_record(zone.name, name, record_type, parsed_content, ttl)
     except ValidationError as e:
         logger.error(e)
+
+def validate_ip_v4(value):
+    try:
+        ip = ipaddress.ip_address(value)
+        if ip.version != 4:
+            raise ValueError
+    except ValueError as e:
+        logger.error(e)
+        raise ValidationError("Invalid Ipv4 address.")
+
+def validate_ip_v6(value):
+    try:
+        ip = ipaddress.ip_address(value)
+        if ip.version != 6:
+            raise ValueError
+    except ValueError as e:
+        logger.error(e)
+        raise ValidationError("Invalid Ipv6 address.")
+
+def validate_domain(value):
+    domain_pattern = re.compile(
+        r'^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})*$'
+    )
+    try:
+        if not domain_pattern.match(value):
+            raise ValueError
+    except ValueError as e:
+        logger.error(e)
+        raise ValidationError("Invalid Domain name.")
+
+VALIDATORS = {
+    'A': validate_ip_v4,
+    'AAAA': validate_ip_v6,
+    'CNAME': validate_domain,
+    'NS': validate_domain,
+}
+
+def validate_record(_record: Record):
+    validator = VALIDATORS.get(_record.record_type.upper())
+    if validator:
+        validator(_record.content)
+    else:
+        pass

@@ -9,7 +9,8 @@ from django.db.models import Q
 from apps.api.accounts.models import Account
 from apps.api.activity.helpers import addActivityLog, mergeActivityDetails, getFieldDetails
 from apps.api.activity.models.activity import ActionType
-from apps.api.dns.helpers import recordUpdateHelper, get_zones, get_zone, get_records, delete_record, create_record
+from apps.api.dns.helpers import recordUpdateHelper, get_zones, get_zone, get_records, delete_record, create_record, \
+    validate_record
 from apps.api.dns.models import Zone, Record
 from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
@@ -67,6 +68,9 @@ def domain(request, id):
                 messages.add_message(request, messages.WARNING, f"{e}")
 
             try:
+                if recordCreate.record_type in ["A", "AAAA", "CNAME", "NS"]:
+                    validate_record(recordCreate)
+
                 details_fields = {
                     "zone": zone.name,
                     "name": recordCreate.name,
@@ -98,6 +102,9 @@ def domain(request, id):
                 disabled=False,
             )
             try:
+                if newRecord.record_type in ["A", "AAAA", "CNAME", "NS"]:
+                    validate_record(newRecord)
+
                 updated = recordUpdateHelper(zone.name, oldRecord, newRecord)
                 details_fields = {
                     "zone": zone.name,

@@ -18,7 +18,7 @@ from apps.api.activity.helpers import addActivityLog, mergeActivityDetails, getS
 from apps.api.activity.models import Activity
 from apps.api.activity.models.activity import ActionType
 from apps.api.dns.helpers import get_zones, get_zone, get_records, create_zone_from_template, delete_zone, \
-    recordUpdateHelper, create_record
+    recordUpdateHelper, create_record, validate_record
 from apps.api.dns.models import Zone, Record
 from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
@@ -238,8 +238,13 @@ def zones(request):
                 }
                 details = mergeActivityDetails(getFieldDetails(new_fields))
                 addActivityLog(ActionType.ZONE_CREATE, f"{new_zone.name} - {new_zone.account}", details, request.user)
-                create_zone_from_template(new_zone, template=new_zone_form.data["template"])
-                messages.add_message(request, messages.SUCCESS, f"Zone {new_zone.name} created")
+
+                if new_zone_form.data["template"] != "":
+                    create_zone_from_template(new_zone, template=new_zone_form.data["template"])
+                    messages.add_message(request, messages.SUCCESS, f"Zone {new_zone.name} created")
+                else :
+                    create_zone_from_template(new_zone, template=None)
+                    messages.add_message(request, messages.SUCCESS, f"Zone {new_zone.name} created")
             except Exception as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
     new_zone_form = CreateZoneForm()
@@ -337,6 +342,9 @@ def zone(request, id):
                 disabled=False,
             )
             try:
+                if newRecord.record_type in ["A", "AAAA", "CNAME", "NS"]:
+                    validate_record(newRecord)
+
                 updated = recordUpdateHelper(zzone.name, oldRecord, newRecord)
                 details_fields = {
                     "zone": zzone.name,
@@ -366,11 +374,12 @@ def zone(request, id):
             new_record_name = recordCreate.name
             if recordCreate.name == "@":
                 new_record_name = zzone.name
+
             try:
                 recordCreate.full_clean()
-            except ValidationError as e:
-                messages.add_message(request, messages.WARNING, f"{e}")
-            try:
+                if recordCreate.record_type in ["A", "AAAA", "CNAME", "NS"]:
+                    validate_record(recordCreate)
+
                 details_fields = {
                     "zone": zzone.name,
                     "name": recordCreate.name,
@@ -378,12 +387,12 @@ def zone(request, id):
                     "content": recordCreate.content,
                     "ttl": recordCreate.ttl,
                 }
+
                 details = mergeActivityDetails(getFieldDetails(details_fields))
                 addActivityLog(ActionType.RECORD_CREATE, f"({recordCreate.record_type}) {recordCreate.name} - {zzone.name} created", details, request.user)
                 create_record(zzone, new_record_name, recordCreate.record_type, recordCreate.content, recordCreate.ttl)
             except Exception as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
-
 
     record_instances = get_records(zone_name)
 
