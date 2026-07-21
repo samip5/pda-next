@@ -257,17 +257,52 @@ class PowerDNSService:
             logger.error(f"Failed to delete record {name} {record_type} from zone {zone_name}: {e}")
             return None
 
-    def dnssec_keys(
+    def get_dnssec_keys(
         self,
         zone_name: str,
-        keytype: str = 'ksk',
         server_id: str = 'localhost'
     ) -> Optional[Dict[str, Any]]|Exception:
         try:
-            return self.client.dnssec_keys(zone_name, keytype, server_id)
+            return self.client.get_dnssec_keys(zone_name)
+        except PowerDNSError as e:
+            logger.error(f"Failed to get dnsec keys for zone {zone_name}: {e}")
+            return Exception(PowerDNSError("Unable to get dnsec keys"))
+
+    def get_dnssec_key(
+        self,
+        zone_name: str,
+        key_id: str,
+        server_id: str = 'localhost'
+    ) -> Optional[Dict[str, Any]]|Exception:
+        try:
+            return self.client.get_dnssec_key(zone_name, key_id, server_id)
+        except PowerDNSError as e:
+            logger.error(f"Failed to get dnsec key for zone {zone_name}: {e}")
+            return Exception(PowerDNSError("Unable to get dnsec key"))
+
+    def create_dnssec_key(
+            self,
+            zone_name: str,
+            keytype: str = 'ksk',
+            server_id: str = 'localhost'
+    ) -> Optional[Dict[str, Any]] | Exception:
+        try:
+            return self.client.create_dnssec_key(zone_name, keytype, server_id)
         except PowerDNSError as e:
             logger.error(f"Failed to create dnssec keys ({keytype}) for zone {zone_name}: {e}")
             return Exception(PowerDNSError("Unable to create dnssec keys"))
+
+    def delete_dnssec_key(
+            self,
+            zone_name: str,
+            key_id: str,
+            server_id: str = 'localhost'
+    ) -> Optional[Dict[str, Any]] | Exception:
+        try:
+            return self.client.delete_dnssec_key(zone_name, key_id, server_id)
+        except PowerDNSError as e:
+            logger.error(f"Failed to get dnsec key for zone {zone_name}: {e}")
+            return Exception(PowerDNSError("Unable to get dnsec key"))
 
     def disable_dnssec(
         self,
@@ -279,3 +314,25 @@ class PowerDNSService:
         except PowerDNSError as e:
             logger.error(f"Failed to disable dnssec for zone {zone_name}: {e}")
             return Exception(PowerDNSError("Unable to disable DNSSEC"))
+
+
+    def get_zone_metadata(self, zone_name: str, metadata_kind: str, server_id: str = 'localhost'):
+        try:
+            return self.client.get_zone_metadata(zone_name, metadata_kind, server_id)
+        except PowerDNSError as e:
+            logger.error(f"Failed to get zone metadata for zone {zone_name}: {e}")
+            return Exception(PowerDNSError("Unable to get zone metadata"))
+
+    def set_zone_metadata(self, zone_name: str, metadata: List[Any], metadata_kind: str = None, server_id: str = 'localhost'):
+        try:
+            return self.client.set_zone_metadata(zone_name, metadata, metadata_kind, server_id)
+        except PowerDNSError as e:
+            logger.error(f"Failed to set zone metadata for zone {zone_name}: {e}")
+            return Exception(PowerDNSError("Unable to set zone metadata"))
+
+    def delete_zone_metadata(self, zone_name: str, metadata_kind: str = None, server_id: str = 'localhost'):
+        try:
+            return self.client.delete_zone_metadata(zone_name, metadata_kind, server_id)
+        except PowerDNSError as e:
+            logger.error(f"Failed to Delete zone metadata for zone {zone_name}: {e}")
+            return Exception(PowerDNSError("Unable to set zone metadata"))

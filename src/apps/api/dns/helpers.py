@@ -2,7 +2,7 @@ import logging
 import uuid
 import ipaddress
 import re
-from typing import Any
+from typing import Any, Dict, List
 
 from django.db.models import QuerySet
 from pydantic import ValidationError
@@ -282,6 +282,89 @@ def delete_zone(zone_name: str):
         logger.error(e)
         return False
 
+
+def get_dnssec_keys(zone_name: str):
+    try:
+        return service.get_dnssec_keys(zone_name)
+    except PowerDNSError as e:
+        logger.error(e)
+        return False
+
+def create_dnssec_key(zone_name: str):
+    try:
+        return service.create_dnssec_key(zone_name)
+    except PowerDNSError as e:
+        logger.error(e)
+        return False
+
+def delete_dnssec_key(zone_name: str, key_id: str):
+    try:
+        return service.delete_dnssec_key(zone_name, key_id)
+    except PowerDNSError as e:
+        logger.error(e)
+        return False
+
+DIGEST_TYPE_MAP = {
+    1: "SHA-1 (Deprecated)",
+    2: "SHA-256 (Recommended)",
+    3: "GOST R 34.11-94",
+    4: "SHA-384",
+}
+def parse_dnssec_keys(dnssec_keys: str):
+    processed_keys = []
+    keys_list = dnssec_keys if isinstance(dnssec_keys, list) else [dnssec_keys]
+
+    for key_data in keys_list:
+        key_data.pop("privatekey", None)
+        parsed_ds_records = []
+        for ds_string in key_data.get("ds", []):
+            parts = ds_string.split(" ")
+            if len(parts) >= 4:
+                digest_type_num = int(parts[2])
+                parsed_ds_records.append({
+                    "raw": ds_string,
+                    "key_tag": parts[0],
+                    "algorithm": parts[1],
+                    "digest_type": parts[2],
+                    "digest_type_name": DIGEST_TYPE_MAP.get(
+                        digest_type_num, "Unknown"
+                    ),
+                    "digest": parts[3],
+                })
+
+        # Attach the structured array back to the key object
+        key_data["parsed_ds"] = parsed_ds_records
+        processed_keys.append(key_data)
+    return processed_keys
+
+
+def get_zone_metadata(
+        zone_name: str,
+        metadata_kind:str = None
+):
+    try:
+        return service.get_zone_metadata(zone_name, metadata_kind)
+    except PowerDNSError as e:
+        logger.error(e)
+        return False
+
+def set_zone_metadata(
+        zone_name: str,
+        metadata: List[Any],
+        metadata_kind: str = None
+):
+    try:
+        return service.set_zone_metadata(zone_name, metadata, metadata_kind)
+    except PowerDNSError as e:
+        logger.error(e)
+        return False
+
+def delete_zone_metadata(zone_name: str, metadata_kind: str = None):
+    try:
+        return service.delete_zone_metadata(zone_name, metadata_kind)
+    except PowerDNSError as e:
+        logger.error(e)
+        return False
 
 def create_zone_from_template(zone: Zone, template: ZoneTemplate = None):
     template = ZoneTemplate.objects.filter(id=template).first()

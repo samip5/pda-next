@@ -8,18 +8,16 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
-from django_auth_ldap.config import LDAPSearch
-from rest_framework.exceptions import ValidationError
 from django.contrib.auth.models import Permission
 from django.db.models import Q
-import config
 from apps.api.accounts.models import Account
 from apps.api.activity.helpers import addActivityLog, mergeActivityDetails, getSingleUserDetails, getFieldDetails, \
     getMemberDetails, getPermissionDetails, getGroupDetails
 from apps.api.activity.models import Activity
 from apps.api.activity.models.activity import ActionType
 from apps.api.dns.helpers import get_zones, get_zone, get_records, create_zone_from_template, delete_zone, \
-    recordUpdateHelper, create_record, validate_record
+    recordUpdateHelper, create_record, validate_record, get_dnssec_keys, create_dnssec_key, parse_dnssec_keys, \
+    delete_dnssec_key, get_zone_metadata, set_zone_metadata, delete_zone_metadata
 from apps.api.dns.models import Zone, Record
 from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
@@ -29,7 +27,7 @@ from apps.globalSettings.utils import get_setting, set_setting
 from apps.pdaAdmin.forms import ZoneForm, AccountForm, ZoneTemplateForm, RecordTemplateForm, CreateZoneForm, UserForm, \
     UserPermissionsForm, UserGroupsForm, GroupForm, GroupPermissionsForm, SocialAppForm
 from apps.users.models import CustomUser
-from config import load_db_settings_to_config, save_config
+from config import load_db_settings_to_config, logger
 from config.settings import app_settings
 
 @login_required
@@ -413,7 +411,58 @@ def zone(request, id):
             except Exception as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
 
+        if form_type == "add_dns_sec_key":
+            try:
+                create_dnssec_key(zone_name)
+            except Exception as e:
+                messages.add_message(request, messages.WARNING, f"{e}")
+        if form_type == "delete_dns_sec_key":
+            try:
+                delete_dnssec_key(zone_name, request.POST.get('dnsssec_key_id'))
+            except Exception as e:
+                messages.add_message(request, messages.WARNING, f"{e}")
+
+        if form_type == "soa_edit_api":
+            try:
+                value = request.POST.get("soa_edit_api", "")
+                service.update_zone(zone_name=zzone.name, soa_edit_api=value)
+            except Exception as e:
+                messages.add_message(request, messages.WARNING, f"{e}")
+
+        if form_type == "set_metadata":
+            kind = request.POST.get("metadata_kind")
+            if kind in ("ALLOW-AXFR-FROM", "ALSO-NOTIFY"):
+                raw = request.POST.get("metadata_iplist", "")
+                values = [line.strip() for line in raw.splitlines() if line.strip()]
+            elif kind in ("TSIG-ALLOW-AXFR", "AXFR-MASTER-TSIG"):
+                key = request.POST.get("metadata_tsigkey", "")
+                values = [key] if key else []
+            else:
+                values = []
+            try:
+                set_zone_metadata(zone_name, values, kind)
+            except Exception as e:
+                messages.add_message(request, messages.WARNING, f"{e}")
+
+        if form_type == "delete_metadata":
+            kind = request.POST.get("metadata_type")
+            try:
+                delete_zone_metadata(zone_name, kind)
+            except Exception as e:
+                messages.add_message(request, messages.WARNING, f"{e}")
+
     record_instances = get_records(zone_name)
+    dnssec_keys = get_dnssec_keys(zone_name)
+    processed_keys = parse_dnssec_keys(dnssec_keys)
+
+    zone_metadata = get_zone_metadata(zone_name)
+    metadata_by_kind = {m["kind"]: m["metadata"] for m in zone_metadata}
+    allow_axfr_from_initial = "\n".join(metadata_by_kind.get("ALLOW-AXFR-FROM", []))
+    also_notify_initial = "\n".join(metadata_by_kind.get("ALSO-NOTIFY", []))
+    tsig_allow_axfr_initial = next(iter(metadata_by_kind.get("TSIG-ALLOW-AXFR", [])), "")
+    axfr_master_tsig_initial = next(iter(metadata_by_kind.get("AXFR-MASTER-TSIG", [])), "")
+    soa_edit_api_initial = next(iter(metadata_by_kind.get("SOA-EDIT-API", [])), "")
+
 
     return render(
         request,
@@ -424,7 +473,13 @@ def zone(request, id):
             "zone":zzone,
             "setting_record_types": setting_record_types,
             "records": record_instances,
-            "accounts":accountList
+            "accounts":accountList,
+            "dnssec_keys": processed_keys,
+            "allow_axfr_from_initial": allow_axfr_from_initial,
+            "also_notify_initial": also_notify_initial,
+            "tsig_allow_axfr_initial": tsig_allow_axfr_initial,
+            "axfr_master_tsig_initial": axfr_master_tsig_initial,
+            "soa_edit_api_initial": soa_edit_api_initial,
         },
     )
 

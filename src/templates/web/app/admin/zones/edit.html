@@ -3,6 +3,7 @@
 {% load i18n %}
 {% load pda_tags %}
 {% load modal_tags %}
+{% load dict_tags %}
 {% block app %}
 <section class="bg-neutral-800 border-1 border-neutral-700 m-2 p-2 rounded-lg shadow">
   <h1 class="text-2xl font-semibold mb-5">Zones</h1>
@@ -27,14 +28,24 @@
                     </select>
                 </div>
                 <div class="pda-input-group">
-                    <label class="text-white" for="name">DNSSEC</label>
-                    <input disabled id="name" name="name" class="form-control" type="text" value="{{ zone.dnssec }}" >
+                    <label class="text-white" for="dnssec">
+                        DNSSEC
+                    {% if zone.dnssec %}
+                        <span><i class="fa fa-lock bg-green-600 p-2 rounded-lg"></i></span>
+                    {% else %}
+                        <span><i class="fa fa-lock bg-red-600 p-2 rounded-lg"></i></span>
+                    {% endif %}
+                    </label>
+
+                    <input disabled id="dnssec" name="dnssec" class="form-control" type="text" value="{{ zone.dnssec }}" >
                 </div>
                 <button class="btn btn-primary w-100" type="submit" name="form_type" value="zone">{% translate "Save" %}</button>
             </form>
         </div>
         {% endif %}
-        {% if perms.pdaAdmin.records_create %}
+        {% if perms.pdaAdmin.records_view %}
+        <div class="w-full">
+            {% if perms.pdaAdmin.records_create %}
             {% modal id="create-zone-record" title="Create DNS Record" size="md" %}
                 {% modaltrigger %}
                     <button @click="open = true" class="btn btn-primary mb-4">
@@ -70,9 +81,7 @@
                     <button @click="open = false" class="btn btn-secondary">Close</button>
                 {% endmodalfooter %}
             {% endmodal %}
-        {% endif %}
-        {% if perms.pdaAdmin.records_view %}
-        <div class="w-full">
+            {% endif %}
             <table class="pda-table w-full">
                 <thead>
                   <tr>
@@ -189,4 +198,246 @@
         {% endif %}
     </div>
 </section>
+<section class="flex flex-col md:flex-row">
+<div class="bg-neutral-800 border-1 border-neutral-700 m-2 p-2 rounded-lg shadow flex flex-col gap-2 w-full md:w-3/5 ">
+    <div class="flex flex-col gap-4 items-center">
+        <h2 class="text-xl font-semibold">DNSSEC</h2>
+        <p>
+            DNSSEC State: {{ zone.dnssec }}
+            {% if zone.dnssec %}
+                <span><i class="fa fa-lock bg-green-600 p-2 rounded-lg"></i></span>
+            {% else %}
+                <span><i class="fa fa-lock bg-red-600 p-2 rounded-lg"></i></span>
+            {% endif %}
+        </p>
+            <form class="pda-form" method="post">
+                {% csrf_token %}
+                <button class="btn btn-primary w-100" type="submit" name="form_type" value="add_dns_sec_key">{% translate "Create DNSSEC Key" %}</button>
+            </form>
+    </div>
+    <div class="flex flex-col md:flex-row flex-wrap justify-center gap-2 m-2">
+            {% for key in dnssec_keys %}
+                <div class="flex flex-col bg-neutral-900 border-1 border-neutral-700 rounded-lg shadow p-4 w-full md:w-[49%]" >
+                    <p>Active: {{key.active}}</p>
+                    <p>Algorithm: {{key.algorithm}}</p>
+
+                    <div class="mt-4">
+                    {% for ds in key.parsed_ds %}
+                        <div class="flex flex-col my-2 bg-neutral-800 p-4 rounded-lg my-4" x-data="{ dnssecKeyOpen: false }">
+                            <p>Digest Type: {{ds.digest_type_name}} (Code: {{ ds.digest_type }})</p>
+                            <p>Key Tag: {{ds.key_tag}}</p>
+                            <p>Algorithm: {{ds.algorithm}}</p>
+
+                            <button class="btn btn-secondary mt-2" @click="dnssecKeyOpen= !dnssecKeyOpen">
+                                <span class="flex flex-row items-center gap-2">
+                               Digest
+                                <i x-show="!dnssecKeyOpen" class="fa fa-chevron-right"></i>
+                                <i x-show="dnssecKeyOpen" class="fa fa-chevron-down"></i>
+                                </span>
+                            </button>
+                            <p x-show="dnssecKeyOpen" x-transition class="break-all bg-neutral-900 p-2 rounded-lg">{{ds.digest}}</p>
+                        </div>
+                    {% endfor %}
+                    </div>
+                    <div class="flex flex-row">
+                        {% modal id="delete-dnssec-key" title="Delete DNSSEC Key" size="md" %}
+                        {% modaltrigger %}
+                        <button @click="open = true" class="btn btn-danger">
+                            <i class="fa fa-trash-o"></i>
+                        </button>
+                        {% endmodaltrigger %}
+                        <form class="pda-form" method="post">
+                            {% csrf_token %}
+                            <input id="dnsssec_key_id" name="dnsssec_key_id" type="hidden" value="{{ key.id }}">
+
+                            <p class="text-white text-xl">You are about to delete DNSSEC Key
+                                <span class="text-xl text-danger bg-neutral-900 p-2 rounded-3">
+                                    {{ key.id }}</span>
+                                are you sure you want to delete the DNSSEC Key?</p>
+                            <button class="btn btn-danger" type="submit" name="form_type" value="delete_dns_sec_key">{% translate "Delete" %}</button>
+                        </form>
+                        {% modalfooter %}
+                        <button @click="open = false" class="btn btn-secondary">Close</button>
+                        {% endmodalfooter %}
+                        {% endmodal %}
+                    </div>
+                </div>
+            {% endfor %}
+    </div>
+</div>
+
+<div class="bg-neutral-800 border-1 border-neutral-700 m-2 p-2 rounded-lg shadow flex flex-col gap-2 w-full md:w-2/5">
+    <div class="flex flex-col gap-4 items-center">
+        <h2 class="text-xl font-semibold">METADATA</h2>
+        <div class="flex md:flex-row flex-col gap-4 flex-wrap m-2 justify-center w-full">
+            <div class="w-full md:w-[48%] md:max-w-96 p-4 bg-neutral-900 border-1 border-neutral-700 rounded-lg shadow flex flex-col gap-2">
+                <form class="pda-form" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="metadata_kind" value="ALLOW-AXFR-FROM">
+                    <div class="pda-input-group">
+                        <label class="text-white" for="allow_axfr_from">ALLOW-AXFR-FROM</label>
+                        <textarea rows="4" id="allow_axfr_from" name="metadata_iplist" placeholder="One IP/CIDR per line">{{ allow_axfr_from_initial }}</textarea>
+                    </div>
+
+                    <button class="btn btn-primary w-100" type="submit" name="form_type" value="set_metadata">{% translate "Save" %}</button>
+                </form>
+
+                <div class="flex flex-row">
+                    {% modal id="delete-metadata" title="Delete Metadata" size="md" %}
+                    {% modaltrigger %}
+                    <button @click="open = true" class="btn btn-danger">
+                        <i class="fa fa-trash-o"></i>
+                    </button>
+                    {% endmodaltrigger %}
+                    <form class="pda-form" method="post">
+                        {% csrf_token %}
+                        <input id="metadata_type" name="metadata_type" type="hidden" value="ALLOW-AXFR-FROM">
+                        <p class="text-white text-xl">You are about to delete Metadata field<p>
+                        <p class="text-xl text-danger bg-neutral-900 p-2 rounded-3 my-2">ALLOW-AXFR-FROM</p>
+                        <p class="text-white text-xl">are you sure you want to delete the field?</p>
+                        <button class="btn btn-danger" type="submit" name="form_type" value="delete_metadata">{% translate "Delete" %}</button>
+                    </form>
+                    {% modalfooter %}
+                    <button @click="open = false" class="btn btn-secondary">Close</button>
+                    {% endmodalfooter %}
+                    {% endmodal %}
+                </div>
+            </div>
+
+            <div class="w-full md:w-[48%] md:max-w-96 p-4 bg-neutral-900 border-1 border-neutral-700 rounded-lg shadow flex flex-col gap-2">
+                <form class="pda-form" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="metadata_kind" value="ALSO-NOTIFY">
+                    <div class="pda-input-group">
+                        <label class="text-white" for="also_notify">ALSO-NOTIFY</label>
+                        <textarea rows="4" id="also_notify" name="metadata_iplist" placeholder="One IP:port per line">{{ also_notify_initial }}</textarea>
+                    </div>
+
+                    <button class="btn btn-primary w-100" type="submit" name="form_type" value="set_metadata">{% translate "Save" %}</button>
+                </form>
+
+                <div class="flex flex-row">
+                    {% modal id="delete-metadata" title="Delete Metadata" size="md" %}
+                    {% modaltrigger %}
+                    <button @click="open = true" class="btn btn-danger">
+                        <i class="fa fa-trash-o"></i>
+                    </button>
+                    {% endmodaltrigger %}
+                    <form class="pda-form" method="post">
+                        {% csrf_token %}
+                        <input id="metadata_type" name="metadata_type" type="hidden" value="ALSO-NOTIFY">
+                        <p class="text-white text-xl">You are about to delete Metadata field<p>
+                        <p class="text-xl text-danger bg-neutral-900 p-2 rounded-3 my-2">ALSO-NOTIFY</p>
+                        <p class="text-white text-xl">are you sure you want to delete the field?</p>
+                        <button class="btn btn-danger" type="submit" name="form_type" value="delete_metadata">{% translate "Delete" %}</button>
+                    </form>
+                    {% modalfooter %}
+                    <button @click="open = false" class="btn btn-secondary">Close</button>
+                    {% endmodalfooter %}
+                    {% endmodal %}
+                </div>
+            </div>
+
+            {% if zone.kind != "Slave" %}
+            <div class="w-full md:w-[48%] md:max-w-96 p-4 bg-neutral-900 border-1 border-neutral-700 rounded-lg shadow flex flex-col gap-2">
+                <form class="pda-form" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="metadata_kind" value="TSIG-ALLOW-AXFR">
+                    <div class="pda-input-group">
+                        <label class="text-white" for="tsig_allow_axfr">TSIG-ALLOW-AXFR</label>
+                        <select id="tsig_allow_axfr" name="metadata_tsigkey">
+                            <option value="">Select a key…</option>
+                            {% for key in tsig_keys %}
+                                <option value="{{ key.name }}" {% if key.name == tsig_allow_axfr_initial %}selected{% endif %}>{{ key.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary w-100" type="submit" name="form_type" value="set_metadata">{% translate "Save" %}</button>
+                </form>
+                <div class="flex flex-row">
+                    {% modal id="delete-metadata" title="Delete Metadata" size="md" %}
+                    {% modaltrigger %}
+                    <button @click="open = true" class="btn btn-danger">
+                        <i class="fa fa-trash-o"></i>
+                    </button>
+                    {% endmodaltrigger %}
+                    <form class="pda-form" method="post">
+                        {% csrf_token %}
+                        <input id="metadata_type" name="metadata_type" type="hidden" value="TSIG-ALLOW-AXFR">
+                        <p class="text-white text-xl">You are about to delete Metadata field<p>
+                        <p class="text-xl text-danger bg-neutral-900 p-2 rounded-3 my-2">TSIG-ALLOW-AXFR</p>
+                        <p class="text-white text-xl">are you sure you want to delete the field?</p>
+                        <button class="btn btn-danger" type="submit" name="form_type" value="delete_metadata">{% translate "Delete" %}</button>
+                    </form>
+                    {% modalfooter %}
+                    <button @click="open = false" class="btn btn-secondary">Close</button>
+                    {% endmodalfooter %}
+                    {% endmodal %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if zone.kind == "Slave" %}
+            <div class="w-full md:w-[48%] md:max-w-96 p-4 bg-neutral-900 border-1 border-neutral-700 rounded-lg shadow flex flex-col gap-2">
+                <form class="pda-form" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="metadata_kind" value="AXFR-MASTER-TSIG">
+                    <div class="pda-input-group">
+                        <label class="text-white" for="axfr_master_tsig">AXFR-MASTER-TSIG</label>
+                        <select id="axfr_master_tsig" name="metadata_tsigkey">
+                            <option value="">Select a key…</option>
+                            {% for key in tsig_keys %}
+                                <option value="{{ key.name }}" {% if key.name == axfr_master_tsig_initial %}selected{% endif %}>{{ key.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button class="btn btn-primary w-100" type="submit" name="form_type" value="set_metadata">{% translate "Save" %}</button>
+                </form>
+                <div class="flex flex-row">
+                    {% modal id="delete-metadata" title="Delete Metadata" size="md" %}
+                    {% modaltrigger %}
+                    <button @click="open = true" class="btn btn-danger">
+                        <i class="fa fa-trash-o"></i>
+                    </button>
+                    {% endmodaltrigger %}
+                    <form class="pda-form" method="post">
+                        {% csrf_token %}
+                        <input id="metadata_type" name="metadata_type" type="hidden" value="AXFR-MASTER-TSIG">
+                        <p class="text-white text-xl">You are about to delete Metadata field<p>
+                        <p class="text-xl text-danger bg-neutral-900 p-2 rounded-3 my-2">AXFR-MASTER-TSIG</p>
+                        <p class="text-white text-xl">are you sure you want to delete the field?</p>
+                        <button class="btn btn-danger" type="submit" name="form_type" value="delete_metadata">{% translate "Delete" %}</button>
+                    </form>
+                    {% modalfooter %}
+                    <button @click="open = false" class="btn btn-secondary">Close</button>
+                    {% endmodalfooter %}
+                    {% endmodal %}
+                </div>
+            </div>
+            {% endif %}
+
+            <form class="pda-form w-full md:w-[48%] md:max-w-96 p-4 bg-neutral-900 border-1 border-neutral-700 rounded-lg shadow" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="metadata_kind" value="SOA-EDIT-API">
+                <div class="pda-input-group">
+                    <label class="text-white" for="soa_edit_api">SOA-EDIT-API</label>
+                    <select id="soa_edit_api" name="soa_edit_api">
+                        <option value="">Not set</option>
+                        <option value="DEFAULT" {% if soa_edit_api_initial == "DEFAULT" %}selected{% endif %}>DEFAULT</option>
+                        <option value="INCREASE" {% if soa_edit_api_initial == "INCREASE" %}selected{% endif %}>INCREASE</option>
+                        <option value="EPOCH" {% if soa_edit_api_initial == "EPOCH" %}selected{% endif %}>EPOCH</option>
+                        <option value="SOA-EDIT" {% if soa_edit_api_initial == "SOA-EDIT" %}selected{% endif %}>SOA-EDIT</option>
+                        <option value="SOA-EDIT-INCREASE" {% if soa_edit_api_initial == "SOA-EDIT-INCREASE" %}selected{% endif %}>SOA-EDIT-INCREASE</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary w-100" type="submit" name="form_type" value="soa_edit_api">{% translate "Save" %}</button>
+            </form>
+        </div>
+    </div>
+</div>
+</section>
+
 {% endblock %}

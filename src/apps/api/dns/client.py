@@ -11,7 +11,7 @@ from urllib.parse import urljoin
 import requests
 from config import settings as app_settings
 
-logger = logging.getLogger("pdadns")
+logger = logging.getLogger("pda")
 
 
 class PowerDNSError(Exception):
@@ -490,10 +490,9 @@ class PowerDNSClient:
                 data=rrset_data
             )
 
-    def dnssec_keys(
+    def get_dnssec_keys(
             self,
             zone_name: str,
-            keytype: str = 'ksk',
             server_id: str = 'localhost',
     ) -> Dict[str, Any]:
         """
@@ -501,11 +500,65 @@ class PowerDNSClient:
 
         Args:
             zone_name: Zone name (e.g., 'example.com.')
+            server_id: Server ID (default: 'localhost')
+        Returns:
+            Zone dnssec keys
+        """
+        return self._request('GET', f'servers/{server_id}/zones/{zone_name}/cryptokeys')
+
+    def get_dnssec_key(
+            self,
+            zone_name: str,
+            key_id: str,
+            server_id: str = 'localhost',
+    ) -> Dict[str, Any]:
+        """
+        DNSSEC Key for a zone.
+
+        Args:
+            zone_name: Zone name (e.g., 'example.com.')
+            key_id: Key ID from PowerDNS Backend
+            server_id: Server ID (default: 'localhost')
+        Returns:
+            Zone dnssec key
+        """
+        return self._request('POST', f'servers/{server_id}/zones/{zone_name}/cryptokeys/{key_id}')
+
+
+    def delete_dnssec_key(
+            self,
+            zone_name: str,
+            key_id: str,
+            server_id: str = 'localhost',
+    ) -> Dict[str, Any]:
+        """
+        Delete DNSSEC from a zone.
+
+        Args:
+            zone_name: Zone name (e.g., 'example.com.')
+            key_id: Key ID from PowerDNS Backend
+            server_id: Server ID (default: 'localhost')
+        Returns:
+
+        """
+        return self._request('DELETE', f'servers/{server_id}/zones/{zone_name}/cryptokeys/{key_id}')
+
+    def create_dnssec_key(
+            self,
+            zone_name: str,
+            keytype: str = 'ksk',
+            server_id: str = 'localhost',
+    ) -> Dict[str, Any]:
+        """
+        Create DNSSEC Keys for a zone.
+
+        Args:
+            zone_name: Zone name (e.g., 'example.com.')
             keytype: Key Type for pdns backend
             server_id: Server ID (default: 'localhost')
 
         Returns:
-            Created zone information
+            Created DNSSEC key
         """
         crptokeys = {
             "active": True,
@@ -536,3 +589,87 @@ class PowerDNSClient:
         }
         self.update_zone(zone_name, server_id, dnssec=False)
         return self._request('POST', f'servers/{server_id}/zones/{zone_name}/cryptokeys', data=crptokeys)
+
+    ZONE_METADATA_KINDS = {
+        "ALLOW-AXFR-FROM": {"multi": True, "label": "Allow AXFR from"},
+        "ALSO-NOTIFY": {"multi": True, "label": "Also notify"},
+        "TSIG-ALLOW-AXFR": {"multi": True, "label": "TSIG keys allowed for AXFR"},
+        "AXFR-MASTER-TSIG": {"multi": True, "label": "TSIG key for outgoing AXFR"},
+        "SOA-EDIT-API": {"multi": False, "label": "SOA-EDIT-API"},
+        "SOA-EDIT": {"multi": False, "label": "SOA-EDIT"},
+    }
+
+    def get_zone_metadata(
+            self,
+            zone_name: str,
+            metadata_kind: str = None,
+            server_id: str = 'localhost',
+    ):
+        """
+        Get Zone metadata.
+
+        Args:
+            zone_name: Zone name (e.g., 'example.com.')
+            metadata_kind: Metadata kind string
+            server_id: Server ID (default: 'localhost')
+
+        Returns:
+            Zone Metadata
+        """
+        path = "metadata"
+        if metadata_kind in self.ZONE_METADATA_KINDS:
+            path = f"{path}/{metadata_kind}"
+        return self._request('GET', f'servers/{server_id}/zones/{zone_name}/{path}')
+
+    def set_zone_metadata(
+            self,
+            zone_name: str,
+            metadata: List[Any],
+            metadata_kind: str = None,
+            server_id: str = 'localhost'
+    ):
+        """
+        Set Zone metadata.
+
+        Args:
+            zone_name: Zone name (e.g., 'example.com.')
+            metadata: Values for the metadata to be set
+            metadata_kind: Metadata kind string
+            server_id: Server ID (default: 'localhost')
+
+        Returns:
+            Zone Metadata for that kind
+        """
+        if metadata_kind not in self.ZONE_METADATA_KINDS:
+            raise ValueError(f"Invalid metadata kind: {metadata_kind}")
+        if not self.ZONE_METADATA_KINDS[metadata_kind]["multi"] and len(metadata) > 1:
+            raise ValueError(f"Metadata kind does not allow multiple values: {metadata_kind}")
+
+        path = f"/metadata/{metadata_kind}"
+        values = {
+            "metadata": metadata,
+        }
+        return self._request('PUT', f'servers/{server_id}/zones/{zone_name}/{path}', values)
+
+    def delete_zone_metadata(
+            self,
+            zone_name: str,
+            metadata_kind: str = None,
+            server_id: str = 'localhost',
+    ):
+        """
+        Delete Zone metadata.
+
+        Args:
+            zone_name: Zone name (e.g., 'example.com.')
+            metadata_kind: Metadata kind string
+            server_id: Server ID (default: 'localhost')
+
+        Returns:
+
+        """
+        if metadata_kind not in self.ZONE_METADATA_KINDS:
+            raise ValueError(f"Invalid metadata kind: {metadata_kind}")
+        path = f"/metadata/{metadata_kind}"
+        return self._request('DELETE', f'servers/{server_id}/zones/{zone_name}/{path}')
+
