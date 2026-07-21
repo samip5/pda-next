@@ -1,3 +1,6 @@
+import json
+
+from allauth.socialaccount.models import SocialApp
 from django import forms
 from django.contrib.auth.models import Permission, Group
 
@@ -134,3 +137,29 @@ class GroupPermissionsForm(forms.ModelForm):
     class Meta:
         model = Group
         fields = ['permissions']
+
+
+class SocialAppForm(forms.ModelForm):
+    class Meta:
+        model = SocialApp
+        fields = ['provider','provider_id', 'name', 'client_id', 'secret', 'key', 'sites', 'settings']
+        widgets = {
+            'name': forms.TextInput(),
+            'secret': forms.PasswordInput(render_value=True),
+            'key': forms.PasswordInput(render_value=True),
+            'sites': forms.CheckboxSelectMultiple(),
+            'settings': forms.Textarea(attrs={'rows': 5, 'placeholder': '{"server_url":""}'}),
+        }
+
+        def clean_settings(self):
+            data = self.cleaned_data.get('settings')
+            if not data:
+                return {}
+            try:
+                # If it's already a dict (from initial data), leave it.
+                # If it's a string (from form input), parse it.
+                if isinstance(data, str):
+                    return json.loads(data)
+                return data
+            except json.JSONDecodeError:
+                raise forms.ValidationError("Invalid JSON format.")

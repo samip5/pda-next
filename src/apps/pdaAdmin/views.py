@@ -1,6 +1,7 @@
 import logging
 import uuid
 
+from allauth.socialaccount.models import SocialApp
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import User, Group
 from django.core.paginator import Paginator
@@ -26,7 +27,7 @@ from django.contrib import messages
 from apps.api.templates.models import ZoneTemplate, RecordTemplate, zone_template
 from apps.globalSettings.utils import get_setting, set_setting
 from apps.pdaAdmin.forms import ZoneForm, AccountForm, ZoneTemplateForm, RecordTemplateForm, CreateZoneForm, UserForm, \
-    UserPermissionsForm, UserGroupsForm, GroupForm, GroupPermissionsForm
+    UserPermissionsForm, UserGroupsForm, GroupForm, GroupPermissionsForm, SocialAppForm
 from apps.users.models import CustomUser
 from config import load_db_settings_to_config, save_config
 from config.settings import app_settings
@@ -75,7 +76,7 @@ def settings(request):
     }
     record_types = Record.RECORD_TYPE_CHOICES
     setting_record_types = get_setting('record_types')
-
+    social_app_form = SocialAppForm()
     if request.method == "POST":
         form_type = request.POST.get('form_type')
         if form_type == "ldap":
@@ -88,6 +89,22 @@ def settings(request):
                 is_active = record_type in request.POST
                 setting_record_types[record_type] = is_active
             set_setting('record_types', setting_record_types, 'json')
+        if form_type == "social":
+            try:
+                social_app_form = SocialAppForm(request.POST)
+                if SocialApp.objects.filter(provider=request.POST.get('provider')).exists():
+                    messages.add_message(request, messages.ERROR, f"A social app with provider '{request.POST.get('provider')}' already exists.")
+                elif social_app_form.is_valid():
+                    social_app_form.clean()
+                    inst = social_app_form.save()
+                    messages.add_message(request, messages.SUCCESS, f"Added {social_app_form.fields['name']}")
+                    social_app_form = SocialAppForm()
+                else:
+                    messages.add_message(request, messages.WARNING, f"{social_app_form.errors.as_data()}")
+            except Exception as e:
+                messages.add_message(request, messages.ERROR, f"{e}")
+
+    social_apps = SocialApp.objects.all()
     view_settings = []
     view_settings.append({"name": "disable_landing_page", "value": f"{get_setting('disable_landing_page')}"})
     view_settings.append({"name": "db_path", "value": f"{get_setting('db_path')}"})
@@ -101,7 +118,9 @@ def settings(request):
             "settings": view_settings,
             "ldap_settings": ldap_settings,
             "record_types": record_types,
-            "setting_record_types": setting_record_types
+            "setting_record_types": setting_record_types,
+            "social_app_form": social_app_form,
+            "social_apps": social_apps
         },
     )
 
