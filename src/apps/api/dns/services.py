@@ -336,3 +336,56 @@ class PowerDNSService:
         except PowerDNSError as e:
             logger.error(f"Failed to Delete zone metadata for zone {zone_name}: {e}")
             return Exception(PowerDNSError("Unable to set zone metadata"))
+
+
+    def get_tsig_keys(self, server_id: str = 'localhost'):
+        try:
+            return self.client.get_tsig_keys(server_id)
+        except PowerDNSError as e:
+            logger.error(f"Failed to get tsig keys for server {server_id}: {e}")
+            return Exception(PowerDNSError("Unable to get tsig keys"))
+
+    def get_tsig_key(self, key_id: str, server_id: str = 'localhost'):
+        try:
+            return self.client.get_tsig_key(server_id, key_id)
+        except PowerDNSError as e:
+            logger.error(f"Failed to get tsig key for server {server_id}: {e}")
+            return Exception(PowerDNSError("Unable to get tsig key"))
+
+    def create_tsig_key(
+            self,
+            name: str,
+            key: str = None,
+            algorithm: str = "hmac-sha256",
+            server_id: str = 'localhost'
+    ):
+        try:
+            return self.client.create_tsig_key(name, key, algorithm, server_id)
+        except PowerDNSError as e:
+            logger.error(f"Failed to create tsig key for server {server_id}: {e}")
+            return Exception(PowerDNSError("Unable to create tsig key"))
+
+    def edit_tsig_key(
+            self,
+            key_id: str,
+            name: str,
+            key: str = None,
+            algorithm: str = "hmac-sha256",
+            server_id: str = 'localhost'
+    ):
+        try:
+            return self.client.edit_tsig_key(key_id, name, algorithm, server_id)
+        except PowerDNSError as e:
+            logger.error(f"Failed to edit tsig key for server {server_id}: {e}")
+            return Exception(PowerDNSError("Unable to edit tsig key"))
+
+    def delete_tsig_key(
+            self,
+            key_id: str,
+            server_id: str = 'localhost'
+    ):
+        try:
+            return self.client.delete_tsig_key(key_id, server_id)
+        except PowerDNSError as e:
+            logger.error(f"Failed to delete tsig key for server {server_id}: {e}")
+            return Exception(PowerDNSError("Unable to delete tsig key"))

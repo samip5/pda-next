@@ -673,3 +673,80 @@ class PowerDNSClient:
         path = f"/metadata/{metadata_kind}"
         return self._request('DELETE', f'servers/{server_id}/zones/{zone_name}/{path}')
 
+    def get_tsig_keys(self, server_id: str = 'localhost'):
+        """
+        Get Server TSIG keys.
+
+        Args:
+            server_id: Server ID (default: 'localhost')
+
+        Returns:
+            Server TSIG keys
+        """
+        return self._request('GET', f'servers/{server_id}/tsigkeys')
+
+    def get_tsig_key(self, key_id: str, server_id: str = 'localhost'):
+        """
+        Get Server TSIG key with id.
+
+        Args:
+            key_id: TSIG key id
+            server_id: Server ID (default: 'localhost')
+
+        Returns:
+            Server TSIG key
+        """
+        return self._request('GET', f'servers/{server_id}/tsigkeys/{key_id}')
+
+    def create_tsig_key(self, name: str, key: str = None, algorithm:str = 'hmac-sha256', server_id: str = 'localhost'):
+        """
+        Create Server TSIG key.
+
+        Args:
+            name: Name for TSIG key
+            key: TSIG key Leave empty for powerdns to generate key
+            algorithm: Algorithm for TSIG key (hmac-md5, hmac-sha1, hmac-sha224, hmac-sha256, hmac-sha384, hmac-sha512)
+            server_id: Server ID (default: 'localhost')
+
+        Returns:
+            Server TSIG key
+        """
+        tsig_key = {
+            "name": name,
+            "key": key,
+            "algorithm": algorithm,
+        }
+        return self._request('POST', f'servers/{server_id}/tsigkeys', tsig_key)
+
+    def edit_tsig_key(self, key_id: str, name: str, key: str = None, algorithm: str = 'hmac-sha256', server_id: str = 'localhost'):
+        """
+        Edit Server TSIG key with id.
+
+        Args:
+            name: Name for TSIG key
+            key_id: TSIG key id
+            key: TSIG key
+            algorithm: Algorithm for TSIG key (hmac-md5, hmac-sha1, hmac-sha224, hmac-sha256, hmac-sha384, hmac-sha512)
+            server_id: Server ID (default: 'localhost')
+
+        Returns:
+            Server TSIG key
+        """
+        tsig_key = {
+            "name": name,
+            "key": key,
+            "algorithm": algorithm,
+        }
+        return self._request('PUT', f'servers/{server_id}/tsigkeys/{key_id}', tsig_key)
+
+    def delete_tsig_key(self, key_id: str, server_id: str = 'localhost'):
+        """
+        Delete Server TSIG key with id.
+
+        Args:
+            key_id: TSIG key id
+            server_id: Server ID (default: 'localhost')
+
+        Returns:
+        """
+        return self._request('DELETE', f'servers/{server_id}/tsigkeys/{key_id}')

@@ -463,3 +463,43 @@ def validate_record(_record: Record):
         validator(_record.content)
     else:
         pass
+
+TSIG_ALGORITHMS = ["hmac-md5", "hmac-sha1", "hmac-sha224", "hmac-sha256", "hmac-sha384", "hmac-sha512"]
+def get_tsig_keys():
+    try:
+        return service.get_tsig_keys()
+    except PowerDNSError as e:
+        logger.error(e)
+        return False
+
+def get_tsig_key(key_id: str):
+    try:
+        return service.get_tsig_key(key_id)
+    except PowerDNSError as e:
+        logger.error(e)
+        return False
+
+def create_tsig_key(name: str, key: str = None, algorithm: str = 'hmac-sha-256'):
+    if algorithm not in TSIG_ALGORITHMS:
+        raise ValueError(f"Algorithm must be one of {TSIG_ALGORITHMS}")
+    try:
+        return service.create_tsig_key(name, key, algorithm)
+    except PowerDNSError as e:
+        logger.error(e)
+        return False
+
+def edit_tsig_key(key_id: str, name: str, key: str = None, algorithm: str = 'hmac-sha-256'):
+    if algorithm not in TSIG_ALGORITHMS:
+        raise ValueError(f"Algorithm must be one of {TSIG_ALGORITHMS}")
+    try:
+        return service.edit_tsig_key(key_id, name, key, algorithm)
+    except PowerDNSError as e:
+        logger.error(e)
+        return False
+
+def delete_tsig_key(key_id: str):
+    try:
+        return service.delete_tsig_key(key_id)
+    except PowerDNSError as e:
+        logger.error(e)
+        return False
