@@ -53,7 +53,7 @@ RUN chown -R app:app /src
 USER app
 
 # Run build-time tasks
-RUN SECRET_KEY=build-time-placeholder DEBUG=False python manage.py collectstatic --noinput
+RUN SECRET_KEY=build-time-placeholder DEBUG=False python manage.py collectstatic --noinput --ignore=src.css
 
 EXPOSE 8000
 CMD ["uvicorn", "pda.asgi:application", "--host", "0.0.0.0", "--port", "8000", "--workers", "3"]

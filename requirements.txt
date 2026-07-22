@@ -69,3 +69,5 @@ wcwidth==0.8.2
 yarg==0.1.10
 uvicorn[standard]
 psycopg==3.3.4
+redis==8.0.1
+whitenoise==6.11.0

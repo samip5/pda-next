@@ -1,10 +1,11 @@
 from .base import *
+from .. import SRC_PATH
 
 # Ensure DEBUG is disabled in production unless explicitly enabled in env
 DEBUG = bool(os.getenv('PDA_DEBUG', 'False') in ['True', 'true', '1'])
 
 # Tighten allowed hosts if provided
-ALLOWED_HOSTS = os.getenv('PDA_ALLOWED_HOSTS', ','.join(ALLOWED_HOSTS)).split(',') if os.getenv('PDA_ALLOWED_HOSTS') else ALLOWED_HOSTS
+ALLOWED_HOSTS = os.getenv('PDA_ALLOWED_HOSTS', [])
 
 # Ensure secure cookies and redirects
 SESSION_COOKIE_SECURE = bool(os.getenv('SESSION_COOKIE_SECURE', 'True') in ['True', 'true', '1'])
@@ -14,8 +15,19 @@ SECURE_SSL_REDIRECT = bool(os.getenv('SECURE_SSL_REDIRECT', 'True') in ['True', 
 # HSTS defaults (can be overridden via PDA_SECURE_HSTS_SECONDS)
 SECURE_HSTS_SECONDS = int(os.getenv('PDA_SECURE_HSTS_SECONDS', globals().get('SECURE_HSTS_SECONDS', 2592000)))
 
+STATIC_URL = '/static/'
+STATIC_ROOT = SRC_PATH / 'static_root'
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+
 # Logging level
 LOGGING['loggers']['django']['level'] = os.getenv('PDA_LOG_LEVEL_DJANGO', app_settings.log_level_django)
 LOGGING['loggers']['pda']['level'] = os.getenv('PDA_LOG_LEVEL_APP', app_settings.log_level_app)
-
-print(f"DEBUG: DATABASES strictly enforced to: {DATABASES['default']['NAME']}")
