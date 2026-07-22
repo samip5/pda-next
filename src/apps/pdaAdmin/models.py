@@ -11,6 +11,14 @@ class AdminPermissions(models.Model):
             ("zones_create", "Create zones"),
             ("zones_delete", "Delete zones"),
             ("zones_edit", "Edit zones"),
+            ("zones_soa_edit_api", "Edit zone SOA API EDIT"),
+            # Zones Metadata
+            ("zones_metadata_view", "View zone metadata"),
+            ("zones_metadata_edit", "Edit zone metadata"),
+            # Zones DNSSEC
+            ("zones_dnssec_view", "View zone DNSSEC"),
+            ("zones_dnssec_edit", "Edit zone DNSSEC"),
+
             # Records
             ("records_view", "View records"),
             ("records_create", "Create records"),
@@ -44,6 +52,9 @@ class AdminPermissions(models.Model):
             ("activity_log_details", "View more details in activity log"),
             # Cache
             ("cache_flush", "Flush cache"),
-            ("settings", "Settings for PDA"),
+            ("settings_view", "View Settings for PDA"),
+            ("settings_edit", "Edit Settings for PDA"),
+            ("settings_auth", "Manage Auth settings for PDA"),
+            ("settings_tsig", "Manage TSIG Keys inside settings"),
             ("dashboard", "PDA Admin Dashboard"),
         ]
