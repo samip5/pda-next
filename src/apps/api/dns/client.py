@@ -696,6 +696,7 @@ class PowerDNSClient:
         Returns:
             Server TSIG key
         """
+        logger.info(key_id)
         return self._request('GET', f'servers/{server_id}/tsigkeys/{key_id}')
 
     def create_tsig_key(self, name: str, key: str = None, algorithm:str = 'hmac-sha256', server_id: str = 'localhost'):

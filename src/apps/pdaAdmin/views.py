@@ -17,7 +17,8 @@ from apps.api.activity.models import Activity
 from apps.api.activity.models.activity import ActionType
 from apps.api.dns.helpers import get_zones, get_zone, get_records, create_zone_from_template, delete_zone, \
     recordUpdateHelper, create_record, validate_record, get_dnssec_keys, create_dnssec_key, parse_dnssec_keys, \
-    delete_dnssec_key, get_zone_metadata, set_zone_metadata, delete_zone_metadata
+    delete_dnssec_key, get_zone_metadata, set_zone_metadata, delete_zone_metadata, get_tsig_keys, create_tsig_key, \
+    delete_tsig_key, get_tsig_key
 from apps.api.dns.models import Zone, Record
 from apps.api.dns.services import PowerDNSService
 from django.contrib import messages
@@ -75,6 +76,7 @@ def settings(request):
     record_types = Record.RECORD_TYPE_CHOICES
     setting_record_types = get_setting('record_types')
     social_app_form = SocialAppForm()
+    tsig_key = None
     if request.method == "POST":
         form_type = request.POST.get('form_type')
         if form_type == "ldap":
@@ -101,12 +103,37 @@ def settings(request):
                     messages.add_message(request, messages.WARNING, f"{social_app_form.errors.as_data()}")
             except Exception as e:
                 messages.add_message(request, messages.ERROR, f"{e}")
+        if form_type == "create_tsig":
+            try:
+                tsig_name = request.POST.get("tsig_name")
+                tsig_key = request.POST.get("tsig_key")
+                tsig_algorithm = request.POST.get("tsig_algorithm")
+                create_tsig_key(tsig_name, tsig_key, tsig_algorithm)
+            except Exception as e:
+                messages.add_message(request, messages.ERROR, f"{e}")
+
+        if form_type == "delete_tsig":
+            try:
+                tsig_key_id = request.POST.get("tsig_key_delete")
+                delete_tsig_key(tsig_key_id)
+            except Exception as e:
+                messages.add_message(request, messages.ERROR, f"{e}")
+        if form_type == "get_tsig":
+            try:
+                tsig_key_id = request.POST.get("tsig_key_id")
+                logger.info(tsig_key_id)
+                tsig_key = get_tsig_key(tsig_key_id)
+                logger.info(tsig_key)
+            except Exception as e:
+                messages.add_message(request, messages.ERROR, f"{e}")
+
 
     social_apps = SocialApp.objects.all()
     view_settings = []
     view_settings.append({"name": "disable_landing_page", "value": f"{get_setting('disable_landing_page')}"})
     view_settings.append({"name": "db_path", "value": f"{get_setting('db_path')}"})
 
+    tsig_keys = get_tsig_keys()
     return render(
         request,
         "web/app/admin/settings.html",
@@ -118,7 +145,9 @@ def settings(request):
             "record_types": record_types,
             "setting_record_types": setting_record_types,
             "social_app_form": social_app_form,
-            "social_apps": social_apps
+            "social_apps": social_apps,
+            "tsig_keys": tsig_keys,
+            "tsig_key": tsig_key,
         },
     )
 
@@ -429,6 +458,13 @@ def zone(request, id):
             except Exception as e:
                 messages.add_message(request, messages.WARNING, f"{e}")
 
+        if form_type == "set_axfr_tsig":
+            try:
+                value = request.POST.getlist("metadata_tsigkey", [])
+                service.update_zone(zone_name=zzone.name, master_tsig_key_ids=value)
+            except Exception as e:
+                messages.add_message(request, messages.WARNING, f"{e}")
+
         if form_type == "set_metadata":
             kind = request.POST.get("metadata_kind")
             if kind in ("ALLOW-AXFR-FROM", "ALSO-NOTIFY"):
@@ -459,10 +495,10 @@ def zone(request, id):
     metadata_by_kind = {m["kind"]: m["metadata"] for m in zone_metadata}
     allow_axfr_from_initial = "\n".join(metadata_by_kind.get("ALLOW-AXFR-FROM", []))
     also_notify_initial = "\n".join(metadata_by_kind.get("ALSO-NOTIFY", []))
-    tsig_allow_axfr_initial = next(iter(metadata_by_kind.get("TSIG-ALLOW-AXFR", [])), "")
-    axfr_master_tsig_initial = next(iter(metadata_by_kind.get("AXFR-MASTER-TSIG", [])), "")
+    tsig_allow_axfr_initial = metadata_by_kind.get("TSIG-ALLOW-AXFR", [])
     soa_edit_api_initial = next(iter(metadata_by_kind.get("SOA-EDIT-API", [])), "")
 
+    tsig_keys = get_tsig_keys()
 
     return render(
         request,
@@ -478,8 +514,8 @@ def zone(request, id):
             "allow_axfr_from_initial": allow_axfr_from_initial,
             "also_notify_initial": also_notify_initial,
             "tsig_allow_axfr_initial": tsig_allow_axfr_initial,
-            "axfr_master_tsig_initial": axfr_master_tsig_initial,
             "soa_edit_api_initial": soa_edit_api_initial,
+            "tsig_keys": tsig_keys,
         },
     )
 

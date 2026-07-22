@@ -347,7 +347,7 @@ class PowerDNSService:
 
     def get_tsig_key(self, key_id: str, server_id: str = 'localhost'):
         try:
-            return self.client.get_tsig_key(server_id, key_id)
+            return self.client.get_tsig_key(key_id, server_id)
         except PowerDNSError as e:
             logger.error(f"Failed to get tsig key for server {server_id}: {e}")
             return Exception(PowerDNSError("Unable to get tsig key"))

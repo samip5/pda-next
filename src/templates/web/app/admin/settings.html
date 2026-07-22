@@ -2,38 +2,54 @@
 {% load static %}
 {% load i18n %}
 {% load pda_tags %}
+{% load modal_tags %}
 {% block app %}
 <section class="">
     <h1 class="text-2xl font-semibold mb-5">Settings</h1>
-    <div x-data="{ activeTab: 1 }" class="flex flex-col md:flex-row">
+    <div x-data="{ activeTab: new URLSearchParams(window.location.search).get('tab') || '1',
+        setTab(tab) {
+            this.activeTab = tab;
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tab);
+            window.history.replaceState({}, '', url);
+        }
+     }" class="flex flex-col md:flex-row">
         <div class="bg-neutral-800 border-1 border-neutral-700 m-2 p-2 md:w-1/6 rounded-lg shadow flex items-center flex-col gap-2">
             <h2 class="text-2xl font-semibold text-center">Settings</h2>
+            <div class="flex flex-row md:flex-col flex-wrap md:items-center md:justify-center gap-2">
             <button class="btn"
-            :class="activeTab === 1 ? 'btn-primary' : 'btn-secondary'"
-            @click="activeTab=1"
+            :class="activeTab === '1' ? 'btn-primary' : 'btn-secondary'"
+            @click="setTab('1')"
             >
                 General
             </button>
             <button class="btn"
-            :class="activeTab === 3 ? 'btn-primary' : 'btn-secondary'"
-            @click="activeTab=3"
+            :class="activeTab === '3' ? 'btn-primary' : 'btn-secondary'"
+            @click="setTab('3')"
             >
                 Auth
             </button>
             <button class="btn"
-            :class="activeTab === 2 ? 'btn-primary' : 'btn-secondary'"
-            @click="activeTab=2"
+            :class="activeTab === '2' ? 'btn-primary' : 'btn-secondary'"
+            @click="setTab('2')"
             >
                 Record Types
             </button>
+            <button class="btn"
+            :class="activeTab === '4' ? 'btn-primary' : 'btn-secondary'"
+            @click="setTab('4')"
+            >
+                Server
+            </button>
+            </div>
         </div>
         <div class="bg-neutral-800 border-1 border-neutral-700 m-2 p-2 md:w-5/6 rounded-lg shadow">
-            <div x-show="activeTab === 1">
+            <div x-show="activeTab === '1'">
             {% for setting in settings %}
                 <p class="text-white">{{ setting.name }}: {{ setting.value }}</p>
             {% endfor %}
             </div>
-            <div x-show="activeTab === 2" class="flex flex-col md:flex-row p-4 gap-4 ">
+            <div x-show="activeTab === '2'" class="flex flex-col md:flex-row p-4 gap-4 ">
                 <div class="w-full md:w-1/2 bg-neutral-900 p-4 rounded-md shadow">
                     <h2 class="text-2xl font-semibold">Forward Record types</h2>
                     <form class="pda-form flex flex-row flex-wrap" method="post">
@@ -63,17 +79,24 @@
                     </form>
                 </div>
             </div>
-            <div x-show="activeTab === 3" x-data="{ authTab: 1 }">
+            <div x-show="activeTab === '3'" x-data="{ authTab: new URLSearchParams(window.location.search).get('authTab') || '1',
+                setAuthTab(authTab) {
+                    this.authTab = authTab;
+                    const url = new URL(window.location);
+                    url.searchParams.set('authTab', authTab);
+                    window.history.replaceState({}, '', url);
+                }
+                }">
                 <h2 class="text-2xl font-semibold">Auth</h2>
                 <div class="flex flex-row gap-2">
-                    <button class="btn" :class="authTab === 1 ? 'btn-primary' : 'btn-secondary'" @click="authTab=1">
+                    <button class="btn" :class="authTab === '1' ? 'btn-primary' : 'btn-secondary'" @click="setAuthTab('1')">
                     LDAP
                     </button>
-                    <button class="btn" :class="authTab === 2 ? 'btn-primary' : 'btn-secondary'" @click="authTab=2">
+                    <button class="btn" :class="authTab === '2' ? 'btn-primary' : 'btn-secondary'" @click="setAuthTab('2')">
                     OIDC
                     </button>
                 </div>
-                <div x-show="authTab === 1">
+                <div x-show="authTab === '1'">
                     <form method="post" class="pda-form">
                         {% csrf_token %}
                             <div class="pda-input-group">
@@ -99,7 +122,7 @@
                         <button type="submit" name="form_type" value="ldap" class="btn btn-primary">Save</button>
                     </form>
                 </div>
-                <div x-show="authTab === 1">
+                <div x-show="authTab === '1'">
                     <form method="post" class="pda-form">
                         {% csrf_token %}
                             <div class="pda-input-group">
@@ -125,7 +148,7 @@
                         <button type="submit" name="form_type" value="ldap" class="btn btn-primary">Save</button>
                     </form>
                 </div>
-                <div x-show="authTab === 2">
+                <div x-show="authTab === '2'">
                     <div>
                         {% for app in social_apps %}
                             {{ app.name }}
@@ -176,6 +199,80 @@
                     </form>
                 </div>
 
+            </div>
+            <div x-show="activeTab === '4'">
+                <h2 class="text-2xl font-semibold">PowerDNS Server</h2>
+                <div>
+                    <h3 class="text-lg font-semibold">TSIG Keys</h3>
+
+                    <form method="post" class="pda-form">
+                        {% csrf_token %}
+                            <div class="pda-input-group">
+                                <label for="tsig_name">Name</label>
+                                <input type="text" name="tsig_name" id="tsig_name">
+                            </div>
+                            <div class="pda-input-group">
+                                <label for="tsig_key">Key (leave empty to generate key)</label>
+                                <input type="text" name="tsig_key" id="tsig_key">
+                            </div>
+
+                            <div class="pda-input-group">
+                                <label for="tsig_algorithm">Key Algorithm</label>
+                                <select id="tsig_algorithm" name="tsig_algorithm">
+                                    <option value="hmac-md5">hmac-md5</option>
+                                    <option value="hmac-sha1">hmac-sha1</option>
+                                    <option value="hmac-sha224">hmac-sha224</option>
+                                    <option value="hmac-sha256" selected>hmac-sha256</option>
+                                    <option value="hmac-sha384">hmac-sha384</option>
+                                    <option value="hmac-sha512">hmac-sha512</option>
+                                </select>
+                            </div>
+                        <button type="submit" name="form_type" value="create_tsig" class="btn btn-primary">Create</button>
+                    </form>
+
+                    <div class="flex flex-row flex-wrap gap-4 mt-2">
+                        {% for key in tsig_keys %}
+                        <div class="w-full md:w-2/6 p-4 bg-neutral-900 border-1 border-neutral-700 rounded-lg shadow">
+                            <p class="text-white">id: {{ key.id }}</p>
+
+                            <p class="text-white">Name: {{ key.name }}</p>
+                            <p class="text-white">Key Algorithm: {{ key.algorithm }}</p>
+                            {% if tsig_key.id == key.id %}
+                                <p class="text-white break-all">Key:</p>
+                                <p class="text-white break-all mb-2 bg-neutral-800 border-1 border-neutral-700 p-2 rounded-lg">{{ tsig_key.key }}</p>
+                            {% else %}
+                                <p class="text-white break-all">Key: Hidden</p>
+                            {% endif %}
+                            <form class="pda-form" method="post">
+                                {% csrf_token %}
+                                <input id="tsig_key_id" name="tsig_key_id" type="hidden" value="{{ key.id }}">
+                                <button class="btn btn-primary" type="submit" name="form_type" value="get_tsig">Show Key</button>
+                            </form>
+
+                            {% modal id="delete-tsig_key" title="Delete TSIG Key" size="md" %}
+                                {% modaltrigger %}
+                                    <button @click="open = true" class="btn btn-danger">
+                                        <i class="fa fa-trash-o"></i>
+                                    </button>
+                                {% endmodaltrigger %}
+                                <form class="pda-form" method="post">
+                                    {% csrf_token %}
+                                    <input id="tsig_key_delete" name="tsig_key_delete" type="hidden" value="{{ key.id }}">
+                                    <p class="text-white text-xl">You are about to delete TSIG Key<p>
+                                    <p class="text-xl text-danger bg-neutral-900 p-2 rounded-3 my-2">{{ key.name }}</p>
+                                    <p class="text-white text-xl">are you sure you want to delete the TSIG Key?</p>
+                                    <button class="btn btn-danger" type="submit" name="form_type" value="delete_tsig">{% translate "Delete" %}</button>
+                                </form>
+                                {% modalfooter %}
+                                    <button @click="open = false" class="btn btn-secondary">Close</button>
+                                {% endmodalfooter %}
+                            {% endmodal %}
+
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                </div>
             </div>
         </div>
         <!--
