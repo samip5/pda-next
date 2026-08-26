@@ -1,11 +1,13 @@
 from .base import *
 from .. import SRC_PATH
+import json
 
 # Ensure DEBUG is disabled in production unless explicitly enabled in env
 DEBUG = bool(os.getenv('PDA_DEBUG', 'False') in ['True', 'true', '1'])
 
 # Tighten allowed hosts if provided
-ALLOWED_HOSTS = os.getenv('PDA_ALLOWED_HOSTS', [])
+raw_env = os.getenv('PDA_ALLOWED_HOSTS')
+ALLOWED_HOSTS = json.loads(raw_env) if raw_env else []
 
 # Ensure secure cookies and redirects
 SESSION_COOKIE_SECURE = bool(os.getenv('SESSION_COOKIE_SECURE', 'True') in ['True', 'true', '1'])
