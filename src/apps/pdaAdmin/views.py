@@ -581,7 +581,7 @@ def edit_template(request, id):
             details_fields = {
                 "template": template.name,
                 "name": record_template.name,
-                "type": record_template.type,
+                "type": record_template.record_type,
                 "content": record_template.content,
                 "ttl": record_template.ttl,
             }
