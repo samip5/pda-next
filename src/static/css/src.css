@@ -155,6 +155,10 @@ html {
     text-wrap: wrap !important;
     overflow-wrap: break-word;
 }
+.pda-table .long-content {
+    @apply max-w-fit;
+}
+
 /* Body rows */
 .pda-table tbody tr {
     @apply border-t-2 border-neutral-500

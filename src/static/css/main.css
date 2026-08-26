@@ -217,9 +217,6 @@
   }
 }
 @layer utilities {
-  .pointer-events-none {
-    pointer-events: none;
-  }
   .absolute {
     position: absolute;
   }
@@ -243,9 +240,6 @@
   }
   .right-0 {
     right: calc(var(--spacing) * 0);
-  }
-  .z-10 {
-    z-index: 10;
   }
   .z-50 {
     z-index: 50;
@@ -313,9 +307,6 @@
   .mt-4 {
     margin-top: calc(var(--spacing) * 4);
   }
-  .mt-22 {
-    margin-top: calc(var(--spacing) * 22);
-  }
   .mt-32 {
     margin-top: calc(var(--spacing) * 32);
   }
@@ -324,9 +315,6 @@
   }
   .mb-0 {
     margin-bottom: calc(var(--spacing) * 0);
-  }
-  .mb-1 {
-    margin-bottom: calc(var(--spacing) * 1);
   }
   .mb-2 {
     margin-bottom: calc(var(--spacing) * 2);
@@ -378,9 +366,6 @@
   }
   .max-h-48 {
     max-height: calc(var(--spacing) * 48);
-  }
-  .max-h-60 {
-    max-height: calc(var(--spacing) * 60);
   }
   .max-h-\[90vh\] {
     max-height: 90vh;
@@ -445,9 +430,6 @@
   .rotate-90 {
     rotate: 90deg;
   }
-  .rotate-180 {
-    rotate: 180deg;
-  }
   .transform {
     transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
   }
@@ -490,9 +472,6 @@
   .justify-end {
     justify-content: flex-end;
   }
-  .gap-1\.5 {
-    gap: calc(var(--spacing) * 1.5);
-  }
   .gap-2 {
     gap: calc(var(--spacing) * 2);
   }
@@ -501,13 +480,6 @@
   }
   .gap-4 {
     gap: calc(var(--spacing) * 4);
-  }
-  .space-y-0\.5 {
-    :where(& > :not(:last-child)) {
-      --tw-space-y-reverse: 0;
-      margin-block-start: calc(calc(var(--spacing) * 0.5) * var(--tw-space-y-reverse));
-      margin-block-end: calc(calc(var(--spacing) * 0.5) * calc(1 - var(--tw-space-y-reverse)));
-    }
   }
   .space-y-1 {
     :where(& > :not(:last-child)) {
@@ -522,11 +494,6 @@
       margin-block-start: calc(calc(var(--spacing) * 2) * var(--tw-space-y-reverse));
       margin-block-end: calc(calc(var(--spacing) * 2) * calc(1 - var(--tw-space-y-reverse)));
     }
-  }
-  .truncate {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
   .overflow-y-auto {
     overflow-y: auto;
@@ -629,9 +596,6 @@
   .p-0 {
     padding: calc(var(--spacing) * 0);
   }
-  .p-1 {
-    padding: calc(var(--spacing) * 1);
-  }
   .p-1\.5 {
     padding: calc(var(--spacing) * 1.5);
   }
@@ -680,9 +644,6 @@
   .pt-28 {
     padding-top: calc(var(--spacing) * 28);
   }
-  .pr-2 {
-    padding-right: calc(var(--spacing) * 2);
-  }
   .pb-0 {
     padding-bottom: calc(var(--spacing) * 0);
   }
@@ -727,10 +688,6 @@
     --tw-font-weight: var(--font-weight-bold);
     font-weight: var(--font-weight-bold);
   }
-  .font-medium {
-    --tw-font-weight: var(--font-weight-medium);
-    font-weight: var(--font-weight-medium);
-  }
   .font-semibold {
     --tw-font-weight: var(--font-weight-semibold);
     font-weight: var(--font-weight-semibold);
@@ -743,9 +700,6 @@
   }
   .text-blue-400 {
     color: var(--color-blue-400);
-  }
-  .text-indigo-600 {
-    color: var(--color-indigo-600);
   }
   .text-neutral-300 {
     color: var(--color-neutral-300);
@@ -839,24 +793,6 @@
       }
     }
   }
-  .hover\:text-white {
-    &:hover {
-      @media (hover: hover) {
-        color: var(--color-white);
-      }
-    }
-  }
-  .focus\:border-neutral-500 {
-    &:focus {
-      border-color: var(--color-neutral-500);
-    }
-  }
-  .focus\:ring-0 {
-    &:focus {
-      --tw-ring-shadow: var(--tw-ring-inset,) 0 0 0 calc(0px + var(--tw-ring-offset-width)) var(--tw-ring-color, currentcolor);
-      box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-    }
-  }
   .focus\:outline-none {
     &:focus {
       --tw-outline-style: none;
@@ -921,11 +857,6 @@
       width: calc(1/6 * 100%);
     }
   }
-  .md\:w-1\/8 {
-    @media (width >= 48rem) {
-      width: calc(1/8 * 100%);
-    }
-  }
   .md\:w-2\/5 {
     @media (width >= 48rem) {
       width: calc(2/5 * 100%);
@@ -959,11 +890,6 @@
   .md\:w-6\/8 {
     @media (width >= 48rem) {
       width: calc(6/8 * 100%);
-    }
-  }
-  .md\:w-22\/6 {
-    @media (width >= 48rem) {
-      width: calc(22/6 * 100%);
     }
   }
   .md\:w-\[48\%\] {
@@ -1262,6 +1188,9 @@ html {
   text-align: left !important;
   text-wrap: wrap !important;
   overflow-wrap: break-word;
+}
+.pda-table .long-content {
+  max-width: fit-content;
 }
 .pda-table tbody tr {
   border-top-style: var(--tw-border-style);
