@@ -28,6 +28,34 @@ def recordUpdateHelper(zone_name: str, oldRecord: Record, newRecord: Record):
 
     new_record_name = str(newRecord.name).replace("@", zone_name)
     old_record_name = str(oldRecord.name).replace("@", zone_name)
+
+    parsed_old_content = oldRecord.content
+    if oldRecord.record_type in ["CNAME", "NS"]:
+        if not parsed_old_content.endswith('.'):
+            parsed_old_content = f"{parsed_old_content}."
+            oldRecord.content = parsed_old_content
+    if oldRecord.record_type in ["TXT"]:
+        if not parsed_old_content.endswith('"'):
+            parsed_old_content = f'{parsed_old_content}"'
+            oldRecord.content = parsed_old_content
+        if not parsed_old_content.startswith('"'):
+            parsed_old_content = f'"{parsed_old_content}'
+            oldRecord.content = parsed_old_content
+
+    parsed_new_content = newRecord.content
+    if newRecord.record_type in ["CNAME", "NS"]:
+        if not parsed_new_content.endswith('.'):
+            parsed_new_content = f"{parsed_new_content}."
+            newRecord.content = parsed_new_content
+    if newRecord.record_type in ["TXT"]:
+        if not parsed_new_content.endswith('"'):
+            parsed_new_content = f'{parsed_new_content}"'
+            newRecord.content = parsed_new_content
+        if not parsed_new_content.startswith('"'):
+            parsed_new_content = f'"{parsed_new_content}'
+            newRecord.content = parsed_new_content
+
+    
     zone = get_zone(zone_name)
     if oldRecord.name == newRecord.name and oldRecord.record_type == newRecord.record_type:
         try:
@@ -412,6 +440,13 @@ def create_record(zone: Zone, name: str, record_type: str, content: str, ttl: in
     if record_type in ["CNAME", "NS"]:
         if not content.endswith('.'):
             parsed_content = f"{content}."
+            _record.content = parsed_content
+    if record_type in ["TXT"]:
+        if not content.endswith('"'):
+            parsed_content = f'{content}"'
+            _record.content = parsed_content
+        if not content.startswith('"'):
+            parsed_content = f'"{content}'
             _record.content = parsed_content
 
     try:
