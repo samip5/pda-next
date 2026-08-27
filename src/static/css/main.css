@@ -398,6 +398,9 @@
   .w-screen {
     width: 100vw;
   }
+  .max-w-\[50vw\] {
+    max-width: 50vw;
+  }
   .max-w-full {
     max-width: 100%;
   }
@@ -689,6 +692,12 @@
   .font-semibold {
     --tw-font-weight: var(--font-weight-semibold);
     font-weight: var(--font-weight-semibold);
+  }
+  .text-wrap {
+    text-wrap: wrap;
+  }
+  .wrap-break-word {
+    overflow-wrap: break-word;
   }
   .break-all {
     word-break: break-all;
@@ -1189,6 +1198,14 @@ html {
 }
 .pda-table .long-content {
   max-width: 30vw;
+}
+.long-content {
+  text-align: left !important;
+  text-wrap: wrap !important;
+  overflow-wrap: break-word;
+}
+.long-content {
+  max-width: 40vw;
 }
 .pda-table tbody tr {
   border-top-style: var(--tw-border-style);

@@ -158,6 +158,14 @@ html {
 .pda-table .long-content {
     @apply max-w-[30vw];
 }
+.long-content {
+    text-align: left !important;
+    text-wrap: wrap !important;
+    overflow-wrap: break-word;
+}
+.long-content {
+    @apply max-w-[40vw];
+}
 
 /* Body rows */
 .pda-table tbody tr {

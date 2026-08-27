@@ -67,7 +67,6 @@ class Activity(models.Model):
     )
 
     details = models.CharField(
-        max_length=255,
         unique=False,
         default='',
         help_text='Details for activity'
